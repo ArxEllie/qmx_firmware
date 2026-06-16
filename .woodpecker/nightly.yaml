@@ -24,10 +24,9 @@ steps:
     environment:
       FORGEJO_TOKEN:
         from_secret: forgejo_token
+      CI_FORGE_URL: "${CI_FORGE_URL}"
       CI_REPO: "${CI_REPO}"
       CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
     commands:
       - apk add --no-cache curl jq
       - sh .woodpecker/scripts/publish-forgejo.sh nightly true "Nightly build"
-      - echo ":::: API connectivity test"
-      - curl -fsSL -H "Authorization: token ${FORGEJO_TOKEN}" "${CI_FORGE_URL}/api/v1/repos/${CI_REPO}" | jq -r '.full_name // "FAILED"'
