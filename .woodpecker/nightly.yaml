@@ -11,6 +11,7 @@
 when:
   - event: cron
     cron: nightly
+  - event: manual
 
 steps:
   - name: build
