@@ -54,7 +54,18 @@ steps:
         NIGHTLY_TAG="nightly-$(date -u +%Y-%m-%d)"
         REPO_API="$FORGE_URL/api/v1/repos/$REPO_SLUG"
         API="$REPO_API/releases"
+
         AUTH="Authorization: token $FORGEJO_TOKEN"
+        auth_status="$(curl -sS -o /tmp/auth.json -w '%{http_code}' -H "$AUTH" "$FORGE_URL/api/v1/user")"
+        if [ "$auth_status" != "200" ]; then
+          AUTH="Authorization: Bearer $FORGEJO_TOKEN"
+          auth_status="$(curl -sS -o /tmp/auth.json -w '%{http_code}' -H "$AUTH" "$FORGE_URL/api/v1/user")"
+        fi
+        if [ "$auth_status" != "200" ]; then
+          echo "Forgejo token authentication failed with HTTP $auth_status"
+          cat /tmp/auth.json
+          exit 1
+        fi
 
         echo "Publishing $NIGHTLY_TAG to $REPO_SLUG"
         repo_status="$(curl -sS -o /tmp/repo.json -w '%{http_code}' -H "$AUTH" "$REPO_API")"
@@ -71,11 +82,23 @@ steps:
         fi
 
         body="Automated nightly build from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
-        rel_response="$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$(jq -nc --arg t "$NIGHTLY_TAG" --arg c "$CI_COMMIT_SHA" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$t,body:$b,prerelease:true,draft:false}')")"
+        release_payload="$(jq -nc --arg t "$NIGHTLY_TAG" --arg c "$CI_COMMIT_SHA" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$t,body:$b,prerelease:true,draft:false}')"
+        release_status="$(curl -sS -o /tmp/release.json -w '%{http_code}' -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$release_payload")"
+        if [ "$release_status" != "201" ]; then
+          echo "Forgejo release creation failed with HTTP $release_status"
+          cat /tmp/release.json
+          exit 1
+        fi
+        rel_response="$(cat /tmp/release.json)"
         rel_id="$(printf '%s' "$rel_response" | jq -r '.id // empty')"
         test -n "$rel_id"
 
         for f in dist/*; do
           [ -f "$f" ] || continue
-          curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")" >/dev/null
+          asset_status="$(curl -sS -o /tmp/asset.json -w '%{http_code}' -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")")"
+          if [ "$asset_status" != "201" ]; then
+            echo "Forgejo asset upload failed with HTTP $asset_status for $(basename "$f")"
+            cat /tmp/asset.json
+            exit 1
+          fi
         done
