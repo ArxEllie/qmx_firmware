@@ -5,6 +5,9 @@
 # To build more boards, just add "<keyboard>:<keymap>" lines to TARGETS.
 set -eu
 
+# Ensure Python deps are present (qmk_cli image may be missing some)
+pip install -q -r requirements.txt
+
 TARGETS="
 nuphy/halo75_v2/ansi:default
 nuphy/halo75_v2/ansi:via
