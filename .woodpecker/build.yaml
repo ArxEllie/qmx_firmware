@@ -1,0 +1,15 @@
+# Build check.
+# Compiles every target WITHOUT publishing anything - safe for testing.
+# Trigger it manually from the Woodpecker UI ("Run pipeline" / manual event),
+# and it also runs automatically on pull requests.
+# Add a `push` entry below if you also want a build on every commit.
+
+when:
+  - event: manual
+  - event: pull_request
+
+steps:
+  - name: build
+    image: qmkfm/qmk_cli
+    commands:
+      - sh .woodpecker/scripts/build.sh

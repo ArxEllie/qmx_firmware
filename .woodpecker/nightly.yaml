@@ -1,14 +1,16 @@
 # Nightly build flow.
 # Run on a schedule via a Woodpecker cron job named "nightly"
-# (Repo Settings -> Crons). Can also be triggered manually from the UI.
+# (Repo Settings -> Crons).
 #
 # Always compiles every target (catches breakage from upstream merges) and
 # publishes/refreshes a rolling "nightly" pre-release on Forgejo.
+#
+# Note: this PUBLISHES, so it is intentionally not on the `manual` event -
+# use build.yaml to manually test a build without side effects.
 
 when:
   - event: cron
     cron: nightly
-  - event: manual
 
 steps:
   - name: build

@@ -7,8 +7,9 @@ CI for building this QMK fork's NuPhy Halo75 V2 firmware on
 
 | File            | Trigger                              | What it does |
 |-----------------|--------------------------------------|--------------|
+| `build.yaml`    | **manual** run / **pull request**    | Compiles every target. Publishes nothing - safe to run for testing. |
 | `release.yaml`  | git **tag** push (e.g. `v1.2.3`)     | Builds firmware, creates a Forgejo **release** for the tag with the binaries attached. |
-| `nightly.yaml`  | **cron** job named `nightly` (or manual run) | Builds firmware, refreshes a rolling `nightly` **pre-release**. |
+| `nightly.yaml`  | **cron** job named `nightly`         | Builds firmware, refreshes a rolling `nightly` **pre-release**. |
 
 Both build the same targets via `scripts/build.sh`:
 
