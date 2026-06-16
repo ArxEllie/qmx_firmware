@@ -3,7 +3,7 @@
 # (Repo Settings -> Crons).
 #
 # Always compiles every target (catches breakage from upstream merges) and
-# publishes a dated "nightly-YYYY-MM-DD" pre-release on Forgejo.
+# uploads dated "nightly-YYYY-MM-DD" package artifacts to Forgejo.
 #
 # Note: this PUBLISHES, so it is intentionally not on the `manual` event -
 # use build.yaml to manually test a build without side effects.
@@ -13,8 +13,11 @@ when:
     cron: nightly
 
 steps:
-  - name: build
+  - name: build-and-publish-nightly
     image: qmkfm/qmk_cli
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
     commands:
       - pip install -q -r requirements.txt
       - make git-submodule
@@ -26,66 +29,54 @@ steps:
       - for ext in bin hex uf2; do for f in *.$ext; do [ -f "$f" ] && mv "$f" dist/; done; done
       - (cd dist && sha256sum -- * > SHA256SUMS)
       - ls -la dist
-
-  - name: publish-nightly
-    image: alpine:3.20
-    environment:
-      FORGEJO_TOKEN:
-        from_secret: forgejo_token
-    commands:
-      - apk add --no-cache curl jq
       - |
-        set -eu
-        if [ -n "${CI_REPO_LINK:-}" ] && [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
-          FORGE_URL="${CI_REPO_LINK%/}"
-          FORGE_URL="${FORGE_URL%/$CI_REPO_NAME}"
-          FORGE_URL="${FORGE_URL%/$CI_REPO_OWNER}"
-        else
-          FORGE_URL="${CI_FORGE_URL%/}"
-        fi
-        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+        python3 - <<'PY'
+        import datetime as dt
+        import os
+        import pathlib
+        import urllib.error
+        import urllib.request
 
-        if [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
-          REPO_SLUG="$CI_REPO_OWNER/$CI_REPO_NAME"
-        else
-          REPO_SLUG="${CI_REPO:?CI_REPO is not set}"
-        fi
+        token = os.environ["FORGEJO_TOKEN"]
+        forge_url = os.environ.get("CI_FORGE_URL", "").rstrip("/")
+        if not forge_url:
+            repo_link = os.environ.get("CI_REPO_LINK", "").rstrip("/")
+            owner = os.environ.get("CI_REPO_OWNER", "")
+            name = os.environ.get("CI_REPO_NAME", "")
+            if repo_link and owner and name:
+                forge_url = repo_link.removesuffix(f"/{name}").removesuffix(f"/{owner}")
+        if not forge_url.startswith(("http://", "https://")):
+            forge_url = f"https://{forge_url}"
 
-        NIGHTLY_VERSION="nightly-$(date -u +%Y-%m-%d)"
-        PACKAGE_NAME="nuphy-halo75-v2"
-        REPO_API="$FORGE_URL/api/v1/repos/$REPO_SLUG"
-        PACKAGE_API="$FORGE_URL/api/packages/$CI_REPO_OWNER/generic/$PACKAGE_NAME/$NIGHTLY_VERSION"
+        owner = os.environ.get("CI_REPO_OWNER") or os.environ.get("CI_REPO", "").split("/", 1)[0]
+        if not owner:
+            raise SystemExit("CI_REPO_OWNER/CI_REPO is not set; cannot choose Forgejo package owner")
+        package_name = "nuphy-halo75-v2"
+        version = "nightly-" + dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+        package_api = f"{forge_url}/api/packages/{owner}/generic/{package_name}/{version}"
 
-        AUTH="Authorization: token $FORGEJO_TOKEN"
-        auth_status="$(curl -sS -o /tmp/auth.json -w '%{http_code}' -H "$AUTH" "$FORGE_URL/api/v1/user")"
-        if [ "$auth_status" != "200" ]; then
-          AUTH="Authorization: Bearer $FORGEJO_TOKEN"
-          auth_status="$(curl -sS -o /tmp/auth.json -w '%{http_code}' -H "$AUTH" "$FORGE_URL/api/v1/user")"
-        fi
-        if [ "$auth_status" != "200" ]; then
-          echo "Forgejo token authentication failed with HTTP $auth_status"
-          cat /tmp/auth.json
-          exit 1
-        fi
+        files = sorted(p for p in pathlib.Path("dist").iterdir() if p.is_file())
+        if not files:
+            raise SystemExit("dist/ is empty; refusing to publish an empty nightly")
 
-        echo "Publishing $PACKAGE_NAME $NIGHTLY_VERSION to $REPO_SLUG packages"
-        repo_status="$(curl -sS -o /tmp/repo.json -w '%{http_code}' -H "$AUTH" "$REPO_API")"
-        if [ "$repo_status" != "200" ]; then
-          echo "Forgejo repo lookup failed with HTTP $repo_status for $REPO_SLUG"
-          cat /tmp/repo.json
-          exit 1
-        fi
+        def request(method, url, data=None):
+            headers = {"Authorization": f"token {token}"}
+            req = urllib.request.Request(url, data=data, headers=headers, method=method)
+            try:
+                with urllib.request.urlopen(req) as res:
+                    return res.status, res.read()
+            except urllib.error.HTTPError as exc:
+                return exc.code, exc.read()
 
-        for f in dist/*; do
-          [ -f "$f" ] || continue
-          name="$(basename "$f")"
-          url="$PACKAGE_API/$name"
-          curl -fsSL -X DELETE -H "$AUTH" "$url" >/dev/null 2>&1 || true
-          upload_status="$(curl -sS -o /tmp/package.json -w '%{http_code}' -X PUT -H "$AUTH" --upload-file "$f" "$url")"
-          if [ "$upload_status" != "201" ] && [ "$upload_status" != "200" ]; then
-            echo "Forgejo package upload failed with HTTP $upload_status for $name"
-            cat /tmp/package.json
-            exit 1
-          fi
-          echo "Uploaded $name"
-        done
+        print(f"Publishing {package_name} {version} to Forgejo packages")
+        for path in files:
+            url = f"{package_api}/{path.name}"
+            request("DELETE", url)
+            status, body = request("PUT", url, path.read_bytes())
+            if status not in (200, 201):
+                print(f"Forgejo package upload failed with HTTP {status} for {path.name}")
+                print(body.decode("utf-8", "replace"))
+                raise SystemExit(1)
+            print(f"Uploaded {path.name}")
+            print(f"Download: {url}")
+        PY

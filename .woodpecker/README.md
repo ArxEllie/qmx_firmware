@@ -66,13 +66,16 @@ files and a `SHA256SUMS` file attached.
 Runs automatically on the cron schedule. Each run uploads the files in `dist/`
 to Forgejo's generic package registry as package `nuphy-halo75-v2`, version
 `nightly-YYYY-MM-DD`, using the UTC date from the build container. Re-running the
-nightly cron on the same date replaces that date's package files.
+nightly cron on the same date replaces that date's package files. The Woodpecker
+log prints a `Download:` URL for each uploaded artifact.
 
 ## Notes
 
 - Build image: `qmkfm/qmk_cli` (ships the ARM toolchain). The Halo75 V2 uses an
   STM32F072, so the artifacts are `.bin` files.
-- Publishing uses the Forgejo/Gitea release API directly via `curl` + `jq`
-  from the Woodpecker pipeline - no extra plugin required.
+- Nightly publishing uses Forgejo's generic package registry directly from the
+  build step, so artifacts are uploaded from the same container that produced
+  them. Forgejo may show these under the owner/package view until you link the
+  package to this repo in package settings.
 - To build without publishing (pure compile check), remove the `publish*` step
   from the relevant pipeline file.
