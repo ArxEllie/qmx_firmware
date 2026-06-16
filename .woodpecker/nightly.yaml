@@ -24,7 +24,7 @@ steps:
       - make -j"$(nproc)" nuphy/halo75_v2/iso:default
       - make -j"$(nproc)" nuphy/halo75_v2/iso:via
       - for ext in bin hex uf2; do for f in *.$ext; do [ -f "$f" ] && mv "$f" dist/; done; done
-      - cd dist && sha256sum -- * > SHA256SUMS
+      - (cd dist && sha256sum -- * > SHA256SUMS)
       - ls -la dist
 
   - name: publish-nightly
