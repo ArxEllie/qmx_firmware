@@ -36,7 +36,13 @@ steps:
       - apk add --no-cache curl jq
       - |
         set -eu
-        FORGE_URL="${CI_FORGE_URL%/}"
+        if [ -n "${CI_REPO_LINK:-}" ] && [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
+          FORGE_URL="${CI_REPO_LINK%/}"
+          FORGE_URL="${FORGE_URL%/$CI_REPO_NAME}"
+          FORGE_URL="${FORGE_URL%/$CI_REPO_OWNER}"
+        else
+          FORGE_URL="${CI_FORGE_URL%/}"
+        fi
         case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
 
         if [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
@@ -51,7 +57,12 @@ steps:
         AUTH="Authorization: token $FORGEJO_TOKEN"
 
         echo "Publishing $NIGHTLY_TAG to $REPO_SLUG"
-        curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null
+        repo_status="$(curl -sS -o /tmp/repo.json -w '%{http_code}' -H "$AUTH" "$REPO_API")"
+        if [ "$repo_status" != "200" ]; then
+          echo "Forgejo repo lookup failed with HTTP $repo_status for $REPO_SLUG"
+          cat /tmp/repo.json
+          exit 1
+        fi
 
         existing="$(curl -fsSL -H "$AUTH" "$API/tags/$NIGHTLY_TAG" 2>/dev/null || echo '{}')"
         existing_id="$(printf '%s' "$existing" | jq -r '.id // empty')"
