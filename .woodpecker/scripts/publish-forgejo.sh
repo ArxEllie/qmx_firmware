@@ -20,13 +20,19 @@ RELEASE_NAME="${3:-$TAG}"
 : "${CI_REPO:?CI_REPO is not set}"
 : "${CI_COMMIT_SHA:?CI_COMMIT_SHA is not set}"
 
-API="$CI_FORGE_URL/api/v1/repos/$CI_REPO/releases"
+# Normalize CI_FORGE_URL: ensure https:// prefix and no trailing slash
+FORGE_URL="${CI_FORGE_URL%/}"
+case "$FORGE_URL" in
+    http://*) : ;;
+    https://*) : ;;
+    *) FORGE_URL="https://$FORGE_URL" ;;
+esac
+
+API="$FORGE_URL/api/v1/repos/$CI_REPO/releases"
 AUTH="Authorization: token $FORGEJO_TOKEN"
 
-echo ":::: DEBUG: CI_FORGE_URL=$CI_FORGE_URL"
-echo ":::: DEBUG: CI_REPO=$CI_REPO"
-echo ":::: DEBUG: API=$API"
 echo ":::: Publishing release '$TAG' (prerelease=$PRERELEASE) to $CI_REPO"
+echo ":::: API base: ${FORGE_URL}/api/v1/repos/${CI_REPO}"
 
 # Remove any existing release for this tag so re-runs / rolling tags are clean.
 existing=$(curl -fsSL -H "$AUTH" "$API/tags/$TAG" 2>/dev/null || echo '{}')
@@ -40,7 +46,7 @@ fi
 # re-created pointing at the current commit.
 if [ "$TAG" = "nightly" ]; then
     curl -fsSL -X DELETE -H "$AUTH" \
-        "$CI_FORGE_URL/api/v1/repos/$CI_REPO/tags/$TAG" >/dev/null 2>&1 || true
+        "$FORGE_URL/api/v1/repos/$CI_REPO/tags/$TAG" >/dev/null 2>&1 || true
 fi
 
 BODY="Automated build from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
