@@ -37,15 +37,30 @@ steps:
       CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
     commands:
       - apk add --no-cache curl jq
-      - export FORGE_URL="${CI_FORGE_URL%/}"
-      - case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
-      - export NIGHTLY_TAG="nightly-$(date -u +%Y-%m-%d)"
-      - export REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
-      - export API="$REPO_API/releases"
-      - export AUTH="Authorization: token $FORGEJO_TOKEN"
-      - curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null
-      - existing="$(curl -fsSL -H "$AUTH" "$API/tags/$NIGHTLY_TAG" 2>/dev/null || echo '{}')" && existing_id="$(printf '%s' "$existing" | jq -r '.id // empty')" && if [ -n "$existing_id" ]; then curl -fsSL -X DELETE -H "$AUTH" "$API/$existing_id"; fi
-      - body="Automated nightly build from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
-      - rel_response="$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$(jq -nc --arg t "$NIGHTLY_TAG" --arg c "$CI_COMMIT_SHA" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$t,body:$b,prerelease:true,draft:false}')")"
-      - rel_id="$(printf '%s' "$rel_response" | jq -r '.id // empty')" && test -n "$rel_id"
-      - for f in dist/*; do [ -f "$f" ] || continue; curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")" >/dev/null; done
+      - |
+        set -eu
+        FORGE_URL="${CI_FORGE_URL%/}"
+        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+
+        NIGHTLY_TAG="nightly-$(date -u +%Y-%m-%d)"
+        REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
+        API="$REPO_API/releases"
+        AUTH="Authorization: token $FORGEJO_TOKEN"
+
+        curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null
+
+        existing="$(curl -fsSL -H "$AUTH" "$API/tags/$NIGHTLY_TAG" 2>/dev/null || echo '{}')"
+        existing_id="$(printf '%s' "$existing" | jq -r '.id // empty')"
+        if [ -n "$existing_id" ]; then
+          curl -fsSL -X DELETE -H "$AUTH" "$API/$existing_id"
+        fi
+
+        body="Automated nightly build from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+        rel_response="$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$(jq -nc --arg t "$NIGHTLY_TAG" --arg c "$CI_COMMIT_SHA" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$t,body:$b,prerelease:true,draft:false}')")"
+        rel_id="$(printf '%s' "$rel_response" | jq -r '.id // empty')"
+        test -n "$rel_id"
+
+        for f in dist/*; do
+          [ -f "$f" ] || continue
+          curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")" >/dev/null
+        done

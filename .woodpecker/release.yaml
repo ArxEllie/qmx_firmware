@@ -27,14 +27,29 @@ steps:
         from_secret: forgejo_token
     commands:
       - apk add --no-cache curl jq
-      - export FORGE_URL="${CI_FORGE_URL%/}"
-      - case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
-      - export REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
-      - export API="$REPO_API/releases"
-      - export AUTH="Authorization: token $FORGEJO_TOKEN"
-      - curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null
-      - existing="$(curl -fsSL -H "$AUTH" "$API/tags/$CI_COMMIT_TAG" 2>/dev/null || echo '{}')" && existing_id="$(printf '%s' "$existing" | jq -r '.id // empty')" && if [ -n "$existing_id" ]; then curl -fsSL -X DELETE -H "$AUTH" "$API/$existing_id"; fi
-      - body="Automated release from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
-      - rel_response="$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$(jq -nc --arg t "$CI_COMMIT_TAG" --arg c "$CI_COMMIT_SHA" --arg n "NuPhy Halo75 V2 $CI_COMMIT_TAG" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$n,body:$b,prerelease:false,draft:false}')")"
-      - rel_id="$(printf '%s' "$rel_response" | jq -r '.id // empty')" && test -n "$rel_id"
-      - for f in dist/*; do [ -f "$f" ] || continue; curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")" >/dev/null; done
+      - |
+        set -eu
+        FORGE_URL="${CI_FORGE_URL%/}"
+        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+
+        REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
+        API="$REPO_API/releases"
+        AUTH="Authorization: token $FORGEJO_TOKEN"
+
+        curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null
+
+        existing="$(curl -fsSL -H "$AUTH" "$API/tags/$CI_COMMIT_TAG" 2>/dev/null || echo '{}')"
+        existing_id="$(printf '%s' "$existing" | jq -r '.id // empty')"
+        if [ -n "$existing_id" ]; then
+          curl -fsSL -X DELETE -H "$AUTH" "$API/$existing_id"
+        fi
+
+        body="Automated release from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+        rel_response="$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$(jq -nc --arg t "$CI_COMMIT_TAG" --arg c "$CI_COMMIT_SHA" --arg n "NuPhy Halo75 V2 $CI_COMMIT_TAG" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$n,body:$b,prerelease:false,draft:false}')")"
+        rel_id="$(printf '%s' "$rel_response" | jq -r '.id // empty')"
+        test -n "$rel_id"
+
+        for f in dist/*; do
+          [ -f "$f" ] || continue
+          curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")" >/dev/null
+        done
