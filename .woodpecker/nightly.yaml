@@ -54,9 +54,9 @@ steps:
         RELEASES_API="$REPO_API/releases"
         AUTH="Authorization: token $FORGEJO_TOKEN"
         TIMESTAMP=$(date -u +%Y%m%d-%H%M)
-        TAG="nightly-${TIMESTAMP}"
-        NAME="Nightly Build ${TIMESTAMP}"
-        BODY="Automated nightly build from commit ${CI_COMMIT_SHA:0:8} on ${TIMESTAMP}"
+        TAG="nightly-$${TIMESTAMP}"
+        NAME="Nightly Build $${TIMESTAMP}"
+        BODY="Automated nightly build from commit ${CI_COMMIT_SHA:0:8} on $${TIMESTAMP}"
         existing=$(curl -fsSL -H "$AUTH" "$RELEASES_API/tags/$TAG" 2>/dev/null || echo '{}')
         id=$(echo "$existing" | jq -r '.id // empty')
         [ -n "$id" ] && curl -fsSL -X DELETE -H "$AUTH" "$RELEASES_API/$id" 2>/dev/null || true
@@ -66,8 +66,10 @@ steps:
         rel_id=$(echo "$release" | jq -r '.id')
         for f in dist/*; do
           [ -f "$f" ] || continue
-          echo "Uploading $(basename "$f")"
+          name=$(basename "$f")
+          echo "Uploading $name"
           curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" \
-            "$RELEASES_API/$rel_id/assets?name=$(basename "$f")" >/dev/null
+            --url-query "name=$name" \
+            "$RELEASES_API/$rel_id/assets" >/dev/null
         done
         echo "Published: $FORGE_URL/$CI_REPO/releases/tag/$TAG"
