@@ -24,6 +24,10 @@ steps:
     environment:
       FORGEJO_TOKEN:
         from_secret: forgejo_token
+      CI_FORGE_URL:
+        from_secret: forgejo_url
+      CI_REPO: "${CI_REPO}"
+      CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
     commands:
       - apk add --no-cache curl jq
       - sh .woodpecker/scripts/publish-forgejo.sh nightly true "Nightly build"

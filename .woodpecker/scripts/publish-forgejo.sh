@@ -23,6 +23,9 @@ RELEASE_NAME="${3:-$TAG}"
 API="$CI_FORGE_URL/api/v1/repos/$CI_REPO/releases"
 AUTH="Authorization: token $FORGEJO_TOKEN"
 
+echo ":::: DEBUG: CI_FORGE_URL=$CI_FORGE_URL"
+echo ":::: DEBUG: CI_REPO=$CI_REPO"
+echo ":::: DEBUG: API=$API"
 echo ":::: Publishing release '$TAG' (prerelease=$PRERELEASE) to $CI_REPO"
 
 # Remove any existing release for this tag so re-runs / rolling tags are clean.
