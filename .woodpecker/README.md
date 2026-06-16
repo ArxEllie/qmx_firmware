@@ -9,7 +9,7 @@ CI for building this QMK fork's NuPhy Halo75 V2 firmware on
 |-----------------|--------------------------------------|--------------|
 | `build.yaml`    | **manual** run / **pull request**    | Compiles every target. Publishes nothing - safe to run for testing. |
 | `release.yaml`  | git **tag** push (e.g. `v1.2.3`)     | Builds firmware, creates a Forgejo **release** for the tag with the binaries attached. |
-| `nightly.yaml`  | **cron** job named `nightly`         | Builds firmware, creates a dated `nightly-YYYY-MM-DD` **pre-release**. |
+| `nightly.yaml`  | **cron** job named `nightly`         | Builds firmware, uploads dated `nightly-YYYY-MM-DD` package artifacts. |
 
 All three build the same targets directly in the Woodpecker pipeline:
 
@@ -63,10 +63,10 @@ git push origin v1.0.0
 files and a `SHA256SUMS` file attached.
 
 ### Nightly
-Runs automatically on the cron schedule. Each run publishes a pre-release named
+Runs automatically on the cron schedule. Each run uploads the files in `dist/`
+to Forgejo's generic package registry as package `nuphy-halo75-v2`, version
 `nightly-YYYY-MM-DD`, using the UTC date from the build container. Re-running the
-nightly cron on the same date replaces that date's release and dated tag, but it
-no longer deletes or recreates a rolling `nightly` git tag.
+nightly cron on the same date replaces that date's package files.
 
 ## Notes
 
