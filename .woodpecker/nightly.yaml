@@ -2,22 +2,16 @@
 # Run on a schedule via a Woodpecker cron job named "nightly"
 # (Repo Settings -> Crons).
 #
-# Always compiles every target (catches breakage from upstream merges) and
-# uploads dated "nightly-YYYY-MM-DD" package artifacts to Forgejo.
-#
-# Note: this PUBLISHES, so it is intentionally not on the `manual` event -
-# use build.yaml to manually test a build without side effects.
+# Publishes a rolling "nightly" pre-release visible in Forgejo's Releases tab.
 
 when:
   - event: cron
     cron: nightly
+  - event: manual
 
 steps:
-  - name: build-and-publish-nightly
+  - name: build
     image: qmkfm/qmk_cli
-    environment:
-      FORGEJO_TOKEN:
-        from_secret: forgejo_token
     commands:
       - pip install -q -r requirements.txt
       - make git-submodule
@@ -29,56 +23,15 @@ steps:
       - for ext in bin hex uf2; do for f in *.$ext; do [ -f "$f" ] && mv "$f" dist/; done; done
       - (cd dist && sha256sum -- * > SHA256SUMS)
       - ls -la dist
-      - |
-        python3 - <<'PY'
-        import datetime as dt
-        import os
-        import pathlib
-        import urllib.error
-        import urllib.request
 
-        token = os.environ["FORGEJO_TOKEN"]
-        forge_url = os.environ.get("CI_FORGE_URL", "").rstrip("/")
-        if not forge_url:
-            repo_link = os.environ.get("CI_REPO_LINK", "").rstrip("/")
-            owner = os.environ.get("CI_REPO_OWNER", "")
-            name = os.environ.get("CI_REPO_NAME", "")
-            if repo_link and owner and name:
-                forge_url = repo_link.removesuffix(f"/{name}").removesuffix(f"/{owner}")
-        if not forge_url.startswith(("http://", "https://")):
-            forge_url = f"https://{forge_url}"
-
-        owner = os.environ.get("CI_REPO_OWNER") or os.environ.get("CI_REPO", "").split("/", 1)[0]
-        if not owner:
-            raise SystemExit("CI_REPO_OWNER/CI_REPO is not set; cannot choose Forgejo package owner")
-        package_name = "nuphy-halo75-v2"
-        version = "nightly-" + dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-        package_api = f"{forge_url}/api/packages/{owner}/generic/{package_name}/{version}"
-
-        files = sorted(p for p in pathlib.Path("dist").iterdir() if p.is_file())
-        if not files:
-            raise SystemExit("dist/ is empty; refusing to publish an empty nightly")
-
-        def request(method, url, data=None, content_type=None):
-            headers = {"Authorization": f"token {token}"}
-            if content_type:
-                headers["Content-Type"] = content_type
-            req = urllib.request.Request(url, data=data, headers=headers, method=method)
-            try:
-                with urllib.request.urlopen(req) as res:
-                    return res.status, res.read()
-            except urllib.error.HTTPError as exc:
-                return exc.code, exc.read()
-
-        print(f"Publishing {package_name} {version} to Forgejo packages")
-        for path in files:
-            url = f"{package_api}/{path.name}"
-            request("DELETE", url)
-            status, body = request("PUT", url, path.read_bytes(), "application/octet-stream")
-            if status not in (200, 201):
-                print(f"Forgejo package upload failed with HTTP {status} for {path.name}")
-                print(body.decode("utf-8", "replace"))
-                raise SystemExit(1)
-            print(f"Uploaded {path.name}")
-            print(f"Download: {url}")
-        PY
+  - name: publish-release
+    image: alpine:3.20
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+      CI_REPO: "${CI_REPO}"
+      CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
+      CI_FORGE_URL: "${CI_FORGE_URL}"
+    commands:
+      - apk add --no-cache curl jq
+      - sh .woodpecker/scripts/publish-forgejo.sh nightly true "Nightly build"
