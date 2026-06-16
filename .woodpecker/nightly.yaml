@@ -34,4 +34,27 @@ steps:
       CI_FORGE_URL: "${CI_FORGE_URL}"
     commands:
       - apk add --no-cache curl jq
-      - sh .woodpecker/scripts/publish-forgejo.sh nightly true "Nightly build"
+      - |
+        set -eu
+        FORGE_URL="${CI_FORGE_URL%/}"
+        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+        REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
+        RELEASES_API="$REPO_API/releases"
+        AUTH="Authorization: token $FORGEJO_TOKEN"
+        TAG="nightly"
+        NAME="Nightly Build ($(date -u +%Y-%m-%d))"
+        BODY="Automated nightly build from commit ${CI_COMMIT_SHA:0:8}"
+        existing=$(curl -fsSL -H "$AUTH" "$RELEASES_API/tags/$TAG" 2>/dev/null || echo '{}')
+        id=$(echo "$existing" | jq -r '.id // empty')
+        [ -n "$id" ] && curl -fsSL -X DELETE -H "$AUTH" "$RELEASES_API/$id" 2>/dev/null || true
+        curl -fsSL -X DELETE -H "$AUTH" "$REPO_API/git/refs/tags/$TAG" 2>/dev/null || true
+        release=$(curl -fsSL -X POST -H "$AUTH" -H "Content-Type: application/json" \
+          "$RELEASES_API" -d "{\"tag_name\":\"$TAG\",\"target_commitish\":\"$CI_COMMIT_SHA\",\"name\":\"$NAME\",\"body\":\"$BODY\",\"prerelease\":true}")
+        rel_id=$(echo "$release" | jq -r '.id')
+        for f in dist/*; do
+          [ -f "$f" ] || continue
+          echo "Uploading $(basename "$f")"
+          curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" \
+            "$RELEASES_API/$rel_id/assets?name=$(basename "$f")" >/dev/null
+        done
+        echo "Published: $FORGE_URL/$CI_REPO/releases/tag/$TAG"
