@@ -28,11 +28,19 @@ case "$FORGE_URL" in
     *) FORGE_URL="https://$FORGE_URL" ;;
 esac
 
-API="$FORGE_URL/api/v1/repos/$CI_REPO/releases"
+REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
+API="$REPO_API/releases"
 AUTH="Authorization: token $FORGEJO_TOKEN"
 
 echo ":::: Publishing release '$TAG' (prerelease=$PRERELEASE) to $CI_REPO"
-echo ":::: API base: ${FORGE_URL}/api/v1/repos/${CI_REPO}"
+echo ":::: Verifying repo access: $REPO_API"
+
+# Verify repo exists and token works
+if ! curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null 2>&1; then
+    echo ":::: ERROR: Cannot access repo at $REPO_API"
+    echo ":::: Check: 1) FORGEJO_TOKEN has 'repo' scope, 2) Repo exists, 3) URL is correct"
+    exit 1
+fi
 
 # Remove any existing release for this tag so re-runs / rolling tags are clean.
 existing=$(curl -fsSL -H "$AUTH" "$API/tags/$TAG" 2>/dev/null || echo '{}')
@@ -52,15 +60,21 @@ fi
 BODY="Automated build from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
 
 echo ":::: Creating release"
-rel_id=$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" \
+rel_response=$(curl -fsSL -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" \
     -d "$(jq -nc \
         --arg t "$TAG" \
         --arg c "$CI_COMMIT_SHA" \
         --arg n "$RELEASE_NAME" \
         --arg b "$BODY" \
         --argjson p "$PRERELEASE" \
-        '{tag_name:$t, target_commitish:$c, name:$n, body:$b, prerelease:$p, draft:false}')" \
-    | jq -r '.id')
+        '{tag_name:$t, target_commitish:$c, name:$n, body:$b, prerelease:$p, draft:false}')")
+
+rel_id=$(printf '%s' "$rel_response" | jq -r '.id // empty')
+if [ -z "$rel_id" ]; then
+    echo ":::: ERROR: Failed to create release"
+    echo ":::: Response: $rel_response"
+    exit 1
+fi
 
 echo ":::: Created release id=$rel_id, uploading assets"
 for f in dist/*; do
