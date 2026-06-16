@@ -11,7 +11,7 @@ CI for building this QMK fork's NuPhy Halo75 V2 firmware on
 | `release.yaml`  | git **tag** push (e.g. `v1.2.3`)     | Builds firmware, creates a Forgejo **release** for the tag with the binaries attached. |
 | `nightly.yaml`  | **cron** job named `nightly`         | Builds firmware, refreshes a rolling `nightly` **pre-release**. |
 
-Both build the same targets via `scripts/build.sh`:
+All three build the same targets via `scripts/build.sh`:
 
 - `nuphy/halo75_v2/ansi:default`
 - `nuphy/halo75_v2/ansi:via`
@@ -48,6 +48,11 @@ In the repo's Woodpecker page: **Settings -> Crons -> Add cron**
 - **Schedule:** e.g. `0 3 * * *` (03:00 daily) or `@daily`
 
 ## Usage
+
+### Test a build manually
+In the repo's Woodpecker page click **+ / Run pipeline** (manual event) on a
+branch. `build.yaml` compiles all targets and publishes nothing, so it's safe
+to run as often as you like. It also runs automatically on pull requests.
 
 ### Cut a release
 ```sh
