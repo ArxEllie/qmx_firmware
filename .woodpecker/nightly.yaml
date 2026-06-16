@@ -59,8 +59,10 @@ steps:
         if not files:
             raise SystemExit("dist/ is empty; refusing to publish an empty nightly")
 
-        def request(method, url, data=None):
+        def request(method, url, data=None, content_type=None):
             headers = {"Authorization": f"token {token}"}
+            if content_type:
+                headers["Content-Type"] = content_type
             req = urllib.request.Request(url, data=data, headers=headers, method=method)
             try:
                 with urllib.request.urlopen(req) as res:
@@ -72,7 +74,7 @@ steps:
         for path in files:
             url = f"{package_api}/{path.name}"
             request("DELETE", url)
-            status, body = request("PUT", url, path.read_bytes())
+            status, body = request("PUT", url, path.read_bytes(), "application/octet-stream")
             if status not in (200, 201):
                 print(f"Forgejo package upload failed with HTTP {status} for {path.name}")
                 print(body.decode("utf-8", "replace"))
