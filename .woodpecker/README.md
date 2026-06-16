@@ -9,17 +9,17 @@ CI for building this QMK fork's NuPhy Halo75 V2 firmware on
 |-----------------|--------------------------------------|--------------|
 | `build.yaml`    | **manual** run / **pull request**    | Compiles every target. Publishes nothing - safe to run for testing. |
 | `release.yaml`  | git **tag** push (e.g. `v1.2.3`)     | Builds firmware, creates a Forgejo **release** for the tag with the binaries attached. |
-| `nightly.yaml`  | **cron** job named `nightly`         | Builds firmware, refreshes a rolling `nightly` **pre-release**. |
+| `nightly.yaml`  | **cron** job named `nightly`         | Builds firmware, creates a dated `nightly-YYYY-MM-DD` **pre-release**. |
 
-All three build the same targets via `scripts/build.sh`:
+All three build the same targets directly in the Woodpecker pipeline:
 
 - `nuphy/halo75_v2/ansi:default`
 - `nuphy/halo75_v2/ansi:via`
 - `nuphy/halo75_v2/iso:default`
 - `nuphy/halo75_v2/iso:via`
 
-Add or remove boards by editing the `TARGETS` list at the top of
-`scripts/build.sh` — nothing else needs to change.
+Add or remove boards by editing the build commands in the relevant pipeline
+files.
 
 ## One-time setup
 
@@ -63,17 +63,16 @@ git push origin v1.0.0
 files and a `SHA256SUMS` file attached.
 
 ### Nightly
-Runs automatically on the cron schedule. The `nightly` pre-release is deleted
-and recreated each run so it always points at the latest default-branch commit.
-You can also trigger it on demand from the Woodpecker UI (**manual** event).
+Runs automatically on the cron schedule. Each run publishes a pre-release named
+`nightly-YYYY-MM-DD`, using the UTC date from the build container. Re-running the
+nightly cron on the same date replaces that date's release, but it no longer
+deletes or recreates a rolling `nightly` git tag.
 
 ## Notes
 
 - Build image: `qmkfm/qmk_cli` (ships the ARM toolchain). The Halo75 V2 uses an
   STM32F072, so the artifacts are `.bin` files.
-- `scripts/build.sh` runs `make git-submodule` to fetch only the submodules the
-  targets need (no full recursive clone required).
 - Publishing uses the Forgejo/Gitea release API directly via `curl` + `jq`
-  (`scripts/publish-forgejo.sh`) — no extra plugin required.
+  from the Woodpecker pipeline - no extra plugin required.
 - To build without publishing (pure compile check), remove the `publish*` step
   from the relevant pipeline file.

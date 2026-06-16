@@ -12,4 +12,13 @@ steps:
   - name: build
     image: qmkfm/qmk_cli
     commands:
-      - sh .woodpecker/scripts/build.sh
+      - pip install -q -r requirements.txt
+      - make git-submodule
+      - mkdir -p dist
+      - make -j"$(nproc)" nuphy/halo75_v2/ansi:default
+      - make -j"$(nproc)" nuphy/halo75_v2/ansi:via
+      - make -j"$(nproc)" nuphy/halo75_v2/iso:default
+      - make -j"$(nproc)" nuphy/halo75_v2/iso:via
+      - for ext in bin hex uf2; do for f in *.$ext; do [ -f "$f" ] && mv "$f" dist/; done; done
+      - cd dist && sha256sum -- * > SHA256SUMS
+      - ls -la dist
