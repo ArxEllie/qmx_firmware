@@ -1,0 +1,21 @@
+# Release build flow.
+# Triggered when a git tag is pushed to Forgejo (e.g. `git tag v1.0.0 && git push --tags`).
+# Builds the firmware and publishes a Forgejo release with the binaries attached.
+
+when:
+  - event: tag
+
+steps:
+  - name: build
+    image: qmkfm/qmk_cli
+    commands:
+      - sh .woodpecker/scripts/build.sh
+
+  - name: publish
+    image: alpine:3.20
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+    commands:
+      - apk add --no-cache curl jq
+      - sh .woodpecker/scripts/publish-forgejo.sh "$CI_COMMIT_TAG" false "NuPhy Halo75 V2 $CI_COMMIT_TAG"
