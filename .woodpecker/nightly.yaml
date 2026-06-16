@@ -20,7 +20,19 @@ steps:
       - make -j"$(nproc)" nuphy/halo75_v2/ansi:via
       - make -j"$(nproc)" nuphy/halo75_v2/iso:default
       - make -j"$(nproc)" nuphy/halo75_v2/iso:via
-      - for ext in bin hex uf2; do for f in *.$ext; do [ -f "$f" ] && mv "$f" dist/; done; done
+      - |
+        # Generate timestamp and rename firmware files
+        TIMESTAMP=$(date -u +%Y%m%d-%H%M)
+        echo "Build timestamp: $TIMESTAMP"
+        for ext in bin hex uf2; do
+          for f in *.$ext; do
+            [ -f "$f" ] || continue
+            # Insert timestamp before extension
+            newname=$(echo "$f" | sed "s/\.${ext}$/-${TIMESTAMP}.${ext}/")
+            mv "$f" "dist/$newname"
+          done
+        done
+      - cp keyboards/nuphy/halo75_v2/iso/keymaps/via/NuPhy\ Halo75\ via3.json dist/
       - (cd dist && sha256sum -- * > SHA256SUMS)
       - ls -la dist
 
@@ -41,9 +53,10 @@ steps:
         REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
         RELEASES_API="$REPO_API/releases"
         AUTH="Authorization: token $FORGEJO_TOKEN"
-        TAG="nightly"
-        NAME="Nightly Build ($(date -u +%Y-%m-%d))"
-        BODY="Automated nightly build from commit ${CI_COMMIT_SHA:0:8}"
+        TIMESTAMP=$(date -u +%Y%m%d-%H%M)
+        TAG="nightly-${TIMESTAMP}"
+        NAME="Nightly Build ${TIMESTAMP}"
+        BODY="Automated nightly build from commit ${CI_COMMIT_SHA:0:8} on ${TIMESTAMP}"
         existing=$(curl -fsSL -H "$AUTH" "$RELEASES_API/tags/$TAG" 2>/dev/null || echo '{}')
         id=$(echo "$existing" | jq -r '.id // empty')
         [ -n "$id" ] && curl -fsSL -X DELETE -H "$AUTH" "$RELEASES_API/$id" 2>/dev/null || true
