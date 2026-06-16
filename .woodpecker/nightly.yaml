@@ -32,9 +32,6 @@ steps:
     environment:
       FORGEJO_TOKEN:
         from_secret: forgejo_token
-      CI_FORGE_URL: "${CI_FORGE_URL}"
-      CI_REPO: "${CI_REPO}"
-      CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
     commands:
       - apk add --no-cache curl jq
       - |
@@ -42,11 +39,18 @@ steps:
         FORGE_URL="${CI_FORGE_URL%/}"
         case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
 
+        if [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
+          REPO_SLUG="$CI_REPO_OWNER/$CI_REPO_NAME"
+        else
+          REPO_SLUG="${CI_REPO:?CI_REPO is not set}"
+        fi
+
         NIGHTLY_TAG="nightly-$(date -u +%Y-%m-%d)"
-        REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
+        REPO_API="$FORGE_URL/api/v1/repos/$REPO_SLUG"
         API="$REPO_API/releases"
         AUTH="Authorization: token $FORGEJO_TOKEN"
 
+        echo "Publishing $NIGHTLY_TAG to $REPO_SLUG"
         curl -fsSL -H "$AUTH" "$REPO_API" >/dev/null
 
         existing="$(curl -fsSL -H "$AUTH" "$API/tags/$NIGHTLY_TAG" 2>/dev/null || echo '{}')"
