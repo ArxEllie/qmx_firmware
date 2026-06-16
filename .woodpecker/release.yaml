@@ -73,8 +73,8 @@ steps:
           curl -fsSL -X DELETE -H "$AUTH" "$API/$existing_id"
         fi
 
-        body="Automated release from commit $CI_COMMIT_SHA on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
-        release_payload="$(jq -nc --arg t "$CI_COMMIT_TAG" --arg c "$CI_COMMIT_SHA" --arg n "NuPhy Halo75 V2 $CI_COMMIT_TAG" --arg b "$body" '{tag_name:$t,target_commitish:$c,name:$n,body:$b,prerelease:false,draft:false}')"
+        body="Automated release from commit ${CI_COMMIT_SHA:-unknown} on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+        release_payload="$(jq -nc --arg t "$CI_COMMIT_TAG" --arg n "NuPhy Halo75 V2 $CI_COMMIT_TAG" --arg b "$body" '{tag_name:$t,name:$n,body:$b,prerelease:false,draft:false}')"
         release_status="$(curl -sS -o /tmp/release.json -w '%{http_code}' -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$release_payload")"
         if [ "$release_status" != "201" ]; then
           echo "Forgejo release creation failed with HTTP $release_status"
