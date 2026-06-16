@@ -65,8 +65,8 @@ files and a `SHA256SUMS` file attached.
 ### Nightly
 Runs automatically on the cron schedule. Each run publishes a pre-release named
 `nightly-YYYY-MM-DD`, using the UTC date from the build container. Re-running the
-nightly cron on the same date replaces that date's release, but it no longer
-deletes or recreates a rolling `nightly` git tag.
+nightly cron on the same date replaces that date's release and dated tag, but it
+no longer deletes or recreates a rolling `nightly` git tag.
 
 ## Notes
 
