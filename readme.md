@@ -1,36 +1,34 @@
-# Quantum Mechanical Keyboard Firmware
+# Myceliatrix QMK Firmware Fork
 
-[![Current Version](https://img.shields.io/github/tag/qmk/qmk_firmware.svg)](https://github.com/qmk/qmk_firmware/tags)
-[![Discord](https://img.shields.io/discord/440868230475677696.svg)](https://discord.gg/Uq7gcHh)
-[![Docs Status](https://img.shields.io/badge/docs-ready-orange.svg)](https://docs.qmk.fm)
-[![GitHub contributors](https://img.shields.io/github/contributors/qmk/qmk_firmware.svg)](https://github.com/qmk/qmk_firmware/pulse/monthly)
-[![GitHub forks](https://img.shields.io/github/forks/qmk/qmk_firmware.svg?style=social&label=Fork)](https://github.com/qmk/qmk_firmware/)
+This is a personal fork of the QMK firmware, focused on adding and improving support for NuPhy keyboards. It is based on both the [NuPhy upstream QMK fork](https://github.com/nuphy-src/qmk_firmware) and the [official QMK firmware](https://github.com/qmk/qmk_firmware).
 
-This is a keyboard firmware based on the [tmk\_keyboard firmware](https://github.com/tmk/tmk_keyboard) with some useful features for Atmel AVR and ARM controllers, and more specifically, the [OLKB product line](https://olkb.com), the [ErgoDox EZ](https://ergodox-ez.com) keyboard, and the Clueboard product line.
+## What This Is
 
-## Documentation
+This repository contains a customized QMK firmware targeting NuPhy keyboards. It exists primarily as a playground for experimentation, feature additions, and fixes that may not yet be present (or may never be merged) into upstream repositories.
 
-* [See the official documentation on docs.qmk.fm](https://docs.qmk.fm)
+## Problems It Solves
 
-The docs are powered by [Docsify](https://docsify.js.org/) and hosted on [GitHub](/docs/). They are also viewable offline; see [Previewing the Documentation](https://docs.qmk.fm/#/contributing?id=previewing-the-documentation) for more details.
-
-You can request changes by making a fork and opening a [pull request](https://github.com/qmk/qmk_firmware/pulls), or by clicking the "Edit this page" link at the bottom of any page.
+- Provides an open, hackable firmware alternative for NuPhy keyboards.
+- Enables custom keymaps, macros, and QMK-specific features (e.g., Tap Dance, Combos, Auto Shift) on supported hardware.
+- Serves as a staging area for patches and tweaks before potentially upstreaming them.
 
 ## Supported Keyboards
 
-* [Planck](/keyboards/planck/)
-* [Preonic](/keyboards/preonic/)
-* [ErgoDox EZ](/keyboards/ergodox_ez/)
-* [Clueboard](/keyboards/clueboard/)
-* [Cluepad](/keyboards/clueboard/17/)
-* [Atreus](/keyboards/atreus/)
+The following NuPhy model is actively supported, tested, and provided with builds by this fork:
 
-The project also includes community support for [lots of other keyboards](/keyboards/).
+- [Halo75 V2](/keyboards/nuphy/halo75_v2/)
 
-## Maintainers
+Other NuPhy models (Air60 V2, Air75 V2, Air96 V2, Gem80, Halo65 V2, Halo96 V2, Kick75) are present in the repository as they were pulled in from upstream, but they are **not supported, tested, or built here**.
 
-QMK is developed and maintained by Jack Humbert of OLKB with contributions from the community, and of course, [Hasu](https://github.com/tmk). The OLKB product firmwares are maintained by [Jack Humbert](https://github.com/jackhumbert), the Ergodox EZ by [ZSA Technology Labs](https://github.com/zsa), the Clueboard by [Zach White](https://github.com/skullydazed), and the Atreus by [Phil Hagelberg](https://github.com/technomancy).
+## Disclaimer
 
-## Official Website
+> **WARNING:** I do **not** recommend flashing this firmware onto your keyboard unless you know exactly what you are doing. This is a personal, experimental fork and may contain bugs, incomplete features, or changes that could cause your keyboard to behave unexpectedly or become unresponsive. Flashing firmware always carries the risk of bricking your device. Use at your own risk.
 
-[qmk.fm](https://qmk.fm) is the official website of QMK, where you can find links to this page, the documentation, and the keyboards supported by QMK.
+## Upstream Credits
+
+This project would not exist without the upstream projects it is derived from:
+
+- [NuPhy QMK Firmware](https://github.com/nuphy-src/qmk_firmware) — the NuPhy-specific QMK source this fork is based on.
+- [QMK Firmware](https://github.com/qmk/qmk_firmware) — the original and official Quantum Mechanical Keyboard firmware.
+
+All credit for the underlying QMK ecosystem goes to the QMK maintainers and contributors, and all credit for the NuPhy-specific additions goes to NuPhy and their contributors.
