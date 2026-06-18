@@ -54,7 +54,7 @@ const uint8_t side_light_table[5] = {
 
 #define SIDE_INDEX 83
 
-const uint8_t side_led_index_tab[44] =
+const uint8_t side_led_index_tab[45] =
     {
         SIDE_INDEX + 0,
         SIDE_INDEX + 1,
@@ -100,6 +100,7 @@ const uint8_t side_led_index_tab[44] =
         SIDE_INDEX + 41,
         SIDE_INDEX + 42,
         SIDE_INDEX + 43,
+        SIDE_INDEX + 44,
 };
 
 
