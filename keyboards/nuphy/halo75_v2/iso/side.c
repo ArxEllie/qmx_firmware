@@ -54,14 +54,14 @@ const uint8_t side_light_table[5] = {
 
 #define SIDE_INDEX 83
 
-const uint8_t side_led_index_tab[45] =
+const uint8_t side_led_index_tab[44] =
     {
-        SIDE_INDEX + 0,
-        SIDE_INDEX + 1,
-        SIDE_INDEX + 2,
-        SIDE_INDEX + 3,
-        SIDE_INDEX + 4,
-        SIDE_INDEX + 5,
+        SIDE_INDEX + 0,   // Status LED 1 (83)
+        SIDE_INDEX + 1,   // Status LED 2 (84)
+        SIDE_INDEX + 2,   // Status LED 3 (85)
+        SIDE_INDEX + 3,   // Status LED 4 (86)
+        SIDE_INDEX + 4,   // Status LED 5 (87)
+        SIDE_INDEX + 5,   // Rim LED start (88)
         SIDE_INDEX + 6,
         SIDE_INDEX + 7,
         SIDE_INDEX + 8,
@@ -99,8 +99,7 @@ const uint8_t side_led_index_tab[45] =
         SIDE_INDEX + 40,
         SIDE_INDEX + 41,
         SIDE_INDEX + 42,
-        SIDE_INDEX + 43,
-        SIDE_INDEX + 44,
+        SIDE_INDEX + 43,   // Rim LED end (126)
 };
 
 
@@ -454,11 +453,11 @@ static void side_power_mode_show(void)
         side_play_cnt -= side_speed_table[0][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
-    // Skip status LED indices (0-4) and only set rim LED indices (5-44)
-    if(power_play_index < 5) power_play_index = 5;
-
+    // Iterate 45 times for timing (0-44), but only set PWM for rim LEDs (5-43)
     if(power_play_index <= 44) {
-        key_pwm_tab[power_play_index] = 0xff;
+        if(power_play_index >= 5 && power_play_index <= 43) {
+            key_pwm_tab[power_play_index] = 0xff;
+        }
         power_play_index++;
     }
 
