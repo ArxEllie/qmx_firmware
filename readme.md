@@ -27,8 +27,6 @@ The Halo75 V2 firmware in this fork includes several improvements over the upstr
 - **Startup Animation Fix**: Rim LED startup animation no longer causes rapid flashing
 - **Better RGB Matrix Handling**: All built-in QMK RGB matrix effects work correctly without affecting side LED system
 
-Other NuPhy models (Air60 V2, Air75 V2, Air96 V2, Gem80, Halo65 V2, Halo96 V2, Kick75) are present in the repository as they were pulled in from upstream, but they are **not supported, tested, or built here**.
-
 ## Disclaimer
 
 > **WARNING:** I do **not** recommend flashing this firmware onto your keyboard unless you know exactly what you are doing. This is a personal, experimental fork and may contain bugs, incomplete features, or changes that could cause your keyboard to behave unexpectedly or become unresponsive. Flashing firmware always carries the risk of bricking your device. Use at your own risk.
