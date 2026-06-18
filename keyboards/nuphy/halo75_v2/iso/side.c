@@ -295,6 +295,7 @@ void set_left_rgb(uint8_t r, uint8_t g, uint8_t b)
 
 void set_all_side_off(void)
 {
+    // Only turn off rim LEDs (5-43), leave status LEDs (0-4) alone
     for (int i = 5; i < 44; i++)
         rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
 }
@@ -559,16 +560,13 @@ static void side_wave_mode_show(void)
                 return;
             }
             else {
-                for(;i<44;i++)
-                {
-                    rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
-                }
+                // Don't turn off LEDs, let them be controlled by other functions
                 return;
             }
 
         }
         if(is_side_rgb_on(i)) rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
-        else rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
+        // else: don't touch LEDs that should be off, let them be controlled by other functions
 
     }
 }
@@ -623,7 +621,7 @@ static void side_new_mode_show(void)
             }
         }
         if(is_side_rgb_on(i)) rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
-        else rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
+        // else: don't touch LEDs that should be off, let them be controlled by other functions
     }
 }
 
@@ -660,7 +658,7 @@ static void side_spectrum_mode_show(void)
             }
         }
         if(is_side_rgb_on(i)) rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
-        else rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
+        // else: don't touch LEDs that should be off, let them be controlled by other functions
     }
 }
 
@@ -712,7 +710,7 @@ static void side_breathe_mode_show(void)
             }
         }
         if(is_side_rgb_on(i)) rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
-        else rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
+        // else: don't touch LEDs that should be off, let them be controlled by other functions
     }
 }
 
@@ -748,7 +746,7 @@ static void side_static_mode_show(void)
         count_rgb_light(side_light_table[side_light]);
 
         if(is_side_rgb_on(i)) rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
-        else rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
+        // else: don't touch LEDs that should be off, let them be controlled by other functions
     }
 }
 
