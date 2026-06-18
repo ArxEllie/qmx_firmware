@@ -24,8 +24,7 @@ The Halo75 V2 firmware in this fork includes several improvements over the upstr
 
 - **Status LED Protection**: Built-in RGB matrix effects no longer interfere with status LEDs (83-87), ensuring system status indicators remain visible
 - **Custom RGB Effects**: `game_mode` and `position_mode` effects properly isolated to main keyboard LEDs only
-- **Startup Animation Fix**: Rim LED startup animation no longer causes rapid flashing
-- **Better RGB Matrix Handling**: All built-in QMK RGB matrix effects work correctly without affecting side LED system
+- **Better RGB Matrix Handling**: All built-in QMK RGB matrix effects work correctly without affecting status LEDs
 
 ## Disclaimer
 
