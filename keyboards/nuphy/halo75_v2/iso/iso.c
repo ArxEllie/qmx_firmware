@@ -39,6 +39,12 @@ uint16_t rgb_test_press_delay       = 0;
 uint8_t rf_sw_temp                  = 0;
 uint8_t rgb_light_old               = 0;
 uint8_t host_mode;
+uint8_t led_probe_index             = 0;
+uint16_t led_probe_step_count       = 0;
+
+static void led_probe_log(const char *event) {
+    uprintf("led_probe %s step=%u qmk_led_index=%u\n", event, led_probe_step_count, led_probe_index);
+}
 
 extern uint8_t side_mode_a;  
 extern uint8_t side_light; 
@@ -625,6 +631,24 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        case RGB_SPI:
+            if (record->event.pressed && rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_led_probe) {
+                led_probe_index = (led_probe_index + 1) % RGB_MATRIX_LED_COUNT;
+                led_probe_step_count++;
+                led_probe_log("next");
+                return false;
+            }
+            return true;
+
+        case RGB_SPD:
+            if (record->event.pressed && rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_led_probe) {
+                led_probe_index = (led_probe_index == 0) ? RGB_MATRIX_LED_COUNT - 1 : led_probe_index - 1;
+                led_probe_step_count++;
+                led_probe_log("prev");
+                return false;
+            }
+            return true;
+
         case DEV_RESET:
             if (record->event.pressed) {
                 f_dev_reset_press = 1;
@@ -773,6 +797,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max)
  */
 void housekeeping_task_kb(void)
 {
+    static bool led_probe_was_active = false;
+    bool        led_probe_is_active  = rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_led_probe;
 
     timer_pro();
 
@@ -786,7 +812,17 @@ void housekeeping_task_kb(void)
 
     dial_sw_scan();
 
-    m_side_led_show();
+    if (led_probe_is_active) {
+        if (!led_probe_was_active) {
+            led_probe_index       = 0;
+            led_probe_step_count  = 0;
+            led_probe_was_active = true;
+            led_probe_log("start");
+        }
+    } else {
+        led_probe_was_active = false;
+        m_side_led_show();
+    }
 
     Sleep_Handle();
 

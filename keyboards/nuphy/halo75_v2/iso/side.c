@@ -97,7 +97,7 @@ const uint8_t side_led_index_tab[45] =
         SIDE_INDEX + 41,
         SIDE_INDEX + 42,
         SIDE_INDEX + 43,
-        SIDE_INDEX + 44,
+        SIDE_INDEX + 43,
 
         SIDE_INDEX + 9,
         SIDE_INDEX + 8,

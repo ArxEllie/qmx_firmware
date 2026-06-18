@@ -76,7 +76,8 @@
 					"Solid Splash",
 					"Solid MultiSplash",
                     "game_mode",
-                    "position_mode"
+                    "position_mode",
+                    "led_probe"
 				]
 			},
 			{
