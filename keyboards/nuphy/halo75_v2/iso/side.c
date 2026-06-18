@@ -447,17 +447,13 @@ uint8_t is_side_rgb_on(uint8_t index)
 
 static void side_power_mode_show(void)
 {
-    // Use slower speed since we have fewer rim LEDs (39 instead of 45)
-    if (side_play_cnt <= side_speed_table[1][side_speed])
+    if (side_play_cnt <= side_speed_table[0][side_speed])
         return;
     else
-        side_play_cnt -= side_speed_table[1][side_speed];
+        side_play_cnt -= side_speed_table[0][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
-    // Start from index 5 to skip status LEDs (0-4)
-    if(power_play_index == 0) power_play_index = 5;
-
-    if(power_play_index <= 43) {
+    if(power_play_index <= 44) {
         key_pwm_tab[power_play_index] = 0xff;
         power_play_index++;
     }
@@ -465,11 +461,6 @@ static void side_power_mode_show(void)
     uint8_t i;
 
     for (i = 5; i < 44; i++) {
-        // Only set color if PWM value is non-zero to prevent flickering
-        if (key_pwm_tab[i] == 0) {
-            rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
-            continue;
-        }
 
         r_temp = colour_lib[side_colour][0];
         g_temp = colour_lib[side_colour][1];
