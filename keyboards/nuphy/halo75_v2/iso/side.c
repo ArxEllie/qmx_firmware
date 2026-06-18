@@ -447,11 +447,11 @@ uint8_t is_side_rgb_on(uint8_t index)
 
 static void side_power_mode_show(void)
 {
-    // Use slower speed for smoother animation with fewer LEDs
-    if (side_play_cnt <= side_speed_table[1][side_speed])
+    // Use much slower speed for smoother animation with fewer LEDs
+    if (side_play_cnt <= side_speed_table[2][side_speed])
         return;
     else
-        side_play_cnt -= side_speed_table[1][side_speed];
+        side_play_cnt -= side_speed_table[2][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
     // Start from index 5 (rim LEDs), skip status LEDs (0-4)
@@ -475,7 +475,7 @@ static void side_power_mode_show(void)
         rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
     }
 
-    for(i=5; i<44; i++)
+    for(i=5; i<power_play_index; i++)
 	{
 		if(key_pwm_tab[i] & 0x80)		key_pwm_tab[i] -= 8;
 		else if(key_pwm_tab[i] & 0x40)	key_pwm_tab[i] -= 6;
