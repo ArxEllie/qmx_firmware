@@ -431,7 +431,7 @@ static void count_rgb_light(uint8_t light_temp)
  * @brief  auxiliary_rgb_light.
  */
 uint8_t f_side_flag = 0x1f;
-uint8_t	key_pwm_tab[44] = {0x00};
+uint8_t	key_pwm_tab[45] = {0x00};
 uint8_t power_play_index = 0;
 uint8_t f_power_show = 1;
 uint8_t is_side_rgb_on(uint8_t index)
@@ -447,17 +447,13 @@ uint8_t is_side_rgb_on(uint8_t index)
 
 static void side_power_mode_show(void)
 {
-    // Use much slower speed for smoother animation with fewer LEDs
-    if (side_play_cnt <= side_speed_table[2][side_speed])
+    if (side_play_cnt <= side_speed_table[0][side_speed])
         return;
     else
-        side_play_cnt -= side_speed_table[2][side_speed];
+        side_play_cnt -= side_speed_table[0][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
-    // Start from index 5 (rim LEDs), skip status LEDs (0-4)
-    if(power_play_index == 0) power_play_index = 5;
-
-    if(power_play_index <= 43) {
+    if(power_play_index <= 44) {
         key_pwm_tab[power_play_index] = 0xff;
         power_play_index++;
     }
@@ -475,7 +471,7 @@ static void side_power_mode_show(void)
         rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
     }
 
-    for(i=5; i<power_play_index; i++)
+    for(i=5; i<44; i++)
 	{
 		if(key_pwm_tab[i] & 0x80)		key_pwm_tab[i] -= 8;
 		else if(key_pwm_tab[i] & 0x40)	key_pwm_tab[i] -= 6;
