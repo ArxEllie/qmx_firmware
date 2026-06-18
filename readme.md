@@ -16,7 +16,16 @@ This repository contains a customized QMK firmware targeting NuPhy keyboards. It
 
 The following NuPhy model is actively supported, tested, and provided with builds by this fork:
 
-- [Halo75 V2](/keyboards/nuphy/halo75_v2/)
+- [Halo75 V2](/keyboards/nuphy/halo75_v2/) — Both ANSI and ISO variants
+
+### Halo75 V2 Improvements
+
+The Halo75 V2 firmware in this fork includes several improvements over the upstream NuPhy firmware:
+
+- **Status LED Protection**: Built-in RGB matrix effects no longer interfere with status LEDs (83-87), ensuring system status indicators remain visible
+- **Custom RGB Effects**: `game_mode` and `position_mode` effects properly isolated to main keyboard LEDs only
+- **Startup Animation Fix**: Rim LED startup animation no longer causes rapid flashing
+- **Better RGB Matrix Handling**: All built-in QMK RGB matrix effects work correctly without affecting side LED system
 
 Other NuPhy models (Air60 V2, Air75 V2, Air96 V2, Gem80, Halo65 V2, Halo96 V2, Kick75) are present in the repository as they were pulled in from upstream, but they are **not supported, tested, or built here**.
 
