@@ -284,7 +284,7 @@ void side_mode_b_control(uint8_t dir)
 }
 
 /**
- * @brief  set left side leds.
+ * @brief  set left side leds (status LEDs).
  * @param  ...
  */
 void set_left_rgb(uint8_t r, uint8_t g, uint8_t b)
