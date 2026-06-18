@@ -454,6 +454,9 @@ static void side_power_mode_show(void)
         side_play_cnt -= side_speed_table[0][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
+    // Skip status LED indices (0-4) and only set rim LED indices (5-44)
+    if(power_play_index < 5) power_play_index = 5;
+
     if(power_play_index <= 44) {
         key_pwm_tab[power_play_index] = 0xff;
         power_play_index++;
