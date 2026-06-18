@@ -447,10 +447,11 @@ uint8_t is_side_rgb_on(uint8_t index)
 
 static void side_power_mode_show(void)
 {
-    if (side_play_cnt <= side_speed_table[0][side_speed])
+    // Use slower speed for smoother animation with fewer LEDs
+    if (side_play_cnt <= side_speed_table[1][side_speed])
         return;
     else
-        side_play_cnt -= side_speed_table[0][side_speed];
+        side_play_cnt -= side_speed_table[1][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
     // Start from index 5 (rim LEDs), skip status LEDs (0-4)
