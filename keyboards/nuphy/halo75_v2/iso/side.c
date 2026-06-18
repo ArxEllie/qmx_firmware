@@ -465,6 +465,11 @@ static void side_power_mode_show(void)
     uint8_t i;
 
     for (i = 5; i < 44; i++) {
+        // Only set color if PWM value is non-zero to prevent flickering
+        if (key_pwm_tab[i] == 0) {
+            rgb_matrix_set_color(side_led_index_tab[i], 0, 0, 0);
+            continue;
+        }
 
         r_temp = colour_lib[side_colour][0];
         g_temp = colour_lib[side_colour][1];
