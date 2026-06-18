@@ -1,12 +1,10 @@
 
 RGB_MATRIX_EFFECT(game_mode)
 RGB_MATRIX_EFFECT(position_mode)
-RGB_MATRIX_EFFECT(led_probe)
 
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
 extern rgb_config_t rgb_matrix_config;
-extern uint8_t led_probe_index;
 
 static bool game_mode(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
@@ -49,19 +47,6 @@ static bool position_mode(effect_params_t* params) {
     rgb_matrix_set_color(72, rgb.r, rgb.g, rgb.b);      // up
 
     return rgb_matrix_check_finished_leds(led_max);
-}
-
-static bool led_probe(effect_params_t* params) {
-    for (uint8_t i = 0; i < RGB_MATRIX_LED_COUNT; i++) {
-        // Preserve status LEDs (83-87)
-        if(i<83 || (i>87 && i<128))
-        rgb_matrix_set_color(i, 0x00, 0x00, 0x00);
-    }
-
-    RGB rgb = hsv_to_rgb(rgb_matrix_config.hsv);
-    rgb_matrix_set_color(led_probe_index, rgb.r, rgb.g, rgb.b);
-
-    return false;
 }
 
 #endif // RGB_MATRIX_CUSTOM_EFFECT_IMPLS
