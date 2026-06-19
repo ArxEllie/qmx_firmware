@@ -221,105 +221,135 @@ void uart_send_report_nkro(report_nkro_t *report) {
 
 /**
  * @brief  Parsing the data received from the RF module.
+ *
+ * Frame formats from the RF module:
+ *   3-byte bare ACK: [head][cmd][0xA0]
+ *   5+ byte data:    [head][cmd][ack][len][data[len]][checksum]
+ *
+ * Validation happens in full before any ACK/sync flags are set, so a
+ * malformed frame can never falsely satisfy a pending ack-wait in
+ * uart_send_cmd() or suppress the sync-loss watchdog in dev_sts_sync().
+ * Every exit path funnels through reset_rx so the parser is always left
+ * in a clean RX_Idle state for the next frame.
  */
 void RF_Protocol_Receive(void) {
     uint8_t i, check_sum = 0;
 
-    if (Usart_Mgr.RXDState == RX_Done) {
+    if (Usart_Mgr.RXDState != RX_Done) return;
+
+    /* --- 3-byte bare ACK: no payload, no command handler to run. --- */
+    if (Usart_Mgr.RXDLen == 3) {
+        if (Usart_Mgr.RXDBuf[2] != 0xA0) goto reset_rx;
         f_uart_ack = 1;
         sync_lost  = 0;
-
-        if (Usart_Mgr.RXDLen > 4) {
-            if ((Usart_Mgr.RXDLen - 5) != RX_LEN) return;
-
-            for (i = 0; i < RX_LEN; i++)
-                check_sum += Usart_Mgr.RXDBuf[4 + i];
-
-            if (check_sum != Usart_Mgr.RXDBuf[4 + i]) {
-                Usart_Mgr.RXDState = RX_SUM_ERR;
-                return;
-            }
-        } else if (Usart_Mgr.RXDLen == 3) {
-            if (Usart_Mgr.RXDBuf[2] == 0xA0) {
-                f_uart_ack = 1;
-            } else {
-                return;
-            }
-        } else {
-            return;
-        }
-
-        switch (RX_CMD) {
-            case CMD_HAND: {
-                f_rf_hand_ok = 1;
-                break;
-            }
-
-            case CMD_24G_SUSPEND: {
-                f_goto_sleep = 1;
-                break;
-            }
-
-            case CMD_NEW_ADV: {
-                f_rf_new_adv_ok = 1;
-                break;
-            }
-
-            case CMD_RF_STS_SYSC: {
-                static uint8_t error_cnt = 0;
-
-                if (dev_info.link_mode == Usart_Mgr.RXDBuf[4]) {
-                    error_cnt = 0;
-
-                    dev_info.rf_state = Usart_Mgr.RXDBuf[5];
-
-                    if ((dev_info.rf_state == RF_CONNECT) && ((Usart_Mgr.RXDBuf[6] & 0xf8) == 0)) {
-                        dev_info.rf_led = Usart_Mgr.RXDBuf[6];
-                    }
-
-                    dev_info.rf_charge = Usart_Mgr.RXDBuf[7];
-
-                    if (Usart_Mgr.RXDBuf[8] <= 100) dev_info.rf_baterry = Usart_Mgr.RXDBuf[8];
-                    if (dev_info.rf_charge & 0x01) dev_info.rf_baterry = 100;
-                } else {
-                    if (dev_info.rf_state != RF_INVALID) {
-                        if (error_cnt >= 5) {
-                            error_cnt      = 0;
-                            f_send_channel = 1;
-                        } else {
-                            error_cnt++;
-                        }
-                    }
-                }
-
-                f_rf_sts_sysc_ok = 1;
-                break;
-            }
-
-            case CMD_READ_DATA: {
-                memcpy(func_tab, &Usart_Mgr.RXDBuf[4], 32);
-
-                if (func_tab[4] <= LINK_USB) {
-                    dev_info.link_mode = func_tab[4];
-                }
-
-                if (func_tab[5] < LINK_USB) {
-                    dev_info.rf_channel = func_tab[5];
-                }
-
-                if ((func_tab[6] <= LINK_BT_3) && (func_tab[6] >= LINK_BT_1)) {
-                    dev_info.ble_channel = func_tab[6];
-                }
-
-                f_rf_read_data_ok = 1;
-                break;
-            }
-        }
-
-        Usart_Mgr.RXDLen      = 0;
-        Usart_Mgr.RXDState    = RX_Idle;
-        Usart_Mgr.RXDOverTime = 0;
+        goto reset_rx;
     }
+
+    /* --- Data frame: need at least head+cmd+ack+len+checksum (5 bytes). --- */
+    if (Usart_Mgr.RXDLen < 5) goto reset_rx;
+
+    /* Declared payload length must match what we actually received. */
+    if ((Usart_Mgr.RXDLen - 5) != RX_LEN) goto reset_rx;
+
+    /* Checksum covers the payload bytes only. */
+    for (i = 0; i < RX_LEN; i++)
+        check_sum += Usart_Mgr.RXDBuf[4 + i];
+    if (check_sum != Usart_Mgr.RXDBuf[4 + i]) goto reset_rx;
+
+    /*
+     * Command-specific payload length guards.
+     * Each handler reads fixed offsets; without these checks a short
+     * but checksum-valid frame would read stale data left over in
+     * RXDBuf from a previous (longer) frame.
+     */
+    switch (RX_CMD) {
+        case CMD_RF_STS_SYSC:
+            /* Handler reads bytes [4]-[8]: link, state, led, charge, battery. */
+            if (RX_LEN < 5) goto reset_rx;
+            break;
+        case CMD_READ_DATA:
+            /* Handler copies 32 bytes from [4] into func_tab. */
+            if (RX_LEN < 32) goto reset_rx;
+            break;
+        default:
+            break;
+    }
+
+    /* --- Frame fully validated: safe to commit ACK/sync state. --- */
+    f_uart_ack = 1;
+    sync_lost  = 0;
+
+    switch (RX_CMD) {
+        case CMD_HAND: {
+            f_rf_hand_ok = 1;
+            break;
+        }
+
+        case CMD_24G_SUSPEND: {
+            f_goto_sleep = 1;
+            break;
+        }
+
+        case CMD_NEW_ADV: {
+            f_rf_new_adv_ok = 1;
+            break;
+        }
+
+        case CMD_RF_STS_SYSC: {
+            static uint8_t error_cnt = 0;
+
+            if (dev_info.link_mode == Usart_Mgr.RXDBuf[4]) {
+                error_cnt = 0;
+
+                dev_info.rf_state = Usart_Mgr.RXDBuf[5];
+
+                if ((dev_info.rf_state == RF_CONNECT) && ((Usart_Mgr.RXDBuf[6] & 0xf8) == 0)) {
+                    dev_info.rf_led = Usart_Mgr.RXDBuf[6];
+                }
+
+                dev_info.rf_charge = Usart_Mgr.RXDBuf[7];
+
+                if (Usart_Mgr.RXDBuf[8] <= 100) dev_info.rf_baterry = Usart_Mgr.RXDBuf[8];
+                if (dev_info.rf_charge & 0x01) dev_info.rf_baterry = 100;
+            } else {
+                if (dev_info.rf_state != RF_INVALID) {
+                    if (error_cnt >= 5) {
+                        error_cnt      = 0;
+                        f_send_channel = 1;
+                    } else {
+                        error_cnt++;
+                    }
+                }
+            }
+
+            f_rf_sts_sysc_ok = 1;
+            break;
+        }
+
+        case CMD_READ_DATA: {
+            memcpy(func_tab, &Usart_Mgr.RXDBuf[4], 32);
+
+            if (func_tab[4] <= LINK_USB) {
+                dev_info.link_mode = func_tab[4];
+            }
+
+            if (func_tab[5] < LINK_USB) {
+                dev_info.rf_channel = func_tab[5];
+            }
+
+            if ((func_tab[6] <= LINK_BT_3) && (func_tab[6] >= LINK_BT_1)) {
+                dev_info.ble_channel = func_tab[6];
+            }
+
+            f_rf_read_data_ok = 1;
+            break;
+        }
+    }
+
+reset_rx:
+    Usart_Mgr.RXDLen      = 0;
+    Usart_Mgr.RXDState    = RX_Idle;
+    Usart_Mgr.RXDOverTime = 0;
 }
 
 /**
