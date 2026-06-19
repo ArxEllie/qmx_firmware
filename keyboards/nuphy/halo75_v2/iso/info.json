@@ -4,7 +4,8 @@
     "usb": {
         "vid": "0x19F5",
         "pid": "0x32F5",
-        "device_version": "1.1.9"
+        "device_version": "1.1.9",
+        "no_startup_check": true
     },
     "features": {
         "bootmagic": true,
