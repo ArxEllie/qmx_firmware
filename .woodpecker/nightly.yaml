@@ -33,7 +33,8 @@ steps:
             mv "$f" "dist/$newname"
           done
         done
-      - cp keyboards/nuphy/halo75_v2/iso/keymaps/via/NuPhy\ Halo75\ via3.json dist/
+      - cp keyboards/nuphy/halo75_v2/ansi/keymaps/via/NuPhy\ Halo75\ via3.json dist/nuphy_halo75_v2_ansi_via.json
+      - cp keyboards/nuphy/halo75_v2/iso/keymaps/via/NuPhy\ Halo75\ via3.json dist/nuphy_halo75_v2_iso_via.json
       - (cd dist && sha256sum -- * > SHA256SUMS)
       - ls -la dist
 
