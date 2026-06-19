@@ -142,9 +142,26 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
 void    uart_send_cmd_deferred_task(void);
 void    uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
-void    device_reset_show(void);
 void    device_reset_init(void);
 void    m_deinit_usb_072(void);
+
+/* Non-blocking device reset state machine.
+ * Replaces the blocking wait_ms/uart_send_cmd chain that previously
+ * froze the main loop for ~1.7 s during a factory reset. */
+typedef enum {
+    RESET_IDLE = 0,
+    RESET_SET_LINK,    /* queue CMD_SET_LINK via deferred UART */
+    RESET_WAIT,        /* 500 ms cool-down before clear */
+    RESET_CLR_DEVICE,  /* queue CMD_CLR_DEVICE via deferred UART */
+    RESET_EECONFIG,    /* eeconfig_init + start blink */
+    RESET_BLINK,       /* 3× white/off, 200 ms each, timer-driven */
+    RESET_INIT,        /* restore defaults, re-enable RGB, done */
+} reset_state_t;
+
+static reset_state_t dev_reset_state    = RESET_IDLE;
+static uint32_t      dev_reset_timer    = 0;
+static uint8_t       dev_reset_blink    = 0;
+static bool          dev_reset_blink_on = false;
 
 extern void light_speed_control(uint8_t fast);
 extern void light_level_control(uint8_t brighten);
@@ -229,11 +246,12 @@ void long_press_key(void) {
         rf_sw_press_delay = 0;
     }
 
-    if (f_dev_reset_press) {
+    if (f_dev_reset_press && dev_reset_state == RESET_IDLE) {
         dev_reset_press_delay++;
         if (dev_reset_press_delay >= DEV_RESET_PRESS_DELAY) {
             f_dev_reset_press = 0;
 
+            /* Set link-mode defaults synchronously — just variable writes. */
             if (dev_info.link_mode != LINK_USB) {
                 if (dev_info.link_mode != LINK_RF_24) {
                     dev_info.link_mode   = LINK_BT_1;
@@ -244,24 +262,8 @@ void long_press_key(void) {
                 dev_info.ble_channel = LINK_BT_1;
             }
 
-            uart_send_cmd(CMD_SET_LINK, 10, 10);
-            wait_ms(500);
-            uart_send_cmd(CMD_CLR_DEVICE, 10, 10);
-
-            eeconfig_init();
-            device_reset_show();
-            device_reset_init();
-
-            keymap_config.no_gui = 0;
-            f_win_lock           = 0;
-
-            if (dev_info.sys_sw_state == SYS_SW_MAC) {
-                default_layer_set(1 << 0); // MAC
-                keymap_config.nkro = 0;
-            } else {
-                default_layer_set(1 << 2); // WIN
-                keymap_config.nkro = 1;
-            }
+            /* Hand off to the non-blocking reset state machine. */
+            dev_reset_state = RESET_SET_LINK;
         }
     } else {
         dev_reset_press_delay = 0;
@@ -843,6 +845,91 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 /**
+ * @brief  Non-blocking device reset state machine.
+ *
+ * Replaces the blocking reset that used wait_ms(500) + blocking
+ * uart_send_cmd ack-waits + a blocking 1.2 s LED blink loop.
+ * Each state transitions on timer_elapsed32() so the main loop
+ * (matrix scan, RF receive, sleep, dial scan) keeps running.
+ */
+static void dev_reset_task(void) {
+    switch (dev_reset_state) {
+        case RESET_IDLE:
+            return;
+
+        case RESET_SET_LINK:
+            /* Queue CMD_SET_LINK non-blocking; the deferred task drains it. */
+            uart_send_cmd_deferred(CMD_SET_LINK, 10);
+            dev_reset_state = RESET_WAIT;
+            dev_reset_timer = timer_read32();
+            break;
+
+        case RESET_WAIT:
+            /* 500 ms cool-down so the RF module processes SET_LINK first. */
+            if (timer_elapsed32(dev_reset_timer) >= 500) {
+                dev_reset_state = RESET_CLR_DEVICE;
+            }
+            break;
+
+        case RESET_CLR_DEVICE:
+            uart_send_cmd_deferred(CMD_CLR_DEVICE, 10);
+            dev_reset_state = RESET_EECONFIG;
+            break;
+
+        case RESET_EECONFIG:
+            eeconfig_init();
+            /* Stop RGB matrix effects so they don't overwrite blink colors. */
+            rgb_matrix_disable();
+            dev_reset_blink    = 0;
+            dev_reset_blink_on = true;
+            rgb_matrix_set_color_all(0xFF, 0xFF, 0xFF);
+            rgb_matrix_update_pwm_buffers();
+            dev_reset_timer = timer_read32();
+            dev_reset_state = RESET_BLINK;
+            break;
+
+        case RESET_BLINK:
+            if (dev_reset_blink_on) {
+                if (timer_elapsed32(dev_reset_timer) >= 200) {
+                    rgb_matrix_set_color_all(0x00, 0x00, 0x00);
+                    rgb_matrix_update_pwm_buffers();
+                    dev_reset_timer    = timer_read32();
+                    dev_reset_blink_on = false;
+                }
+            } else {
+                if (timer_elapsed32(dev_reset_timer) >= 200) {
+                    if (++dev_reset_blink >= 3) {
+                        dev_reset_state = RESET_INIT;
+                        break;
+                    }
+                    rgb_matrix_set_color_all(0xFF, 0xFF, 0xFF);
+                    rgb_matrix_update_pwm_buffers();
+                    dev_reset_timer    = timer_read32();
+                    dev_reset_blink_on = true;
+                }
+            }
+            break;
+
+        case RESET_INIT:
+            device_reset_init();
+
+            keymap_config.no_gui = 0;
+            f_win_lock           = 0;
+
+            if (dev_info.sys_sw_state == SYS_SW_MAC) {
+                default_layer_set(1 << 0); // MAC
+                keymap_config.nkro = 0;
+            } else {
+                default_layer_set(1 << 2); // WIN
+                keymap_config.nkro = 1;
+            }
+
+            dev_reset_state = RESET_IDLE;
+            break;
+    }
+}
+
+/**
    housekeeping_task_kb
  */
 void housekeeping_task_kb(void) {
@@ -862,6 +949,8 @@ void housekeeping_task_kb(void) {
     dev_sts_sync();
 
     long_press_key();
+
+    dev_reset_task();
 
     dial_sw_scan();
 

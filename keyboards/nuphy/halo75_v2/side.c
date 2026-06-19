@@ -954,25 +954,6 @@ void bat_led_show(void) {
     }
 }
 
-/**
- * @brief  device_reset_show.
- */
-void rgb_matrix_update_pwm_buffers(void);
-void device_reset_show(void) {
-    gpio_write_pin_high(DC_BOOST_PIN);
-    gpio_write_pin_high(RGB_DRIVER_SDB1);
-    gpio_write_pin_high(RGB_DRIVER_SDB2);
-    for (int blink_cnt = 0; blink_cnt < 3; blink_cnt++) {
-        rgb_matrix_set_color_all(0xFF, 0xFF, 0xFF);
-        rgb_matrix_update_pwm_buffers();
-        wait_ms(200);
-
-        rgb_matrix_set_color_all(0x00, 0x00, 0x00);
-        rgb_matrix_update_pwm_buffers();
-        wait_ms(200);
-    }
-}
-
 void device_reset_init(void) {
     side_mode_a     = 0;
     side_mode_b     = 3;
