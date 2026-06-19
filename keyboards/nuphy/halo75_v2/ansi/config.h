@@ -45,6 +45,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define UART_TX_PIN                 B6
 #define UART_RX_PIN                 B7
 
+// On STM32F072 (Cortex-M0), USART1 on PB6/PB7 is AF0, not AF7.
+// The QMK uart driver defaults UART_TX/RX_PAL_MODE to 7 (correct for
+// STM32F4, wrong for STM32F0 where AF7 = comparator outputs).
+// Without these overrides the USART1 peripheral never connects to the
+// physical pins and the nRF module receives nothing.
+#define UART_TX_PAL_MODE            0
+#define UART_RX_PAL_MODE            0
+
 // This is a 7-bit address, that gets left-shifted and bit 0
 // set to 0 for write, 1 for read (as per I2C protocol)
 // The address will vary depending on your wiring:
