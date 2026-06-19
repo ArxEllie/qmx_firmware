@@ -11,7 +11,7 @@
         "bootmagic": true,
         "mousekey": true,
         "extrakey": true,
-        "console": true,
+        "console": false,
         "command": false,
         "nkro": true,
         "key_lock": true,
