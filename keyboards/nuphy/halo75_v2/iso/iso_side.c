@@ -28,10 +28,23 @@ const uint8_t side_led_index_tab[44] = {
 };
 
 uint8_t is_side_rgb_on(uint8_t index) {
-    // Status LEDs (indices 0-4) are never part of rim animations
+    // Status LEDs (indices 0-4) are never part of rim animations.
     if (index < 5) return false;
-    // Rim LEDs (indices 5-44) are controlled by f_side_flag
-    // For now, enable all rim LEDs when any flag is set
-    if (f_side_flag != 0) return true;
-    return false;
+
+    // ISO keeps the same SIDE_MOD_B bit groups as ANSI, adapted to its
+    // rim-only range after the five status LEDs at the head of the table.
+    if (((index >= 5) && (index <= 15)) && (f_side_flag & 0x01))
+        return true;
+    else if ((((index >= 16) && (index <= 22)) || ((index >= 28) && (index <= 34))) && (f_side_flag & 0x02))
+        return true;
+    else if (((index >= 40) && (index <= 43)) && (f_side_flag & 0x04))
+        return true;
+    else if (((index >= 23) && (index <= 27)) && (f_side_flag & 0x08))
+        return true;
+    else if (((index >= 35) && (index <= 36)) && (f_side_flag & 0x10))
+        return true;
+    else if (((index >= 37) && (index <= 39)) && (f_side_flag & 0x01))
+        return true;
+    else
+        return false;
 }
