@@ -639,9 +639,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        // RGB_SPI - Deprecated in modern QMK
-        // RGB_SPD - Deprecated in modern QMK
-
         case DEV_RESET:
             if (record->event.pressed) {
                 f_dev_reset_press = 1;
@@ -665,26 +662,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 f_bat_hold = !f_bat_hold;
             }
             return false;
-
-        // RGB_VAI - Deprecated in modern QMK
-        // if(low_bat_flag && (rgb_matrix_config.hsv.v == RGB_MATRIX_VAL_STEP)) return false;
-        // return true;
-
-        // RGB_TOG - Deprecated in modern QMK
-        // if (record->event.pressed) {
-        //     rgb_matrix_enable();
-        //     if(rgb_matrix_config.hsv.v)
-        //     {
-        //         rgb_light_old = rgb_matrix_config.hsv.v;
-        //         rgb_matrix_config.hsv.v = 0;
-        //     }
-        //     else
-        //     {
-        //         if(rgb_light_old) rgb_matrix_config.hsv.v = rgb_light_old;
-        //             else rgb_matrix_config.hsv.v = (255 - RGB_MATRIX_SPD_STEP * 2);
-        //     }
-        // }
-        // return false;
 
         default:
             return true;
@@ -778,8 +755,6 @@ void keyboard_post_init_kb(void)
     m_londing_eeprom_data();
     m_power_on_dial_sw_scan();
     keyboard_post_init_user();
-
-    // rf_link_show_time = 0;
 }
 
 /**
