@@ -16,16 +16,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#define _CHIBIOS_HAL_CONF_
-#define _CHIBIOS_HAL_CONF_VER_8_4_
+#include_next <mcuconf.h>
 
-#undef HAL_USE_SERIAL
-#define HAL_USE_SERIAL TRUE
+#undef STM32_SERIAL_USE_USART1
+#define STM32_SERIAL_USE_USART1 TRUE
 
-#undef HAL_USE_I2C
-#define HAL_USE_I2C TRUE
+#undef STM32_I2C_USE_I2C1
+#define STM32_I2C_USE_I2C1 TRUE
 
-#undef HAL_USE_DMA
-#define HAL_USE_DMA TRUE
+#undef STM32_I2C_USE_DMA
+#define STM32_I2C_USE_DMA TRUE
 
-#include_next <halconf.h>
+#define STM32_I2C_BUSY_TIMEOUT 50
+#define STM32_I2C_I2C1_IRQ_PRIORITY 3
+#define STM32_I2C_I2C1_DMA_PRIORITY 1
+#define STM32_I2C_DMA_ERROR_HOOK(i2cp) osalSysHalt("DMA failure")
+#undef STM32_I2C_I2C1_RX_DMA_STREAM
+#define STM32_I2C_I2C1_RX_DMA_STREAM STM32_DMA_STREAM_ID(1, 3)
+#undef STM32_I2C_I2C1_TX_DMA_STREAM
+#define STM32_I2C_I2C1_TX_DMA_STREAM STM32_DMA_STREAM_ID(1, 2)
