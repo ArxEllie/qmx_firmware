@@ -36,6 +36,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SIDE_COLOUR_MAX  8
 #define LIGHT_SPEED_MAX  4
 
+// Minimum interval (ms) between full side LED refreshes.
+// rgb_matrix_indicators_advanced_user() can fire several times per render
+// cycle (once per LED_PROCESS_LIMIT iteration).  The animation modes already
+// self-throttle via side_play_cnt, and the status LED functions use their own
+// internal timers, so capping the whole pipeline at ~60 fps avoids redundant
+// rgb_matrix_set_color() writes for static indicators and saves battery on
+// wireless.
+#define SIDE_REFRESH_INTERVAL 16
+
 const uint8_t side_speed_table[5][5] = {
     [SIDE_WAVE]   = {10,  20, 25, 30,  45},
     [SIDE_MIX]    = {25,  30, 40, 50,  60},
@@ -1105,6 +1114,15 @@ void m_side_led_show(void)
         if (!f_dial_sw_init_ok) return;
         flag_power_on = 0;
     }
+
+    // Throttle the full side LED render (animation + status LEDs) to
+    // ~60 fps.  side_play_cnt is already accumulated above so animation
+    // timing stays accurate even when we skip the render this call.
+    static uint32_t side_last_refresh = 0;
+    if (timer_elapsed32(side_last_refresh) < SIDE_REFRESH_INTERVAL) {
+        return;
+    }
+    side_last_refresh = timer_read32();
 
     if(f_power_show) {
        side_power_mode_show();
