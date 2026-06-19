@@ -1,6 +1,6 @@
 # QMK Firmware — NuPhy Halo75 V2 Fork
 
-This is a fork of [QMK Firmware](https://github.com/qmk/qmk_firmware) focused on keeping the **NuPhy Halo75 V2** keyboard fully functional with the latest QMK, including proper ISO support, wireless connectivity, and side LED control.
+This is a fork of [NuPhy's official QMK firmware](https://github.com/nuphy-src/qmk_firmware) with modern QMK pulled in from [QMK's own repository](https://github.com/qmk/qmk_firmware). It focuses on keeping the **NuPhy Halo75 V2** keyboard fully functional with the latest QMK, including proper ISO support, wireless connectivity, and side LED control.
 
 ## Why This Exists
 
@@ -95,4 +95,4 @@ To use the [VIA configurator](https://usevia.app/), load the appropriate VIA JSO
 
 ## Upstream
 
-This fork tracks [QMK Firmware](https://github.com/qmk/qmk_firmware) upstream. The QMK documentation is available at [docs.qmk.fm](https://docs.qmk.fm).
+This fork is based on [NuPhy's official QMK firmware](https://github.com/nuphy-src/qmk_firmware) with updates merged in from [QMK Firmware](https://github.com/qmk/qmk_firmware) upstream. The QMK documentation is available at [docs.qmk.fm](https://docs.qmk.fm).
