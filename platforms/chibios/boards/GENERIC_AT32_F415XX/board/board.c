@@ -36,15 +36,17 @@
  *          This variable is used by the HAL when initializing the PAL driver.
  */
 #if HAL_USE_PAL || defined(__DOXYGEN__)
-const PALConfig pal_default_config = {
-    {VAL_GPIOAODT, VAL_GPIOACFGLR, VAL_GPIOACFGHR}, {VAL_GPIOBODT, VAL_GPIOBCFGLR, VAL_GPIOBCFGHR},
-#    if AT32_HAS_GPIOC
-    {VAL_GPIOCODT, VAL_GPIOCCFGLR, VAL_GPIOCCFGHR},
-#    endif
-    {VAL_GPIODODT, VAL_GPIODCFGLR, VAL_GPIODCFGHR},
-#    if AT32_HAS_GPIOF
-    {VAL_GPIOFODT, VAL_GPIOFCFGLR, VAL_GPIOFCFGHR},
-#    endif
+const PALConfig pal_default_config =
+{
+  {VAL_GPIOAODT, VAL_GPIOACFGLR, VAL_GPIOACFGHR},
+  {VAL_GPIOBODT, VAL_GPIOBCFGLR, VAL_GPIOBCFGHR},
+#if AT32_HAS_GPIOC
+  {VAL_GPIOCODT, VAL_GPIOCCFGLR, VAL_GPIOCCFGHR},
+#endif
+  {VAL_GPIODODT, VAL_GPIODCFGLR, VAL_GPIODCFGHR},
+#if AT32_HAS_GPIOF
+  {VAL_GPIOFODT, VAL_GPIOFCFGLR, VAL_GPIOFCFGHR},
+#endif
 };
 #endif
 
@@ -65,7 +67,7 @@ const PALConfig pal_default_config = {
  * @details System clocks are initialized before everything else.
  */
 void __early_init(void) {
-    at32_clock_init();
+  at32_clock_init();
 }
 
 #if HAL_USE_SDC || defined(__DOXYGEN__)
@@ -73,18 +75,20 @@ void __early_init(void) {
  * @brief   SDC card detection.
  */
 bool sdc_lld_is_card_inserted(SDCDriver *sdcp) {
-    static bool last_status = false;
+  static bool last_status = false;
 
-    if (blkIsTransferring(sdcp)) return last_status;
-    return last_status = (bool)palReadPad(GPIOC, GPIOC_PIN11);
+  if (blkIsTransferring(sdcp))
+    return last_status;
+  return last_status = (bool)palReadPad(GPIOC, GPIOC_PIN11);
 }
 
 /**
  * @brief   SDC card write protection detection.
  */
 bool sdc_lld_is_write_protected(SDCDriver *sdcp) {
-    (void)sdcp;
-    return false;
+
+  (void)sdcp;
+  return false;
 }
 #endif /* HAL_USE_SDC */
 
@@ -93,5 +97,5 @@ bool sdc_lld_is_write_protected(SDCDriver *sdcp) {
  * @note    You can add your board-specific code here.
  */
 void boardInit(void) {
-    IOMUX->REMAP |= IOMUX_REMAP_SWJTAG_MUX_JTAGDIS;
+  IOMUX->REMAP |= IOMUX_REMAP_SWJTAG_MUX_JTAGDIS;
 }

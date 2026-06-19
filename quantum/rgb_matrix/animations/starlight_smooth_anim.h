@@ -15,7 +15,7 @@ hsv_t STARLIGHT_SMOOTH_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool STARLIGHT_SMOOTH(effect_params_t *params) {
+bool STARLIGHT_SMOOTH(effect_params_t* params) {
     if (params->init) {
         memset(phase_offsets, 0, sizeof(phase_offsets));
     }

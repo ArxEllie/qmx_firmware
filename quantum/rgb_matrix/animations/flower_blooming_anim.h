@@ -20,7 +20,7 @@ RGB_MATRIX_EFFECT(FLOWER_BLOOMING)
 
 typedef hsv_t (*flower_blooming_f)(hsv_t hsv, uint8_t i, uint8_t time);
 
-bool effect_runner_bloom(effect_params_t *params, flower_blooming_f effect_func) {
+bool effect_runner_bloom(effect_params_t* params, flower_blooming_f effect_func) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint8_t time = scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed / 10, 1));
@@ -45,7 +45,7 @@ static hsv_t FLOWER_BLOOMING_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool FLOWER_BLOOMING(effect_params_t *params) {
+bool FLOWER_BLOOMING(effect_params_t* params) {
     return effect_runner_bloom(params, &FLOWER_BLOOMING_math);
 }
 

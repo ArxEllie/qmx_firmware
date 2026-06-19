@@ -133,7 +133,7 @@ bool pca9505_set_output(uint8_t slave_addr, pca9505_port_t port, uint8_t conf) {
     return true;
 }
 
-bool pca9505_read_pins(uint8_t slave_addr, pca9505_port_t port, uint8_t *out) {
+bool pca9505_read_pins(uint8_t slave_addr, pca9505_port_t port, uint8_t* out) {
     uint8_t addr = SLAVE_TO_ADDR(slave_addr);
     uint8_t cmd  = 0;
     switch (port) {

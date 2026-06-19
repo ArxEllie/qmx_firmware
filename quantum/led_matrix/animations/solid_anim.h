@@ -1,7 +1,7 @@
 LED_MATRIX_EFFECT(SOLID)
 #ifdef LED_MATRIX_CUSTOM_EFFECT_IMPLS
 
-bool SOLID(effect_params_t *params) {
+bool SOLID(effect_params_t* params) {
     LED_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint8_t val = led_matrix_eeconfig.val;

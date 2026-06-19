@@ -7,7 +7,7 @@ static hsv_t BAND_SPIRAL_SAT_math(hsv_t hsv, int16_t dx, int16_t dy, uint8_t dis
     return hsv;
 }
 
-bool BAND_SPIRAL_SAT(effect_params_t *params) {
+bool BAND_SPIRAL_SAT(effect_params_t* params) {
     return effect_runner_dx_dy_dist(params, &BAND_SPIRAL_SAT_math);
 }
 

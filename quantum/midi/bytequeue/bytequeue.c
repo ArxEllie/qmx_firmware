@@ -20,13 +20,13 @@
 #include "bytequeue.h"
 #include "interrupt_setting.h"
 
-void bytequeue_init(byteQueue_t *queue, uint8_t *dataArray, byteQueueIndex_t arrayLen) {
+void bytequeue_init(byteQueue_t* queue, uint8_t* dataArray, byteQueueIndex_t arrayLen) {
     queue->length = arrayLen;
     queue->data   = dataArray;
     queue->start = queue->end = 0;
 }
 
-bool bytequeue_enqueue(byteQueue_t *queue, uint8_t item) {
+bool bytequeue_enqueue(byteQueue_t* queue, uint8_t item) {
     interrupt_setting_t setting = store_and_clear_interrupt();
     // full
     if (((queue->end + 1) % queue->length) == queue->start) {
@@ -40,7 +40,7 @@ bool bytequeue_enqueue(byteQueue_t *queue, uint8_t item) {
     }
 }
 
-byteQueueIndex_t bytequeue_length(byteQueue_t *queue) {
+byteQueueIndex_t bytequeue_length(byteQueue_t* queue) {
     byteQueueIndex_t    len;
     interrupt_setting_t setting = store_and_clear_interrupt();
     if (queue->end >= queue->start)
@@ -52,12 +52,12 @@ byteQueueIndex_t bytequeue_length(byteQueue_t *queue) {
 }
 
 // we don't need to avoid interrupts if there is only one reader
-uint8_t bytequeue_get(byteQueue_t *queue, byteQueueIndex_t index) {
+uint8_t bytequeue_get(byteQueue_t* queue, byteQueueIndex_t index) {
     return queue->data[(queue->start + index) % queue->length];
 }
 
 // we just update the start index to remove elements
-void bytequeue_remove(byteQueue_t *queue, byteQueueIndex_t numToRemove) {
+void bytequeue_remove(byteQueue_t* queue, byteQueueIndex_t numToRemove) {
     interrupt_setting_t setting = store_and_clear_interrupt();
     queue->start                = (queue->start + numToRemove) % queue->length;
     restore_interrupt_setting(setting);

@@ -394,84 +394,49 @@ const PROGMEM uchar shared_hid_report[] = {
 #else
 const PROGMEM uchar keyboard_hid_report[] = {
 #endif
-    0x05,
-    0x01, // Usage Page (Generic Desktop)
-    0x09,
-    0x06, // Usage (Keyboard)
-    0xA1,
-    0x01, // Collection (Application)
+    0x05, 0x01, // Usage Page (Generic Desktop)
+    0x09, 0x06, // Usage (Keyboard)
+    0xA1, 0x01, // Collection (Application)
 #ifdef KEYBOARD_SHARED_EP
-    0x85,
-    REPORT_ID_KEYBOARD, // Report ID
+    0x85, REPORT_ID_KEYBOARD, // Report ID
 #endif
     // Modifiers (8 bits)
-    0x05,
-    0x07, //   Usage Page (Keyboard/Keypad)
-    0x19,
-    0xE0, //   Usage Minimum (Keyboard Left Control)
-    0x29,
-    0xE7, //   Usage Maximum (Keyboard Right GUI)
-    0x15,
-    0x00, //   Logical Minimum (0)
-    0x25,
-    0x01, //   Logical Maximum (1)
-    0x95,
-    0x08, //   Report Count (8)
-    0x75,
-    0x01, //   Report Size (1)
-    0x81,
-    0x02, //   Input (Data, Variable, Absolute)
+    0x05, 0x07, //   Usage Page (Keyboard/Keypad)
+    0x19, 0xE0, //   Usage Minimum (Keyboard Left Control)
+    0x29, 0xE7, //   Usage Maximum (Keyboard Right GUI)
+    0x15, 0x00, //   Logical Minimum (0)
+    0x25, 0x01, //   Logical Maximum (1)
+    0x95, 0x08, //   Report Count (8)
+    0x75, 0x01, //   Report Size (1)
+    0x81, 0x02, //   Input (Data, Variable, Absolute)
     // Reserved (1 byte)
-    0x95,
-    0x01, //   Report Count (1)
-    0x75,
-    0x08, //   Report Size (8)
-    0x81,
-    0x03, //   Input (Constant)
+    0x95, 0x01, //   Report Count (1)
+    0x75, 0x08, //   Report Size (8)
+    0x81, 0x03, //   Input (Constant)
     // Keycodes (6 bytes)
-    0x05,
-    0x07, //   Usage Page (Keyboard/Keypad)
-    0x19,
-    0x00, //   Usage Minimum (0)
-    0x29,
-    0xFF, //   Usage Maximum (255)
-    0x15,
-    0x00, //   Logical Minimum (0)
-    0x26,
-    0xFF,
-    0x00, //   Logical Maximum (255)
-    0x95,
-    0x06, //   Report Count (6)
-    0x75,
-    0x08, //   Report Size (8)
-    0x81,
-    0x00, //   Input (Data, Array, Absolute)
+    0x05, 0x07,       //   Usage Page (Keyboard/Keypad)
+    0x19, 0x00,       //   Usage Minimum (0)
+    0x29, 0xFF,       //   Usage Maximum (255)
+    0x15, 0x00,       //   Logical Minimum (0)
+    0x26, 0xFF, 0x00, //   Logical Maximum (255)
+    0x95, 0x06,       //   Report Count (6)
+    0x75, 0x08,       //   Report Size (8)
+    0x81, 0x00,       //   Input (Data, Array, Absolute)
 
     // Status LEDs (5 bits)
-    0x05,
-    0x08, //   Usage Page (LED)
-    0x19,
-    0x01, //   Usage Minimum (Num Lock)
-    0x29,
-    0x05, //   Usage Maximum (Kana)
-    0x15,
-    0x00, //   Logical Minimum (0)
-    0x25,
-    0x01, //   Logical Maximum (1)
-    0x95,
-    0x05, //   Report Count (5)
-    0x75,
-    0x01, //   Report Size (1)
-    0x91,
-    0x02, //   Output (Data, Variable, Absolute)
+    0x05, 0x08, //   Usage Page (LED)
+    0x19, 0x01, //   Usage Minimum (Num Lock)
+    0x29, 0x05, //   Usage Maximum (Kana)
+    0x15, 0x00, //   Logical Minimum (0)
+    0x25, 0x01, //   Logical Maximum (1)
+    0x95, 0x05, //   Report Count (5)
+    0x75, 0x01, //   Report Size (1)
+    0x91, 0x02, //   Output (Data, Variable, Absolute)
     // LED padding (3 bits)
-    0x95,
-    0x01, //   Report Count (1)
-    0x75,
-    0x03, //   Report Size (3)
-    0x91,
-    0x03, //   Output (Constant)
-    0xC0, // End Collection
+    0x95, 0x01, //   Report Count (1)
+    0x75, 0x03, //   Report Size (3)
+    0x91, 0x03, //   Output (Constant)
+    0xC0,       // End Collection
 #ifndef KEYBOARD_SHARED_EP
 };
 #endif
@@ -483,233 +448,133 @@ const PROGMEM uchar shared_hid_report[] = {
 
 #ifdef NKRO_ENABLE
     // NKRO report descriptor
-    0x05,
-    0x01, // Usage Page (Generic Desktop)
-    0x09,
-    0x06, // Usage (Keyboard)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_NKRO, //   Report ID
+    0x05, 0x01,           // Usage Page (Generic Desktop)
+    0x09, 0x06,           // Usage (Keyboard)
+    0xA1, 0x01,           // Collection (Application)
+    0x85, REPORT_ID_NKRO, //   Report ID
     // Modifiers (8 bits)
-    0x05,
-    0x07, //   Usage Page (Keyboard/Keypad)
-    0x19,
-    0xE0, //   Usage Minimum (Keyboard Left Control)
-    0x29,
-    0xE7, //   Usage Maximum (Keyboard Right GUI)
-    0x15,
-    0x00, //   Logical Minimum (0)
-    0x25,
-    0x01, //   Logical Maximum (1)
-    0x95,
-    0x08, //   Report Count (8)
-    0x75,
-    0x01, //   Report Size (1)
-    0x81,
-    0x02, //   Input (Data, Variable, Absolute)
+    0x05, 0x07, //   Usage Page (Keyboard/Keypad)
+    0x19, 0xE0, //   Usage Minimum (Keyboard Left Control)
+    0x29, 0xE7, //   Usage Maximum (Keyboard Right GUI)
+    0x15, 0x00, //   Logical Minimum (0)
+    0x25, 0x01, //   Logical Maximum (1)
+    0x95, 0x08, //   Report Count (8)
+    0x75, 0x01, //   Report Size (1)
+    0x81, 0x02, //   Input (Data, Variable, Absolute)
     // Keycodes
-    0x05,
-    0x07, //   Usage Page (Keyboard/Keypad)
-    0x19,
-    0x00, //   Usage Minimum (0)
-    0x29,
-    NKRO_REPORT_BITS * 8 - 1, //   Usage Maximum
-    0x15,
-    0x00, //   Logical Minimum (0)
-    0x25,
-    0x01, //   Logical Maximum (1)
-    0x95,
-    NKRO_REPORT_BITS * 8, //   Report Count
-    0x75,
-    0x01, //   Report Size (1)
-    0x81,
-    0x02, //   Input (Data, Variable, Absolute)
+    0x05, 0x07,                     //   Usage Page (Keyboard/Keypad)
+    0x19, 0x00,                     //   Usage Minimum (0)
+    0x29, NKRO_REPORT_BITS * 8 - 1, //   Usage Maximum
+    0x15, 0x00,                     //   Logical Minimum (0)
+    0x25, 0x01,                     //   Logical Maximum (1)
+    0x95, NKRO_REPORT_BITS * 8,     //   Report Count
+    0x75, 0x01,                     //   Report Size (1)
+    0x81, 0x02,                     //   Input (Data, Variable, Absolute)
 
     // Status LEDs (5 bits)
-    0x05,
-    0x08, //   Usage Page (LED)
-    0x19,
-    0x01, //   Usage Minimum (Num Lock)
-    0x29,
-    0x05, //   Usage Maximum (Kana)
-    0x95,
-    0x05, //   Report Count (5)
-    0x75,
-    0x01, //   Report Size (1)
-    0x91,
-    0x02, //   Output (Data, Variable, Absolute)
+    0x05, 0x08, //   Usage Page (LED)
+    0x19, 0x01, //   Usage Minimum (Num Lock)
+    0x29, 0x05, //   Usage Maximum (Kana)
+    0x95, 0x05, //   Report Count (5)
+    0x75, 0x01, //   Report Size (1)
+    0x91, 0x02, //   Output (Data, Variable, Absolute)
     // LED padding (3 bits)
-    0x95,
-    0x01, //   Report Count (1)
-    0x75,
-    0x03, //   Report Size (3)
-    0x91,
-    0x03, //   Output (Constant)
-    0xC0, // End Collection
+    0x95, 0x01, //   Report Count (1)
+    0x75, 0x03, //   Report Size (3)
+    0x91, 0x03, //   Output (Constant)
+    0xC0,       // End Collection
 #endif
 
 #ifdef MOUSE_ENABLE
     // Mouse report descriptor
-    0x05,
-    0x01, // Usage Page (Generic Desktop)
-    0x09,
-    0x02, // Usage (Mouse)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_MOUSE, //   Report ID
-    0x09,
-    0x01, //   Usage (Pointer)
-    0xA1,
-    0x00, //   Collection (Physical)
+    0x05, 0x01,            // Usage Page (Generic Desktop)
+    0x09, 0x02,            // Usage (Mouse)
+    0xA1, 0x01,            // Collection (Application)
+    0x85, REPORT_ID_MOUSE, //   Report ID
+    0x09, 0x01,            //   Usage (Pointer)
+    0xA1, 0x00,            //   Collection (Physical)
     // Buttons (8 bits)
-    0x05,
-    0x09, //     Usage Page (Button)
-    0x19,
-    0x01, //     Usage Minimum (Button 1)
-    0x29,
-    0x08, //     Usage Maximum (Button 8)
-    0x15,
-    0x00, //     Logical Minimum (0)
-    0x25,
-    0x01, //     Logical Maximum (1)
-    0x95,
-    0x08, //     Report Count (8)
-    0x75,
-    0x01, //     Report Size (1)
-    0x81,
-    0x02, //     Input (Data, Variable, Absolute)
+    0x05, 0x09, //     Usage Page (Button)
+    0x19, 0x01, //     Usage Minimum (Button 1)
+    0x29, 0x08, //     Usage Maximum (Button 8)
+    0x15, 0x00, //     Logical Minimum (0)
+    0x25, 0x01, //     Logical Maximum (1)
+    0x95, 0x08, //     Report Count (8)
+    0x75, 0x01, //     Report Size (1)
+    0x81, 0x02, //     Input (Data, Variable, Absolute)
 
 #    ifdef MOUSE_EXTENDED_REPORT
     // Boot protocol XY ignored in Report protocol
-    0x95,
-    0x02, //     Report Count (2)
-    0x75,
-    0x08, //     Report Size (8)
-    0x81,
-    0x03, //     Input (Constant)
+    0x95, 0x02, //     Report Count (2)
+    0x75, 0x08, //     Report Size (8)
+    0x81, 0x03, //     Input (Constant)
 #    endif
 
     // X/Y position (2 or 4 bytes)
-    0x05,
-    0x01, //     Usage Page (Generic Desktop)
-    0x09,
-    0x30, //     Usage (X)
-    0x09,
-    0x31, //     Usage (Y)
+    0x05, 0x01, //     Usage Page (Generic Desktop)
+    0x09, 0x30, //     Usage (X)
+    0x09, 0x31, //     Usage (Y)
 #    ifndef MOUSE_EXTENDED_REPORT
-    0x15,
-    MOUSE_REPORT_XY_MIN, // Logical Minimum (-127)
-    0x25,
-    MOUSE_REPORT_XY_MAX, // Logical Maximum (127)
-    0x95,
-    0x02, // Report Count (2)
-    0x75,
-    0x08, // Report Size (8)
+    0x15, MOUSE_REPORT_XY_MIN, // Logical Minimum (-127)
+    0x25, MOUSE_REPORT_XY_MAX, // Logical Maximum (127)
+    0x95, 0x02,                // Report Count (2)
+    0x75, 0x08,                // Report Size (8)
 #    else
-    0x16,
-    0x01,
-    HID_VALUE_16(MOUSE_REPORT_XY_MIN), // Logical Minimum (-32767)
-    0x26,
-    0xFF,
-    HID_VALUE_16(MOUSE_REPORT_XY_MAX), // Logical Maximum (32767)
-    0x95,
-    0x02, // Report Count (2)
-    0x75,
-    0x10, // Report Size (16)
+    0x16, 0x01, HID_VALUE_16(MOUSE_REPORT_XY_MIN), // Logical Minimum (-32767)
+    0x26, 0xFF, HID_VALUE_16(MOUSE_REPORT_XY_MAX), // Logical Maximum (32767)
+    0x95, 0x02,                                    // Report Count (2)
+    0x75, 0x10,                                    // Report Size (16)
 #    endif
-    0x81,
-    0x06, //     Input (Data, Variable, Relative)
+    0x81, 0x06, //     Input (Data, Variable, Relative)
 
 #    ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
     // Feature report and padding (1 byte)
-    0xA1,
-    0x02, //     Collection (Logical)
-    0x09,
-    0x48, //       Usage (Resolution Multiplier)
-    0x95,
-    0x01, //       Report Count (1)
-    0x75,
-    0x02, //       Report Size (2)
-    0x15,
-    0x00, //       Logical Minimum (0)
-    0x25,
-    0x01, //       Logical Maximum (1)
-    0x35,
-    0x01, //       Physical Minimum (1)
-    0x45,
-    POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER, // Physical Maximum (POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER)
-    0x55,
-    POINTING_DEVICE_HIRES_SCROLL_EXPONENT, // Unit Exponent (POINTING_DEVICE_HIRES_SCROLL_EXPONENT)
-    0xB1,
-    0x02, //       Feature (Data, Variable, Absolute)
-    0x35,
-    0x00, //       Physical Minimum (0)
-    0x45,
-    0x00, //       Physical Maximum (0)
-    0x75,
-    0x06, //       Report Size (6)
-    0xB1,
-    0x03, //       Feature (Constant)
+    0xA1, 0x02,                                    //     Collection (Logical)
+    0x09, 0x48,                                    //       Usage (Resolution Multiplier)
+    0x95, 0x01,                                    //       Report Count (1)
+    0x75, 0x02,                                    //       Report Size (2)
+    0x15, 0x00,                                    //       Logical Minimum (0)
+    0x25, 0x01,                                    //       Logical Maximum (1)
+    0x35, 0x01,                                    //       Physical Minimum (1)
+    0x45, POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER, // Physical Maximum (POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER)
+    0x55, POINTING_DEVICE_HIRES_SCROLL_EXPONENT,   // Unit Exponent (POINTING_DEVICE_HIRES_SCROLL_EXPONENT)
+    0xB1, 0x02,                                    //       Feature (Data, Variable, Absolute)
+    0x35, 0x00,                                    //       Physical Minimum (0)
+    0x45, 0x00,                                    //       Physical Maximum (0)
+    0x75, 0x06,                                    //       Report Size (6)
+    0xB1, 0x03,                                    //       Feature (Constant)
 #    endif
 
     // Vertical wheel (1 or 2 bytes)
-    0x09,
-    0x38, //     Usage (Wheel)
+    0x09, 0x38, //     Usage (Wheel)
 #    ifndef WHEEL_EXTENDED_REPORT
-    0x15,
-    MOUSE_REPORT_HV_MIN, // Logical Minimum (-127)
-    0x25,
-    MOUSE_REPORT_HV_MAX, // Logical Maximum (127)
-    0x95,
-    0x01, // Report Count (1)
-    0x75,
-    0x08, // Report Size (8)
+    0x15, MOUSE_REPORT_HV_MIN, // Logical Minimum (-127)
+    0x25, MOUSE_REPORT_HV_MAX, // Logical Maximum (127)
+    0x95, 0x01,                // Report Count (1)
+    0x75, 0x08,                // Report Size (8)
 #    else
-    0x16,
-    0x01,
-    HID_VALUE_16(MOUSE_REPORT_HV_MIN), // Logical Minimum (-32767)
-    0x26,
-    0xFF,
-    HID_VALUE_16(MOUSE_REPORT_HV_MAX), // Logical Maximum (32767)
-    0x95,
-    0x01, // Report Count (1)
-    0x75,
-    0x10, // Report Size (16)
+    0x16, 0x01, HID_VALUE_16(MOUSE_REPORT_HV_MIN), // Logical Minimum (-32767)
+    0x26, 0xFF, HID_VALUE_16(MOUSE_REPORT_HV_MAX), // Logical Maximum (32767)
+    0x95, 0x01,                                    // Report Count (1)
+    0x75, 0x10,                                    // Report Size (16)
 #    endif
-    0x81,
-    0x06, //     Input (Data, Variable, Relative)
+    0x81, 0x06, //     Input (Data, Variable, Relative)
 
     // Horizontal wheel (1 or 2 bytes)
-    0x05,
-    0x0C, //     Usage Page (Consumer)
-    0x0A,
-    0x38,
-    0x02, //     Usage (AC Pan)
+    0x05, 0x0C,       //     Usage Page (Consumer)
+    0x0A, 0x38, 0x02, //     Usage (AC Pan)
 #    ifndef WHEEL_EXTENDED_REPORT
-    0x15,
-    MOUSE_REPORT_HV_MIN, // Logical Minimum (-127)
-    0x25,
-    MOUSE_REPORT_HV_MAX, // Logical Maximum (127)
-    0x95,
-    0x01, // Report Count (1)
-    0x75,
-    0x08, // Report Size (8)
+    0x15, MOUSE_REPORT_HV_MIN, // Logical Minimum (-127)
+    0x25, MOUSE_REPORT_HV_MAX, // Logical Maximum (127)
+    0x95, 0x01,                // Report Count (1)
+    0x75, 0x08,                // Report Size (8)
 #    else
-    0x16,
-    0x01,
-    HID_VALUE_16(MOUSE_REPORT_HV_MIN), // Logical Minimum (-32767)
-    0x26,
-    0xFF,
-    HID_VALUE_16(MOUSE_REPORT_HV_MAX), // Logical Maximum (32767)
-    0x95,
-    0x01, // Report Count (1)
-    0x75,
-    0x10, // Report Size (16)
+    0x16, 0x01, HID_VALUE_16(MOUSE_REPORT_HV_MIN), // Logical Minimum (-32767)
+    0x26, 0xFF, HID_VALUE_16(MOUSE_REPORT_HV_MAX), // Logical Maximum (32767)
+    0x95, 0x01,                                    // Report Count (1)
+    0x75, 0x10,                                    // Report Size (16)
 #    endif
-    0x81,
-    0x06, //     Input (Data, Variable, Relative)
+    0x81, 0x06, //     Input (Data, Variable, Relative)
 
 #    ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
     0xC0, //   End Collection
@@ -721,174 +586,103 @@ const PROGMEM uchar shared_hid_report[] = {
 
 #ifdef EXTRAKEY_ENABLE
     // Extrakeys report descriptor
-    0x05,
-    0x01, // Usage Page (Generic Desktop)
-    0x09,
-    0x80, // Usage (System Control)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_SYSTEM, //   Report ID
-    0x19,
-    0x01, //   Usage Minimum (Pointer)
-    0x2A,
-    0xB7,
-    0x00, //   Usage Maximum (System Display LCD Autoscale)
-    0x15,
-    0x01, //   Logical Minimum
-    0x26,
-    0xB7,
-    0x00, //   Logical Maximum
-    0x95,
-    0x01, //   Report Count (1)
-    0x75,
-    0x10, //   Report Size (16)
-    0x81,
-    0x00, //   Input (Data, Array, Absolute)
-    0xC0, // End Collection
+    0x05, 0x01,             // Usage Page (Generic Desktop)
+    0x09, 0x80,             // Usage (System Control)
+    0xA1, 0x01,             // Collection (Application)
+    0x85, REPORT_ID_SYSTEM, //   Report ID
+    0x19, 0x01,             //   Usage Minimum (Pointer)
+    0x2A, 0xB7, 0x00,       //   Usage Maximum (System Display LCD Autoscale)
+    0x15, 0x01,             //   Logical Minimum
+    0x26, 0xB7, 0x00,       //   Logical Maximum
+    0x95, 0x01,             //   Report Count (1)
+    0x75, 0x10,             //   Report Size (16)
+    0x81, 0x00,             //   Input (Data, Array, Absolute)
+    0xC0,                   // End Collection
 
-    0x05,
-    0x0C, // Usage Page (Consumer)
-    0x09,
-    0x01, // Usage (Consumer Control)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_CONSUMER, //   Report ID
-    0x19,
-    0x01, //   Usage Minimum (Consumer Control)
-    0x2A,
-    0xA0,
-    0x02, //   Usage Maximum (AC Desktop Show All Applications)
-    0x15,
-    0x01, //   Logical Minimum
-    0x26,
-    0xA0,
-    0x02, //   Logical Maximum
-    0x95,
-    0x01, //   Report Count (1)
-    0x75,
-    0x10, //   Report Size (16)
-    0x81,
-    0x00, //   Input (Data, Array, Absolute)
-    0xC0, // End Collection
+    0x05, 0x0C,               // Usage Page (Consumer)
+    0x09, 0x01,               // Usage (Consumer Control)
+    0xA1, 0x01,               // Collection (Application)
+    0x85, REPORT_ID_CONSUMER, //   Report ID
+    0x19, 0x01,               //   Usage Minimum (Consumer Control)
+    0x2A, 0xA0, 0x02,         //   Usage Maximum (AC Desktop Show All Applications)
+    0x15, 0x01,               //   Logical Minimum
+    0x26, 0xA0, 0x02,         //   Logical Maximum
+    0x95, 0x01,               //   Report Count (1)
+    0x75, 0x10,               //   Report Size (16)
+    0x81, 0x00,               //   Input (Data, Array, Absolute)
+    0xC0,                     // End Collection
 #endif
 
 #ifdef JOYSTICK_ENABLE
     // Joystick report descriptor
-    0x05,
-    0x01, // Usage Page (Generic Desktop)
-    0x09,
-    0x04, // Usage (Joystick)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_JOYSTICK, //   Report ID
-    0xA1,
-    0x00, //   Collection (Physical)
+    0x05, 0x01,               // Usage Page (Generic Desktop)
+    0x09, 0x04,               // Usage (Joystick)
+    0xA1, 0x01,               // Collection (Application)
+    0x85, REPORT_ID_JOYSTICK, //   Report ID
+    0xA1, 0x00,               //   Collection (Physical)
 #    if JOYSTICK_AXIS_COUNT > 0
-    0x05,
-    0x01, //     Usage Page (Generic Desktop)
-    0x09,
-    0x30, //     Usage (X)
+    0x05, 0x01, //     Usage Page (Generic Desktop)
+    0x09, 0x30, //     Usage (X)
 #        if JOYSTICK_AXIS_COUNT > 1
-    0x09,
-    0x31, //     Usage (Y)
+    0x09, 0x31, //     Usage (Y)
 #        endif
 #        if JOYSTICK_AXIS_COUNT > 2
-    0x09,
-    0x32, //     Usage (Z)
+    0x09, 0x32, //     Usage (Z)
 #        endif
 #        if JOYSTICK_AXIS_COUNT > 3
-    0x09,
-    0x33, //     Usage (Rx)
+    0x09, 0x33, //     Usage (Rx)
 #        endif
 #        if JOYSTICK_AXIS_COUNT > 4
-    0x09,
-    0x34, //     Usage (Ry)
+    0x09, 0x34, //     Usage (Ry)
 #        endif
 #        if JOYSTICK_AXIS_COUNT > 5
-    0x09,
-    0x35, //     Usage (Rz)
+    0x09, 0x35, //     Usage (Rz)
 #        endif
 #        if JOYSTICK_AXIS_RESOLUTION == 8
-    0x15,
-    -JOYSTICK_MAX_VALUE, //     Logical Minimum
-    0x25,
-    JOYSTICK_MAX_VALUE, //     Logical Maximum
-    0x95,
-    JOYSTICK_AXIS_COUNT, //     Report Count
-    0x75,
-    0x08, //     Report Size (8)
+    0x15, -JOYSTICK_MAX_VALUE, //     Logical Minimum
+    0x25, JOYSTICK_MAX_VALUE,  //     Logical Maximum
+    0x95, JOYSTICK_AXIS_COUNT, //     Report Count
+    0x75, 0x08,                //     Report Size (8)
 #        else
-    0x16,
-    HID_VALUE_16(-JOYSTICK_MAX_VALUE), //     Logical Minimum
-    0x26,
-    HID_VALUE_16(JOYSTICK_MAX_VALUE), //     Logical Maximum
-    0x95,
-    JOYSTICK_AXIS_COUNT, //     Report Count
-    0x75,
-    0x10, //     Report Size (16)
+    0x16, HID_VALUE_16(-JOYSTICK_MAX_VALUE), //     Logical Minimum
+    0x26, HID_VALUE_16(JOYSTICK_MAX_VALUE),  //     Logical Maximum
+    0x95, JOYSTICK_AXIS_COUNT,               //     Report Count
+    0x75, 0x10,                              //     Report Size (16)
 #        endif
-    0x81,
-    0x02, //     Input (Data, Variable, Absolute)
+    0x81, 0x02, //     Input (Data, Variable, Absolute)
 #    endif
 
 #    ifdef JOYSTICK_HAS_HAT
     // Hat Switch (4 bits)
-    0x09,
-    0x39, //     Usage (Hat Switch)
-    0x15,
-    0x00, //     Logical Minimum (0)
-    0x25,
-    0x07, //     Logical Maximum (7)
-    0x35,
-    0x00, //     Physical Minimum (0)
-    0x46,
-    0x3B,
-    0x01, //     Physical Maximum (315)
-    0x65,
-    0x14, //     Unit (Degree, English Rotation)
-    0x95,
-    0x01, //     Report Count (1)
-    0x75,
-    0x04, //     Report Size (4)
-    0x81,
-    0x42, //     Input (Data, Variable, Absolute, Null State)
+    0x09, 0x39,       //     Usage (Hat Switch)
+    0x15, 0x00,       //     Logical Minimum (0)
+    0x25, 0x07,       //     Logical Maximum (7)
+    0x35, 0x00,       //     Physical Minimum (0)
+    0x46, 0x3B, 0x01, //     Physical Maximum (315)
+    0x65, 0x14,       //     Unit (Degree, English Rotation)
+    0x95, 0x01,       //     Report Count (1)
+    0x75, 0x04,       //     Report Size (4)
+    0x81, 0x42,       //     Input (Data, Variable, Absolute, Null State)
     // Padding (4 bits)
-    0x95,
-    0x04, //     Report Count (4)
-    0x75,
-    0x01, //     Report Size (1)
-    0x81,
-    0x01, //     Input (Constant)
+    0x95, 0x04, //     Report Count (4)
+    0x75, 0x01, //     Report Size (1)
+    0x81, 0x01, //     Input (Constant)
 #    endif
 
 #    if JOYSTICK_BUTTON_COUNT > 0
-    0x05,
-    0x09, //     Usage Page (Button)
-    0x19,
-    0x01, //     Usage Minimum (Button 1)
-    0x29,
-    JOYSTICK_BUTTON_COUNT, //     Usage Maximum
-    0x15,
-    0x00, //     Logical Minimum (0)
-    0x25,
-    0x01, //     Logical Maximum (1)
-    0x95,
-    JOYSTICK_BUTTON_COUNT, //     Report Count
-    0x75,
-    0x01, //     Report Size (1)
-    0x81,
-    0x02, //     Input (Data, Variable, Absolute)
+    0x05, 0x09,                  //     Usage Page (Button)
+    0x19, 0x01,                  //     Usage Minimum (Button 1)
+    0x29, JOYSTICK_BUTTON_COUNT, //     Usage Maximum
+    0x15, 0x00,                  //     Logical Minimum (0)
+    0x25, 0x01,                  //     Logical Maximum (1)
+    0x95, JOYSTICK_BUTTON_COUNT, //     Report Count
+    0x75, 0x01,                  //     Report Size (1)
+    0x81, 0x02,                  //     Input (Data, Variable, Absolute)
 
 #        if (JOYSTICK_BUTTON_COUNT % 8) != 0
-    0x95,
-    8 - (JOYSTICK_BUTTON_COUNT % 8), //     Report Count
-    0x75,
-    0x01, //     Report Size (1)
-    0x81,
-    0x03, //     Input (Constant)
+    0x95, 8 - (JOYSTICK_BUTTON_COUNT % 8), //     Report Count
+    0x75, 0x01,                            //     Report Size (1)
+    0x81, 0x03,                            //     Input (Constant)
 #        endif
 #    endif
     0xC0, //   End Collection
@@ -897,97 +691,57 @@ const PROGMEM uchar shared_hid_report[] = {
 
 #ifdef DIGITIZER_ENABLE
     // Digitizer report descriptor
-    0x05,
-    0x0D, // Usage Page (Digitizers)
-    0x09,
-    0x01, // Usage (Digitizer)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_DIGITIZER, //   Report ID
-    0x09,
-    0x20, //   Usage (Stylus)
-    0xA1,
-    0x00, //   Collection (Physical)
+    0x05, 0x0D,                // Usage Page (Digitizers)
+    0x09, 0x01,                // Usage (Digitizer)
+    0xA1, 0x01,                // Collection (Application)
+    0x85, REPORT_ID_DIGITIZER, //   Report ID
+    0x09, 0x20,                //   Usage (Stylus)
+    0xA1, 0x00,                //   Collection (Physical)
     // In Range, Tip Switch & Barrel Switch (3 bits)
-    0x09,
-    0x32, //     Usage (In Range)
-    0x09,
-    0x42, //     Usage (Tip Switch)
-    0x09,
-    0x44, //     Usage (Barrel Switch)
-    0x15,
-    0x00, //     Logical Minimum
-    0x25,
-    0x01, //     Logical Maximum
-    0x95,
-    0x03, //     Report Count (3)
-    0x75,
-    0x01, //     Report Size (1)
-    0x81,
-    0x02, //     Input (Data, Variable, Absolute)
+    0x09, 0x32, //     Usage (In Range)
+    0x09, 0x42, //     Usage (Tip Switch)
+    0x09, 0x44, //     Usage (Barrel Switch)
+    0x15, 0x00, //     Logical Minimum
+    0x25, 0x01, //     Logical Maximum
+    0x95, 0x03, //     Report Count (3)
+    0x75, 0x01, //     Report Size (1)
+    0x81, 0x02, //     Input (Data, Variable, Absolute)
     // Padding (5 bits)
-    0x95,
-    0x05, //     Report Count (5)
-    0x81,
-    0x03, //     Input (Constant)
+    0x95, 0x05, //     Report Count (5)
+    0x81, 0x03, //     Input (Constant)
 
     // X/Y Position (4 bytes)
-    0x05,
-    0x01, //     Usage Page (Generic Desktop)
-    0x09,
-    0x30, //     Usage (X)
-    0x09,
-    0x31, //     Usage (Y)
-    0x26,
-    0xFF,
-    0x7F, //     Logical Maximum (32767)
-    0x95,
-    0x02, //     Report Count (2)
-    0x75,
-    0x10, //     Report Size (16)
-    0x65,
-    0x13, //     Unit (Inch, English Linear)
-    0x55,
-    0x0E, //     Unit Exponent (-2)
-    0x81,
-    0x02, //     Input (Data, Variable, Absolute)
-    0xC0, //   End Collection
-    0xC0, // End Collection
+    0x05, 0x01,       //     Usage Page (Generic Desktop)
+    0x09, 0x30,       //     Usage (X)
+    0x09, 0x31,       //     Usage (Y)
+    0x26, 0xFF, 0x7F, //     Logical Maximum (32767)
+    0x95, 0x02,       //     Report Count (2)
+    0x75, 0x10,       //     Report Size (16)
+    0x65, 0x13,       //     Unit (Inch, English Linear)
+    0x55, 0x0E,       //     Unit Exponent (-2)
+    0x81, 0x02,       //     Input (Data, Variable, Absolute)
+    0xC0,             //   End Collection
+    0xC0,             // End Collection
 #endif
 
 #ifdef PROGRAMMABLE_BUTTON_ENABLE
     // Programmable buttons report descriptor
-    0x05,
-    0x0C, // Usage Page (Consumer)
-    0x09,
-    0x01, // Usage (Consumer Control)
-    0xA1,
-    0x01, // Collection (Application)
-    0x85,
-    REPORT_ID_PROGRAMMABLE_BUTTON, //   Report ID
-    0x09,
-    0x03, //   Usage (Programmable Buttons)
-    0xA1,
-    0x04, //   Collection (Named Array)
-    0x05,
-    0x09, //     Usage Page (Button)
-    0x19,
-    0x01, //     Usage Minimum (Button 1)
-    0x29,
-    0x20, //     Usage Maximum (Button 32)
-    0x15,
-    0x00, //     Logical Minimum (0)
-    0x25,
-    0x01, //     Logical Maximum (1)
-    0x95,
-    0x20, //     Report Count (32)
-    0x75,
-    0x01, //     Report Size (1)
-    0x81,
-    0x02, //     Input (Data, Variable, Absolute)
-    0xC0, //   End Collection
-    0xC0, // End Collection
+    0x05, 0x0C,                          // Usage Page (Consumer)
+    0x09, 0x01,                          // Usage (Consumer Control)
+    0xA1, 0x01,                          // Collection (Application)
+    0x85, REPORT_ID_PROGRAMMABLE_BUTTON, //   Report ID
+    0x09, 0x03,                          //   Usage (Programmable Buttons)
+    0xA1, 0x04,                          //   Collection (Named Array)
+    0x05, 0x09,                          //     Usage Page (Button)
+    0x19, 0x01,                          //     Usage Minimum (Button 1)
+    0x29, 0x20,                          //     Usage Maximum (Button 32)
+    0x15, 0x00,                          //     Logical Minimum (0)
+    0x25, 0x01,                          //     Logical Maximum (1)
+    0x95, 0x20,                          //     Report Count (32)
+    0x75, 0x01,                          //     Report Size (1)
+    0x81, 0x02,                          //     Input (Data, Variable, Absolute)
+    0xC0,                                //   End Collection
+    0xC0,                                // End Collection
 #endif
 
 #ifdef SHARED_EP_ENABLE

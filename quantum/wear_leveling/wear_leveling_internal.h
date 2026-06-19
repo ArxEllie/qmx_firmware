@@ -29,14 +29,14 @@ typedef uint64_t backing_store_int_t;
 #    include <debug.h>
 #    define bs_dprintf(...) dprintf("Backing store: " __VA_ARGS__)
 #    define wl_dprintf(...) dprintf("Wear leveling: " __VA_ARGS__)
-#    define wl_dump(address, value, length)              \
-        do {                                             \
-            dprintf("[0x%04X]: ", (int)(address));       \
-            const uint8_t *p = (const uint8_t *)(value); \
-            for (int i = 0; i < (length); ++i) {         \
-                dprintf(" %02X", (int)p[i]);             \
-            }                                            \
-            dprintf("\n");                               \
+#    define wl_dump(address, value, length)             \
+        do {                                            \
+            dprintf("[0x%04X]: ", (int)(address));      \
+            const uint8_t* p = (const uint8_t*)(value); \
+            for (int i = 0; i < (length); ++i) {        \
+                dprintf(" %02X", (int)p[i]);            \
+            }                                           \
+            dprintf("\n");                              \
         } while (0)
 #else
 #    define wl_dprintf(...) \
@@ -69,10 +69,10 @@ bool backing_store_init(void);
 bool backing_store_unlock(void);
 bool backing_store_erase(void);
 bool backing_store_write(uint32_t address, backing_store_int_t value);
-bool backing_store_write_bulk(uint32_t address, backing_store_int_t *values, size_t item_count); // weak implementation already provided, optimized implementation can be implemented by driver
+bool backing_store_write_bulk(uint32_t address, backing_store_int_t* values, size_t item_count); // weak implementation already provided, optimized implementation can be implemented by driver
 bool backing_store_lock(void);
-bool backing_store_read(uint32_t address, backing_store_int_t *value);
-bool backing_store_read_bulk(uint32_t address, backing_store_int_t *values, size_t item_count); // weak implementation already provided, optimized implementation can be implemented by driver
+bool backing_store_read(uint32_t address, backing_store_int_t* value);
+bool backing_store_read_bulk(uint32_t address, backing_store_int_t* values, size_t item_count); // weak implementation already provided, optimized implementation can be implemented by driver
 
 /**
  * Helper type used to contain a write log entry.

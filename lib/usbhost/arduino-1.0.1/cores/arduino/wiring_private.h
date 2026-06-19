@@ -33,14 +33,14 @@
 #include "Arduino.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"{
 #endif
 
 #ifndef cbi
-#    define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
 #ifndef sbi
-#    define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
 #define EXTERNAL_INT_0 0
@@ -53,11 +53,11 @@ extern "C" {
 #define EXTERNAL_INT_7 7
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#    define EXTERNAL_NUM_INTERRUPTS 8
-#elif defined(__AVR_ATmega1284P__)
-#    define EXTERNAL_NUM_INTERRUPTS 3
+#define EXTERNAL_NUM_INTERRUPTS 8
+#elif defined(__AVR_ATmega1284P__) 
+#define EXTERNAL_NUM_INTERRUPTS 3
 #else
-#    define EXTERNAL_NUM_INTERRUPTS 2
+#define EXTERNAL_NUM_INTERRUPTS 2
 #endif
 
 typedef void (*voidFuncPtr)(void);

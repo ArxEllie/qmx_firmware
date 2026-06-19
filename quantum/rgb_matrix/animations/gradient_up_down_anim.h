@@ -2,7 +2,7 @@
 RGB_MATRIX_EFFECT(GRADIENT_UP_DOWN)
 #    ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
-bool GRADIENT_UP_DOWN(effect_params_t *params) {
+bool GRADIENT_UP_DOWN(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
     hsv_t   hsv   = rgb_matrix_config.hsv;

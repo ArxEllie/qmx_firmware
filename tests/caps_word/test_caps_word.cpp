@@ -310,7 +310,7 @@ struct CapsWordPressUserParams {
     uint16_t    expected_passed_keycode;
     bool        continues_caps_word;
 
-    static const std::string &GetName(const TestParamInfo<CapsWordPressUserParams> &info) {
+    static const std::string& GetName(const TestParamInfo<CapsWordPressUserParams>& info) {
         return info.param.name;
     }
 };
@@ -402,7 +402,7 @@ struct CapsWordBothShiftsParams {
     uint16_t    left_shift_keycode;
     uint16_t    right_shift_keycode;
 
-    static const std::string &GetName(const TestParamInfo<CapsWordBothShiftsParams> &info) {
+    static const std::string& GetName(const TestParamInfo<CapsWordBothShiftsParams>& info) {
         return info.param.name;
     }
 };
@@ -507,7 +507,7 @@ struct CapsWordDoubleTapShiftParams {
     std::string name;
     uint16_t    left_shift_keycode;
 
-    static const std::string &GetName(const TestParamInfo<CapsWordDoubleTapShiftParams> &info) {
+    static const std::string& GetName(const TestParamInfo<CapsWordDoubleTapShiftParams>& info) {
         return info.param.name;
     }
 };

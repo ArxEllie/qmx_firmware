@@ -32,7 +32,7 @@ static auto_mouse_context_t auto_mouse_context = {
 };
 
 /* local functions */
-static bool is_mouse_record(uint16_t keycode, keyrecord_t *record);
+static bool is_mouse_record(uint16_t keycode, keyrecord_t* record);
 static void auto_mouse_reset(void);
 
 /* check for target layer deactivation overrides */
@@ -329,7 +329,7 @@ void auto_mouse_reset_trigger(bool pressed) {
  * @params keycode[in] uint16_t
  * @params record[in] keyrecord_t pointer
  */
-bool process_auto_mouse(uint16_t keycode, keyrecord_t *record) {
+bool process_auto_mouse(uint16_t keycode, keyrecord_t* record) {
     // skip if not enabled or mouse_layer not set
     if (!(AUTO_MOUSE_ENABLED)) return true;
 
@@ -428,7 +428,7 @@ bool process_auto_mouse(uint16_t keycode, keyrecord_t *record) {
  * @params record[in]  keyrecord_t pointer
  * @return bool true: keyrecord is mousekey false: keyrecord is not mousekey
  */
-static bool is_mouse_record(uint16_t keycode, keyrecord_t *record) {
+static bool is_mouse_record(uint16_t keycode, keyrecord_t* record) {
     // allow for keyboard to hook in and override if need be
     if (is_mouse_record_kb(keycode, record) || IS_MOUSEKEY(keycode)) return true;
     return false;
@@ -443,7 +443,7 @@ static bool is_mouse_record(uint16_t keycode, keyrecord_t *record) {
  * @params record[in] keyrecord_t pointer
  * @return bool true: keyrecord is defined as mouse key false: keyrecord is not defined as mouse key
  */
-__attribute__((weak)) bool is_mouse_record_kb(uint16_t keycode, keyrecord_t *record) {
+__attribute__((weak)) bool is_mouse_record_kb(uint16_t keycode, keyrecord_t* record) {
     return is_mouse_record_user(keycode, record);
 }
 
@@ -456,7 +456,7 @@ __attribute__((weak)) bool is_mouse_record_kb(uint16_t keycode, keyrecord_t *rec
  * @params record[in] keyrecord_t pointer
  * @return bool true: keyrecord is defined as mouse key false: keyrecord is not defined as mouse key
  */
-__attribute__((weak)) bool is_mouse_record_user(uint16_t keycode, keyrecord_t *record) {
+__attribute__((weak)) bool is_mouse_record_user(uint16_t keycode, keyrecord_t* record) {
     return false;
 }
 

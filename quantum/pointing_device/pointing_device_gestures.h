@@ -48,11 +48,11 @@ typedef struct {
 } cursor_glide_context_t;
 
 /* Check glide report conditions, calculates glide coordinates */
-cursor_glide_t cursor_glide_check(cursor_glide_context_t *glide);
+cursor_glide_t cursor_glide_check(cursor_glide_context_t* glide);
 
 /* Start glide reporting, gives first set of glide coordinates */
-cursor_glide_t cursor_glide_start(cursor_glide_context_t *glide);
+cursor_glide_t cursor_glide_start(cursor_glide_context_t* glide);
 
 /* Update glide engine on the latest cursor movement, cursor glide is based on the final movement */
-void cursor_glide_update(cursor_glide_context_t *glide, mouse_xy_report_t dx, mouse_xy_report_t dy, uint16_t z);
+void cursor_glide_update(cursor_glide_context_t* glide, mouse_xy_report_t dx, mouse_xy_report_t dy, uint16_t z);
 #endif

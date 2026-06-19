@@ -4,7 +4,7 @@
 
 typedef uint8_t (*reactive_f)(uint8_t val, uint16_t offset);
 
-bool effect_runner_reactive(effect_params_t *params, reactive_f effect_func) {
+bool effect_runner_reactive(effect_params_t* params, reactive_f effect_func) {
     LED_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint16_t max_tick = 65535 / led_matrix_eeconfig.speed;

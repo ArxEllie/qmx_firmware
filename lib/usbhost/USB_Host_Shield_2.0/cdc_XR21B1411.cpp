@@ -16,176 +16,196 @@ e-mail   :  support@circuitsathome.com
  */
 #include "cdc_XR21B1411.h"
 
-XR21B1411::XR21B1411(USB *p, CDCAsyncOper *pasync) : ACM(p, pasync) {
-    // Is this needed??
-    _enhanced_status = enhanced_features(); // Set up features
+XR21B1411::XR21B1411(USB *p, CDCAsyncOper *pasync) :
+ACM(p, pasync) {
+        // Is this needed??
+        _enhanced_status = enhanced_features(); // Set up features
 }
 
 uint8_t XR21B1411::Init(uint8_t parent, uint8_t port, bool lowspeed) {
-    const uint8_t constBufSize = sizeof(USB_DEVICE_DESCRIPTOR);
+        const uint8_t constBufSize = sizeof (USB_DEVICE_DESCRIPTOR);
 
-    uint8_t                buf[constBufSize];
-    USB_DEVICE_DESCRIPTOR *udd = reinterpret_cast<USB_DEVICE_DESCRIPTOR *>(buf);
+        uint8_t buf[constBufSize];
+        USB_DEVICE_DESCRIPTOR * udd = reinterpret_cast<USB_DEVICE_DESCRIPTOR*>(buf);
 
-    uint8_t    rcode;
-    UsbDevice *p         = NULL;
-    EpInfo    *oldep_ptr = NULL;
-    uint8_t    num_of_conf; // number of configurations
+        uint8_t rcode;
+        UsbDevice *p = NULL;
+        EpInfo *oldep_ptr = NULL;
+        uint8_t num_of_conf; // number of configurations
 
-    AddressPool &addrPool = pUsb->GetAddressPool();
+        AddressPool &addrPool = pUsb->GetAddressPool();
 
-    USBTRACE("XR Init\r\n");
+        USBTRACE("XR Init\r\n");
 
-    if (bAddress) return USB_ERROR_CLASS_INSTANCE_ALREADY_IN_USE;
+        if(bAddress)
+                return USB_ERROR_CLASS_INSTANCE_ALREADY_IN_USE;
 
-    // Get pointer to pseudo device with address 0 assigned
-    p = addrPool.GetUsbDevicePtr(0);
+        // Get pointer to pseudo device with address 0 assigned
+        p = addrPool.GetUsbDevicePtr(0);
 
-    if (!p) return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
+        if(!p)
+                return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
 
-    if (!p->epinfo) {
-        USBTRACE("epinfo\r\n");
-        return USB_ERROR_EPINFO_IS_NULL;
-    }
+        if(!p->epinfo) {
+                USBTRACE("epinfo\r\n");
+                return USB_ERROR_EPINFO_IS_NULL;
+        }
 
-    // Save old pointer to EP_RECORD of address 0
-    oldep_ptr = p->epinfo;
+        // Save old pointer to EP_RECORD of address 0
+        oldep_ptr = p->epinfo;
 
-    // Temporary assign new pointer to epInfo to p->epinfo in order to avoid toggle inconsistence
-    p->epinfo = epInfo;
+        // Temporary assign new pointer to epInfo to p->epinfo in order to avoid toggle inconsistence
+        p->epinfo = epInfo;
 
-    p->lowspeed = lowspeed;
+        p->lowspeed = lowspeed;
 
-    // Get device descriptor
-    rcode = pUsb->getDevDescr(0, 0, constBufSize, (uint8_t *)buf);
+        // Get device descriptor
+        rcode = pUsb->getDevDescr(0, 0, constBufSize, (uint8_t*)buf);
 
-    // Restore p->epinfo
-    p->epinfo = oldep_ptr;
+        // Restore p->epinfo
+        p->epinfo = oldep_ptr;
 
-    if (rcode) goto FailGetDevDescr;
+        if(rcode)
+                goto FailGetDevDescr;
 
-    // Allocate new address according to device class
-    bAddress = addrPool.AllocAddress(parent, false, port);
+        // Allocate new address according to device class
+        bAddress = addrPool.AllocAddress(parent, false, port);
 
-    if (!bAddress) return USB_ERROR_OUT_OF_ADDRESS_SPACE_IN_POOL;
+        if(!bAddress)
+                return USB_ERROR_OUT_OF_ADDRESS_SPACE_IN_POOL;
 
-    // Extract Max Packet Size from the device descriptor
-    epInfo[0].maxPktSize = udd->bMaxPacketSize0;
+        // Extract Max Packet Size from the device descriptor
+        epInfo[0].maxPktSize = udd->bMaxPacketSize0;
 
-    // Assign new address to the device
-    rcode = pUsb->setAddr(0, 0, bAddress);
+        // Assign new address to the device
+        rcode = pUsb->setAddr(0, 0, bAddress);
 
-    if (rcode) {
+        if(rcode) {
+                p->lowspeed = false;
+                addrPool.FreeAddress(bAddress);
+                bAddress = 0;
+                USBTRACE2("setAddr:", rcode);
+                return rcode;
+        }
+
+        USBTRACE2("Addr:", bAddress);
+
         p->lowspeed = false;
-        addrPool.FreeAddress(bAddress);
-        bAddress = 0;
-        USBTRACE2("setAddr:", rcode);
-        return rcode;
-    }
 
-    USBTRACE2("Addr:", bAddress);
+        p = addrPool.GetUsbDevicePtr(bAddress);
 
-    p->lowspeed = false;
+        if(!p)
+                return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
 
-    p = addrPool.GetUsbDevicePtr(bAddress);
+        p->lowspeed = lowspeed;
 
-    if (!p) return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
+        num_of_conf = udd->bNumConfigurations;
 
-    p->lowspeed = lowspeed;
+        if((((udd->idVendor != 0x2890U) || (udd->idProduct != 0x0201U)) && ((udd->idVendor != 0x04e2U) || (udd->idProduct != 0x1411U))))
+                return USB_DEV_CONFIG_ERROR_DEVICE_NOT_SUPPORTED;
 
-    num_of_conf = udd->bNumConfigurations;
+        // Assign epInfo to epinfo pointer
+        rcode = pUsb->setEpInfoEntry(bAddress, 1, epInfo);
 
-    if ((((udd->idVendor != 0x2890U) || (udd->idProduct != 0x0201U)) && ((udd->idVendor != 0x04e2U) || (udd->idProduct != 0x1411U)))) return USB_DEV_CONFIG_ERROR_DEVICE_NOT_SUPPORTED;
+        if(rcode)
+                goto FailSetDevTblEntry;
 
-    // Assign epInfo to epinfo pointer
-    rcode = pUsb->setEpInfoEntry(bAddress, 1, epInfo);
+        USBTRACE2("NC:", num_of_conf);
 
-    if (rcode) goto FailSetDevTblEntry;
+        for(uint8_t i = 0; i < num_of_conf; i++) {
+                ConfigDescParser< USB_CLASS_COM_AND_CDC_CTRL,
+                        CDC_SUBCLASS_ACM,
+                        CDC_PROTOCOL_ITU_T_V_250,
+                        CP_MASK_COMPARE_CLASS |
+                        CP_MASK_COMPARE_SUBCLASS |
+                        CP_MASK_COMPARE_PROTOCOL > CdcControlParser(this);
 
-    USBTRACE2("NC:", num_of_conf);
+                ConfigDescParser<USB_CLASS_CDC_DATA, 0, 0,
+                        CP_MASK_COMPARE_CLASS> CdcDataParser(this);
 
-    for (uint8_t i = 0; i < num_of_conf; i++) {
-        ConfigDescParser<USB_CLASS_COM_AND_CDC_CTRL, CDC_SUBCLASS_ACM, CDC_PROTOCOL_ITU_T_V_250, CP_MASK_COMPARE_CLASS | CP_MASK_COMPARE_SUBCLASS | CP_MASK_COMPARE_PROTOCOL> CdcControlParser(this);
+                rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcControlParser);
 
-        ConfigDescParser<USB_CLASS_CDC_DATA, 0, 0, CP_MASK_COMPARE_CLASS> CdcDataParser(this);
+                if(rcode)
+                        goto FailGetConfDescr;
 
-        rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcControlParser);
+                rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcDataParser);
 
-        if (rcode) goto FailGetConfDescr;
+                if(rcode)
+                        goto FailGetConfDescr;
 
-        rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcDataParser);
+                if(bNumEP > 1)
+                        break;
+        } // for
 
-        if (rcode) goto FailGetConfDescr;
+        if(bNumEP < 4)
+                return USB_DEV_CONFIG_ERROR_DEVICE_NOT_SUPPORTED;
 
-        if (bNumEP > 1) break;
-    } // for
+        // Assign epInfo to epinfo pointer
+        rcode = pUsb->setEpInfoEntry(bAddress, bNumEP, epInfo);
 
-    if (bNumEP < 4) return USB_DEV_CONFIG_ERROR_DEVICE_NOT_SUPPORTED;
+        USBTRACE2("Conf:", bConfNum);
 
-    // Assign epInfo to epinfo pointer
-    rcode = pUsb->setEpInfoEntry(bAddress, bNumEP, epInfo);
+        // Set Configuration Value
+        rcode = pUsb->setConf(bAddress, 0, bConfNum);
 
-    USBTRACE2("Conf:", bConfNum);
+        if(rcode)
+                goto FailSetConfDescr;
 
-    // Set Configuration Value
-    rcode = pUsb->setConf(bAddress, 0, bConfNum);
+        // Set up features status
+        _enhanced_status = enhanced_features();
+        half_duplex(false);
+        autoflowRTS(false);
+        autoflowDSR(false);
+        autoflowXON(false);
+        wide(false); // Always false, because this is only available in custom mode.
 
-    if (rcode) goto FailSetConfDescr;
+        rcode = pAsync->OnInit(this);
 
-    // Set up features status
-    _enhanced_status = enhanced_features();
-    half_duplex(false);
-    autoflowRTS(false);
-    autoflowDSR(false);
-    autoflowXON(false);
-    wide(false); // Always false, because this is only available in custom mode.
+        if(rcode)
+                goto FailOnInit;
 
-    rcode = pAsync->OnInit(this);
+        USBTRACE("XR configured\r\n");
 
-    if (rcode) goto FailOnInit;
+        ready = true;
 
-    USBTRACE("XR configured\r\n");
+        //bPollEnable = true;
 
-    ready = true;
-
-    // bPollEnable = true;
-
-    // USBTRACE("Poll enabled\r\n");
-    return 0;
+        //USBTRACE("Poll enabled\r\n");
+        return 0;
 
 FailGetDevDescr:
 #ifdef DEBUG_USB_HOST
-    NotifyFailGetDevDescr();
-    goto Fail;
+        NotifyFailGetDevDescr();
+        goto Fail;
 #endif
 
 FailSetDevTblEntry:
 #ifdef DEBUG_USB_HOST
-    NotifyFailSetDevTblEntry();
-    goto Fail;
+        NotifyFailSetDevTblEntry();
+        goto Fail;
 #endif
 
 FailGetConfDescr:
 #ifdef DEBUG_USB_HOST
-    NotifyFailGetConfDescr();
-    goto Fail;
+        NotifyFailGetConfDescr();
+        goto Fail;
 #endif
 
 FailSetConfDescr:
 #ifdef DEBUG_USB_HOST
-    NotifyFailSetConfDescr();
-    goto Fail;
+        NotifyFailSetConfDescr();
+        goto Fail;
 #endif
 
 FailOnInit:
 #ifdef DEBUG_USB_HOST
-    USBTRACE("OnInit:");
+        USBTRACE("OnInit:");
 #endif
 
 #ifdef DEBUG_USB_HOST
 Fail:
-    NotifyFail(rcode);
+        NotifyFail(rcode);
 #endif
-    Release();
-    return rcode;
+        Release();
+        return rcode;
 }

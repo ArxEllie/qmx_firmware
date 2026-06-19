@@ -46,7 +46,7 @@ struct TestParams {
     std::string name;
     bool        autoshift_on;
 
-    static const std::string &GetName(const TestParamInfo<TestParams> &info) {
+    static const std::string& GetName(const TestParamInfo<TestParams>& info) {
         return info.param.name;
     }
 };

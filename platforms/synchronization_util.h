@@ -25,7 +25,7 @@ inline void split_shared_memory_unlock(void) {};
         return 0;                                                           \
     }                                                                       \
                                                                             \
-    inline void prefix##_autounlock_unlock_helper(unsigned *unused_guard) { \
+    inline void prefix##_autounlock_unlock_helper(unsigned* unused_guard) { \
         prefix##_unlock();                                                  \
     }
 
@@ -33,7 +33,7 @@ inline void split_shared_memory_unlock(void) {};
  * by the above macro don't actually get inlined. */
 #define QMK_IMPLEMENT_AUTOUNLOCK_HELPERS(prefix)                  \
     extern inline unsigned prefix##_autounlock_lock_helper(void); \
-    extern inline void     prefix##_autounlock_unlock_helper(unsigned *unused_guard);
+    extern inline void     prefix##_autounlock_unlock_helper(unsigned* unused_guard);
 
 /* Convinience macro the automatically generate the correct RAII-style
  * lock_autounlock function macro */

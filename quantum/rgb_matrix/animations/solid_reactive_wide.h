@@ -22,13 +22,13 @@ static hsv_t SOLID_REACTIVE_WIDE_math(hsv_t hsv, int16_t dx, int16_t dy, uint8_t
 }
 
 #            ifdef ENABLE_RGB_MATRIX_SOLID_REACTIVE_WIDE
-bool SOLID_REACTIVE_WIDE(effect_params_t *params) {
+bool SOLID_REACTIVE_WIDE(effect_params_t* params) {
     return effect_runner_reactive_splash(qsub8(g_last_hit_tracker.count, 1), params, &SOLID_REACTIVE_WIDE_math);
 }
 #            endif
 
 #            ifdef ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTIWIDE
-bool SOLID_REACTIVE_MULTIWIDE(effect_params_t *params) {
+bool SOLID_REACTIVE_MULTIWIDE(effect_params_t* params) {
     return effect_runner_reactive_splash(0, params, &SOLID_REACTIVE_WIDE_math);
 }
 #            endif

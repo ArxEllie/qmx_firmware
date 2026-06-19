@@ -19,20 +19,20 @@
 #include <ostream>
 #include "gmock/gmock.h"
 
-bool          operator==(const report_mouse_t &lhs, const report_mouse_t &rhs);
-std::ostream &operator<<(std::ostream &stream, const report_mouse_t &value);
+bool          operator==(const report_mouse_t& lhs, const report_mouse_t& rhs);
+std::ostream& operator<<(std::ostream& stream, const report_mouse_t& value);
 
-class MouseReportMatcher : public testing::MatcherInterface<report_mouse_t &> {
+class MouseReportMatcher : public testing::MatcherInterface<report_mouse_t&> {
    public:
     MouseReportMatcher(int16_t x, int16_t y, int8_t h, int8_t v, uint8_t button_mask);
-    virtual bool MatchAndExplain(report_mouse_t &report, testing::MatchResultListener *listener) const override;
-    virtual void DescribeTo(::std::ostream *os) const override;
-    virtual void DescribeNegationTo(::std::ostream *os) const override;
+    virtual bool MatchAndExplain(report_mouse_t& report, testing::MatchResultListener* listener) const override;
+    virtual void DescribeTo(::std::ostream* os) const override;
+    virtual void DescribeNegationTo(::std::ostream* os) const override;
 
    private:
     report_mouse_t m_report;
 };
 
-inline testing::Matcher<report_mouse_t &> MouseReport(int16_t x, int16_t y, int8_t h, int8_t v, uint8_t button_mask) {
+inline testing::Matcher<report_mouse_t&> MouseReport(int16_t x, int16_t y, int8_t h, int8_t v, uint8_t button_mask) {
     return testing::MakeMatcher(new MouseReportMatcher(x, y, h, v, button_mask));
 }

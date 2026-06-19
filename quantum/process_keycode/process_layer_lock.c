@@ -21,7 +21,7 @@
 extern layer_state_t locked_layers;
 
 // Handles an event on an `MO` or `TT` layer switch key.
-static inline bool handle_mo_or_tt(uint8_t layer, keyrecord_t *record) {
+static inline bool handle_mo_or_tt(uint8_t layer, keyrecord_t* record) {
     if (is_layer_locked(layer)) {
         if (record->event.pressed) { // On press, unlock the layer.
             layer_lock_invert(layer);
@@ -31,7 +31,7 @@ static inline bool handle_mo_or_tt(uint8_t layer, keyrecord_t *record) {
     return true;
 }
 
-bool process_layer_lock(uint16_t keycode, keyrecord_t *record) {
+bool process_layer_lock(uint16_t keycode, keyrecord_t* record) {
 #ifndef NO_ACTION_LAYER
     layer_lock_activity_trigger();
 

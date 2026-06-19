@@ -366,7 +366,7 @@ __attribute__((weak)) adc_mux pinToMux(pin_t pin) {
 }
 // clang-format on
 
-static inline ADCDriver *intToADCDriver(uint8_t adcInt) {
+static inline ADCDriver* intToADCDriver(uint8_t adcInt) {
     switch (adcInt) {
 #if RP_ADC_USE_ADC1 || STM32_ADC_USE_ADC1 || WB32_ADC_USE_ADC1 || AT32_ADC_USE_ADC1
         case 0:
@@ -389,7 +389,7 @@ static inline ADCDriver *intToADCDriver(uint8_t adcInt) {
     return NULL;
 }
 
-static inline void manageAdcInitializationDriver(uint8_t adc, ADCDriver *adcDriver) {
+static inline void manageAdcInitializationDriver(uint8_t adc, ADCDriver* adcDriver) {
     if (!adcInitialized[adc]) {
         adcStart(adcDriver, &adcCfg);
         adcInitialized[adc] = true;
@@ -430,7 +430,7 @@ int16_t adc_read(adc_mux mux) {
         ;
 #endif
 
-    ADCDriver *targetDriver = intToADCDriver(mux.adc);
+    ADCDriver* targetDriver = intToADCDriver(mux.adc);
     if (!targetDriver) {
         return 0;
     }

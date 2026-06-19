@@ -2,7 +2,7 @@
 
 typedef uint8_t (*sin_cos_i_f)(uint8_t val, int8_t sin, int8_t cos, uint8_t i, uint8_t time);
 
-bool effect_runner_sin_cos_i(effect_params_t *params, sin_cos_i_f effect_func) {
+bool effect_runner_sin_cos_i(effect_params_t* params, sin_cos_i_f effect_func) {
     LED_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint16_t time      = scale16by8(g_led_timer, led_matrix_eeconfig.speed / 4);

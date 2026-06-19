@@ -5,7 +5,7 @@
 RGB_MATRIX_EFFECT(PIXEL_RAIN)
 #    ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
-static bool PIXEL_RAIN(effect_params_t *params) {
+static bool PIXEL_RAIN(effect_params_t* params) {
     static uint8_t  index = 0;
     static uint32_t timer = 0;
 

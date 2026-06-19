@@ -31,17 +31,17 @@
  * Board identifier.
  */
 #define BOARD_GENERIC_AT32_F415XX
-#define BOARD_NAME "GENERIC AT32F415 board"
+#define BOARD_NAME                  "GENERIC AT32F415 board"
 
 /*
  * Board oscillators-related settings.
  */
 #if !defined(AT32_LEXTCLK)
-#    define AT32_LEXTCLK 32768
+#define AT32_LEXTCLK                32768
 #endif
 
 #if !defined(AT32_HEXTCLK)
-#    define AT32_HEXTCLK 8000000
+#define AT32_HEXTCLK                8000000
 #endif
 
 /*
@@ -53,72 +53,72 @@
  * GPIO settings, allow unused GPIO for smaller chip packages.
  */
 #if defined(AT32F415KB) || defined(AT32F415KC)
-#    define AT32_HAS_GPIOC TRUE
-#    define AT32_HAS_GPIOF TRUE
+#define AT32_HAS_GPIOC              TRUE
+#define AT32_HAS_GPIOF              TRUE
 #endif
 
 /*
  * IO pins assignments.
  */
-#define GPIOA_PIN0 0U
-#define GPIOA_PIN1 1U
-#define GPIOA_PIN2 2U
-#define GPIOA_PIN3 3U
-#define GPIOA_PIN4 4U
-#define GPIOA_PIN5 5U
-#define GPIOA_PIN6 6U
-#define GPIOA_PIN7 7U
-#define GPIOA_PIN8 8U
-#define GPIOA_PIN9 9U
-#define GPIOA_PIN10 10U
-#define GPIOA_PIN11 11U
-#define GPIOA_PIN12 12U
-#define GPIOA_SWDIO 13U
-#define GPIOA_SWCLK 14U
-#define GPIOA_PIN15 15U
+#define GPIOA_PIN0                  0U
+#define GPIOA_PIN1                  1U
+#define GPIOA_PIN2                  2U
+#define GPIOA_PIN3                  3U
+#define GPIOA_PIN4                  4U
+#define GPIOA_PIN5                  5U
+#define GPIOA_PIN6                  6U
+#define GPIOA_PIN7                  7U
+#define GPIOA_PIN8                  8U
+#define GPIOA_PIN9                  9U
+#define GPIOA_PIN10                 10U
+#define GPIOA_PIN11                 11U
+#define GPIOA_PIN12                 12U
+#define GPIOA_SWDIO                 13U
+#define GPIOA_SWCLK                 14U
+#define GPIOA_PIN15                 15U
 
-#define GPIOB_PIN0 0U
-#define GPIOB_PIN1 1U
-#define GPIOB_PIN2 2U
-#define GPIOB_PIN3 3U
-#define GPIOB_PIN4 4U
-#define GPIOB_PIN5 5U
-#define GPIOB_PIN6 6U
-#define GPIOB_PIN7 7U
-#define GPIOB_PIN8 8U
-#define GPIOB_PIN9 9U
-#define GPIOB_PIN10 10U
-#define GPIOB_PIN11 11U
-#define GPIOB_PIN12 12U
-#define GPIOB_PIN13 13U
-#define GPIOB_PIN14 14U
-#define GPIOB_PIN15 15U
+#define GPIOB_PIN0                  0U
+#define GPIOB_PIN1                  1U
+#define GPIOB_PIN2                  2U
+#define GPIOB_PIN3                  3U
+#define GPIOB_PIN4                  4U
+#define GPIOB_PIN5                  5U
+#define GPIOB_PIN6                  6U
+#define GPIOB_PIN7                  7U
+#define GPIOB_PIN8                  8U
+#define GPIOB_PIN9                  9U
+#define GPIOB_PIN10                 10U
+#define GPIOB_PIN11                 11U
+#define GPIOB_PIN12                 12U
+#define GPIOB_PIN13                 13U
+#define GPIOB_PIN14                 14U
+#define GPIOB_PIN15                 15U
 
-#define GPIOC_PIN0 0U
-#define GPIOC_PIN1 1U
-#define GPIOC_PIN2 2U
-#define GPIOC_PIN3 3U
-#define GPIOC_PIN4 4U
-#define GPIOC_PIN5 5U
-#define GPIOC_PIN6 6U
-#define GPIOC_PIN7 7U
-#define GPIOC_PIN8 8U
-#define GPIOC_PIN9 9U
-#define GPIOC_PIN10 10U
-#define GPIOC_PIN11 11U
-#define GPIOC_PIN12 12U
-#define GPIOC_PIN13 13U
-#define GPIOC_PIN14 14U
-#define GPIOC_PIN15 15U
+#define GPIOC_PIN0                  0U
+#define GPIOC_PIN1                  1U
+#define GPIOC_PIN2                  2U
+#define GPIOC_PIN3                  3U
+#define GPIOC_PIN4                  4U
+#define GPIOC_PIN5                  5U
+#define GPIOC_PIN6                  6U
+#define GPIOC_PIN7                  7U
+#define GPIOC_PIN8                  8U
+#define GPIOC_PIN9                  9U
+#define GPIOC_PIN10                 10U
+#define GPIOC_PIN11                 11U
+#define GPIOC_PIN12                 12U
+#define GPIOC_PIN13                 13U
+#define GPIOC_PIN14                 14U
+#define GPIOC_PIN15                 15U
 
-#define GPIOD_HEXT_IN 0U
-#define GPIOD_HEXT_OUT 1U
-#define GPIOD_PIN2 2U
+#define GPIOD_HEXT_IN               0U
+#define GPIOD_HEXT_OUT              1U
+#define GPIOD_PIN2                  2U
 
-#define GPIOF_PIN4 4U
-#define GPIOF_PIN5 5U
-#define GPIOF_PIN6 6U
-#define GPIOF_PIN7 7U
+#define GPIOF_PIN4                  4U
+#define GPIOF_PIN5                  5U
+#define GPIOF_PIN6                  6U
+#define GPIOF_PIN7                  7U
 
 /*===========================================================================*/
 /* Driver pre-compile time settings.                                         */
@@ -163,23 +163,23 @@
 /*
  * Port A setup.
  */
-#define VAL_GPIOACFGLR 0x88888888 /*  PA7...PA0 */
-#define VAL_GPIOACFGHR 0x88888888 /* PA15...PA8 */
-#define VAL_GPIOAODT 0xFFFFFFFF
+#define VAL_GPIOACFGLR          0x88888888      /*  PA7...PA0 */
+#define VAL_GPIOACFGHR          0x88888888      /* PA15...PA8 */
+#define VAL_GPIOAODT            0xFFFFFFFF
 
 /*
  * Port B setup.
  */
-#define VAL_GPIOBCFGLR 0x88888888 /*  PB7...PB0 */
-#define VAL_GPIOBCFGHR 0x88888888 /* PB15...PB8 */
-#define VAL_GPIOBODT 0xFFFFFFFF
+#define VAL_GPIOBCFGLR          0x88888888      /*  PB7...PB0 */
+#define VAL_GPIOBCFGHR          0x88888888      /* PB15...PB8 */
+#define VAL_GPIOBODT            0xFFFFFFFF
 
 /*
  * Port C setup.
  */
-#define VAL_GPIOCCFGLR 0x88888888 /*  PC7...PC0 */
-#define VAL_GPIOCCFGHR 0x88888888 /* PC15...PC8 */
-#define VAL_GPIOCODT 0xFFFFFFFF
+#define VAL_GPIOCCFGLR          0x88888888      /*  PC7...PC0 */
+#define VAL_GPIOCCFGHR          0x88888888      /* PC15...PC8 */
+#define VAL_GPIOCODT            0xFFFFFFFF
 
 /*
  * Port D setup.
@@ -187,29 +187,29 @@
  * PD0  - Normal input              (GPIOD_HEXT_IN).
  * PD1  - Normal input              (GPIOD_HEXT_OUT).
  */
-#define VAL_GPIODCFGLR 0x88888844 /*  PD7...PD0 */
-#define VAL_GPIODCFGHR 0x88888888 /* PD15...PD8 */
-#define VAL_GPIODODT 0xFFFFFFFF
+#define VAL_GPIODCFGLR          0x88888844      /*  PD7...PD0 */
+#define VAL_GPIODCFGHR          0x88888888      /* PD15...PD8 */
+#define VAL_GPIODODT            0xFFFFFFFF
 
 /*
  * Port F setup.
  */
-#define VAL_GPIOFCFGLR 0x88888888 /*  PF7...PF0 */
-#define VAL_GPIOFCFGHR 0x88888888 /* PF15...PF8 */
-#define VAL_GPIOFODT 0xFFFFFFFF
+#define VAL_GPIOFCFGLR          0x88888888      /*  PF7...PF0 */
+#define VAL_GPIOFCFGHR          0x88888888      /* PF15...PF8 */
+#define VAL_GPIOFODT            0xFFFFFFFF
 
 /*===========================================================================*/
 /* External declarations.                                                    */
 /*===========================================================================*/
 
 #if !defined(_FROM_ASM_)
-#    ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#    endif
-void boardInit(void);
-#    ifdef __cplusplus
+#endif
+  void boardInit(void);
+#ifdef __cplusplus
 }
-#    endif
+#endif
 #endif /* _FROM_ASM_ */
 
 #endif /* _BOARD_H_ */

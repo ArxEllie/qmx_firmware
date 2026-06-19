@@ -30,7 +30,7 @@ void serial_transport_driver_master_init(void);
  * @return true Receive success.
  * @return false Receive failed, e.g. by bit errors.
  */
-bool __attribute__((nonnull, hot)) serial_transport_receive(uint8_t *destination, const size_t size);
+bool __attribute__((nonnull, hot)) serial_transport_receive(uint8_t* destination, const size_t size);
 
 /**
  * @brief Blocking receive of size * bytes with an implicitly defined timeout.
@@ -38,7 +38,7 @@ bool __attribute__((nonnull, hot)) serial_transport_receive(uint8_t *destination
  * @return true Receive success.
  * @return false Receive failed, e.g. by timeout or bit errors.
  */
-bool __attribute__((nonnull, hot)) serial_transport_receive_blocking(uint8_t *destination, const size_t size);
+bool __attribute__((nonnull, hot)) serial_transport_receive_blocking(uint8_t* destination, const size_t size);
 
 /**
  * @brief Blocking send of buffer with timeout.
@@ -46,4 +46,4 @@ bool __attribute__((nonnull, hot)) serial_transport_receive_blocking(uint8_t *de
  * @return true Send success.
  * @return false Send failed, e.g. by timeout or bit errors.
  */
-bool __attribute__((nonnull, hot)) serial_transport_send(const uint8_t *source, const size_t size);
+bool __attribute__((nonnull, hot)) serial_transport_send(const uint8_t* source, const size_t size);

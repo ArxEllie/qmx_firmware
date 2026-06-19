@@ -21,22 +21,22 @@
 
 TestLogger test_logger;
 
-TestLogger &TestLogger::info() {
+TestLogger& TestLogger::info() {
     *this << "[ INFO     ] ";
     return this->timestamp();
 }
 
-TestLogger &TestLogger::trace() {
+TestLogger& TestLogger::trace() {
     *this << "[ TRACE    ] ";
     return this->timestamp();
 }
 
-TestLogger &TestLogger::error() {
+TestLogger& TestLogger::error() {
     *this << "[ ERROR    ] ";
     return this->timestamp();
 }
 
-TestLogger &TestLogger::timestamp() {
+TestLogger& TestLogger::timestamp() {
     *this << std::setw(6) << timer_read32() << " ";
     return *this;
 }

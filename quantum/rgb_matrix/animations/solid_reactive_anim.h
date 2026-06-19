@@ -12,7 +12,7 @@ static hsv_t SOLID_REACTIVE_math(hsv_t hsv, uint16_t offset) {
     return hsv;
 }
 
-bool SOLID_REACTIVE(effect_params_t *params) {
+bool SOLID_REACTIVE(effect_params_t* params) {
     return effect_runner_reactive(params, &SOLID_REACTIVE_math);
 }
 

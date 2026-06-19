@@ -7,7 +7,7 @@ static hsv_t RAINBOW_MOVING_CHEVRON_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool RAINBOW_MOVING_CHEVRON(effect_params_t *params) {
+bool RAINBOW_MOVING_CHEVRON(effect_params_t* params) {
     return effect_runner_i(params, &RAINBOW_MOVING_CHEVRON_math);
 }
 

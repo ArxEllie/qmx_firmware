@@ -26,7 +26,7 @@
  * @return true    Continue processing keycodes, and send to host
  * @return false   Stop processing keycodes, and don't send to host
  */
-bool process_caps_word(uint16_t keycode, keyrecord_t *record);
+bool process_caps_word(uint16_t keycode, keyrecord_t* record);
 
 /**
  * @brief Weak function for user-level Caps Word press modification.

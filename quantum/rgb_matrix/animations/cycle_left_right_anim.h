@@ -7,7 +7,7 @@ static hsv_t CYCLE_LEFT_RIGHT_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool CYCLE_LEFT_RIGHT(effect_params_t *params) {
+bool CYCLE_LEFT_RIGHT(effect_params_t* params) {
     return effect_runner_i(params, &CYCLE_LEFT_RIGHT_math);
 }
 

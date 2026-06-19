@@ -26,7 +26,7 @@
 #ifdef CAPS_WORD_INVERT_ON_SHIFT
 static uint8_t held_mods = 0;
 
-static bool handle_shift(uint16_t keycode, keyrecord_t *record) {
+static bool handle_shift(uint16_t keycode, keyrecord_t* record) {
     switch (keycode) {
         case OSM(MOD_LSFT):
             keycode = KC_LSFT;
@@ -71,7 +71,7 @@ static bool handle_shift(uint16_t keycode, keyrecord_t *record) {
 }
 #endif // CAPS_WORD_INVERT_ON_SHIFT
 
-bool process_caps_word(uint16_t keycode, keyrecord_t *record) {
+bool process_caps_word(uint16_t keycode, keyrecord_t* record) {
     if (keycode == QK_CAPS_WORD_TOGGLE) {
         if (record->event.pressed) {
             caps_word_toggle();

@@ -12,8 +12,8 @@
 #    error PIO Driver is only available for Raspberry Pi 2040 MCUs!
 #endif
 
-static inline bool receive_impl(uint8_t *destination, const size_t size, sysinterval_t timeout);
-static inline bool send_impl(const uint8_t *source, const size_t size);
+static inline bool receive_impl(uint8_t* destination, const size_t size, sysinterval_t timeout);
+static inline bool send_impl(const uint8_t* source, const size_t size);
 static inline void pio_serve_interrupt(void);
 
 #define MSG_PIO_ERROR ((msg_t)(-3))
@@ -207,7 +207,7 @@ static inline msg_t sync_tx(sysinterval_t timeout) {
     return msg;
 }
 
-static inline bool send_impl(const uint8_t *source, const size_t size) {
+static inline bool send_impl(const uint8_t* source, const size_t size) {
     size_t send = 0;
     msg_t  msg;
     while (send < size) {
@@ -240,7 +240,7 @@ static inline bool send_impl(const uint8_t *source, const size_t size) {
  * @return true Send success.
  * @return false Send failed.
  */
-inline bool serial_transport_send(const uint8_t *source, const size_t size) {
+inline bool serial_transport_send(const uint8_t* source, const size_t size) {
     leave_rx_state();
     bool result = send_impl(source, size);
     enter_rx_state();
@@ -263,7 +263,7 @@ static inline msg_t sync_rx(sysinterval_t timeout) {
     return msg;
 }
 
-static inline bool receive_impl(uint8_t *destination, const size_t size, sysinterval_t timeout) {
+static inline bool receive_impl(uint8_t* destination, const size_t size, sysinterval_t timeout) {
     size_t read = 0U;
 
     while (read < size) {
@@ -279,7 +279,7 @@ static inline bool receive_impl(uint8_t *destination, const size_t size, sysinte
             if (read >= size) {
                 break;
             }
-            *destination++ = *((uint8_t *)&pio->rxf[rx_state_machine] + 3U);
+            *destination++ = *((uint8_t*)&pio->rxf[rx_state_machine] + 3U);
             read++;
         }
         osalSysUnlock();
@@ -294,7 +294,7 @@ static inline bool receive_impl(uint8_t *destination, const size_t size, sysinte
  * @return true Receive success.
  * @return false Receive failed, e.g. by timeout.
  */
-inline bool serial_transport_receive(uint8_t *destination, const size_t size) {
+inline bool serial_transport_receive(uint8_t* destination, const size_t size) {
     return receive_impl(destination, size, TIME_MS2I(SERIAL_USART_TIMEOUT));
 }
 
@@ -304,7 +304,7 @@ inline bool serial_transport_receive(uint8_t *destination, const size_t size) {
  * @return true Receive success.
  * @return false Receive failed.
  */
-inline bool serial_transport_receive_blocking(uint8_t *destination, const size_t size) {
+inline bool serial_transport_receive_blocking(uint8_t* destination, const size_t size) {
     return receive_impl(destination, size, TIME_INFINITE);
 }
 

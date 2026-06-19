@@ -50,9 +50,9 @@ bool backing_store_lock(void) {
     return true;
 }
 
-bool backing_store_read(uint32_t address, backing_store_int_t *value) {
+bool backing_store_read(uint32_t address, backing_store_int_t* value) {
     uint32_t             offset = ((WEAR_LEVELING_LEGACY_EMULATION_BASE_PAGE_ADDRESS) + address);
-    backing_store_int_t *loc    = (backing_store_int_t *)offset;
+    backing_store_int_t* loc    = (backing_store_int_t*)offset;
     *value                      = ~(*loc);
     bs_dprintf("Read  ");
     wl_dump(offset, loc, sizeof(backing_store_int_t));

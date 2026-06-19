@@ -134,7 +134,7 @@ void __early_init(void) {
     // This is a dirty hack and should only be used as a temporary fix until this
     // is upstreamed.
     while (WDOG_TMROUTL < 2)
-        ; // Must wait for WDOG timer if already running, before jumping
+        ;  // Must wait for WDOG timer if already running, before jumping
 
     k20x_clock_init();
 }
@@ -145,6 +145,7 @@ void __early_init(void) {
  */
 void boardInit(void) {}
 
+
 void restart_usb_driver(USBDriver *usbp) {
-    // Do nothing. Restarting the USB driver on these boards breaks it.
+  // Do nothing. Restarting the USB driver on these boards breaks it.
 }

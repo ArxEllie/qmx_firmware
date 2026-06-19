@@ -141,10 +141,10 @@ static const uint16_t common_names[] PROGMEM = {
 // clang-format on
 
 /** Users can override this to define names of additional keycodes. */
-__attribute__((weak)) const keycode_string_name_t *keycode_string_names_data_user = NULL;
+__attribute__((weak)) const keycode_string_name_t* keycode_string_names_data_user = NULL;
 __attribute__((weak)) uint16_t                     keycode_string_names_size_user = 0;
 /** Keyboard vendors can override this to define names of additional keycodes. */
-__attribute__((weak)) const keycode_string_name_t *keycode_string_names_data_kb = NULL;
+__attribute__((weak)) const keycode_string_name_t* keycode_string_names_data_kb = NULL;
 __attribute__((weak)) uint16_t                     keycode_string_names_size_kb = 0;
 /** Names of the 4 mods on each hand. */
 static const char mod_names[] PROGMEM = "CTL\0SFT\0ALT\0GUI";
@@ -154,7 +154,7 @@ static char buffer[32];
 static index_t buffer_len;
 
 /** Finds the name of a keycode in `common_names` or returns NULL. */
-static const char *search_common_names(uint16_t keycode) {
+static const char* search_common_names(uint16_t keycode) {
     static uint8_t buffer[8];
 
     for (int_fast16_t offset = 0; offset < ARRAY_SIZE(common_names); offset += 4) {
@@ -170,7 +170,7 @@ static const char *search_common_names(uint16_t keycode) {
             buffer[5]         = (uint8_t)w2;
             buffer[6]         = (uint8_t)(w2 >> 8);
             buffer[7]         = 0;
-            return (const char *)buffer;
+            return (const char*)buffer;
         }
     }
 
@@ -184,7 +184,7 @@ static const char *search_common_names(uint16_t keycode) {
  * @param size   Numer of entries in the table.
  * @return Name string for the keycode, or NULL if not found.
  */
-static const char *search_table(const keycode_string_name_t *data, uint16_t size, uint16_t keycode) {
+static const char* search_table(const keycode_string_name_t* data, uint16_t size, uint16_t keycode) {
     if (data != NULL) {
         for (uint16_t i = 0; i < size; ++i) {
             if (data[i].keycode == keycode) {
@@ -196,7 +196,7 @@ static const char *search_table(const keycode_string_name_t *data, uint16_t size
 }
 
 /** Formats `number` in `base`, either 10 or 16. */
-static char *number_string(uint16_t number, int8_t base) {
+static char* number_string(uint16_t number, int8_t base) {
     static char result[7];
     result[sizeof(result) - 1] = '\0';
     index_t i                  = sizeof(result) - 1;
@@ -214,8 +214,8 @@ static char *number_string(uint16_t number, int8_t base) {
 }
 
 /** Appends `str` to `buffer`, truncating if the result would overflow. */
-static void append(const char *str) {
-    char   *dest = buffer + buffer_len;
+static void append(const char* str) {
+    char*   dest = buffer + buffer_len;
     index_t i;
     for (i = 0; buffer_len + i < BUFFER_MAX_LEN && str[i]; ++i) {
         dest[i] = str[i];
@@ -225,8 +225,8 @@ static void append(const char *str) {
 }
 
 /** Same as append(), but where `str` is a PROGMEM string. */
-static void append_P(const char *str) {
-    char   *dest = buffer + buffer_len;
+static void append_P(const char* str) {
+    char*   dest = buffer + buffer_len;
     index_t i;
     for (i = 0; buffer_len + i < BUFFER_MAX_LEN; ++i) {
         const char c = pgm_read_byte(&str[i]);
@@ -269,7 +269,7 @@ static void append_5_bit_mods(uint8_t mods) {
  * @brief Writes a keycode of the format `name` + "(" + `param` + ")".
  * @note `name` is a PROGMEM string, `param` is not.
  */
-static void append_unary_keycode(const char *name, const char *param) {
+static void append_unary_keycode(const char* name, const char* param) {
     append_P(name);
     append_char('(');
     append(param);
@@ -280,7 +280,7 @@ static void append_unary_keycode(const char *name, const char *param) {
  * @brief Writes a keycode of the format `name` + `number`.
  * @note `name` is a PROGMEM string.
  */
-static void append_numbered_keycode(const char *name, uint16_t number) {
+static void append_numbered_keycode(const char* name, uint16_t number) {
     append_P(name);
     append_number(number, 10);
 }
@@ -289,7 +289,7 @@ static void append_numbered_keycode(const char *name, uint16_t number) {
 static void append_keycode(uint16_t keycode) {
     // In case there is overlap among tables, search `keycode_string_names_user`
     // first so that it takes precedence.
-    const char *keycode_name = search_table(keycode_string_names_data_user, keycode_string_names_size_user, keycode);
+    const char* keycode_name = search_table(keycode_string_names_data_user, keycode_string_names_size_user, keycode);
     if (keycode_name) {
         append(keycode_name);
         return;
@@ -556,7 +556,7 @@ static void append_keycode(uint16_t keycode) {
     append_number(keycode, 16); // Fallback: write keycode as hex value.
 }
 
-const char *get_keycode_string(uint16_t keycode) {
+const char* get_keycode_string(uint16_t keycode) {
     buffer_len = 0;
     buffer[0]  = '\0';
     append_keycode(keycode);

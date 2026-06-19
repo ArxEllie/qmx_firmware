@@ -136,7 +136,7 @@ static const pio_program_t ws2812_program = {
 };
 
 static uint32_t                WS2812_BUFFER[WS2812_LED_COUNT];
-static const rp_dma_channel_t *dma_channel;
+static const rp_dma_channel_t* dma_channel;
 static uint32_t                RP_DMA_MODE_WS2812;
 static int                     STATE_MACHINE = -1;
 
@@ -156,7 +156,7 @@ __always_inline static uint32_t rgbw8888_to_u32(uint8_t red, uint8_t green, uint
 #endif
 }
 
-static void ws2812_dma_callback(void *p, uint32_t ct) {
+static void ws2812_dma_callback(void* p, uint32_t ct) {
     // We assume that there is at least one frame left in the OSR even if the TX
     // FIFO is already empty.
     rtcnt_t time_to_completion = (pio_sm_get_tx_fifo_level(pio, STATE_MACHINE) + 1) * MAX(WS2812_T1H + WS2812_T1L, WS2812_T0H + WS2812_T0L);

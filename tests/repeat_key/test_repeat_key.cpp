@@ -29,23 +29,23 @@ using ::testing::InSequence;
 
 namespace {
 
-bool process_record_user_default(uint16_t keycode, keyrecord_t *record) {
+bool process_record_user_default(uint16_t keycode, keyrecord_t* record) {
     return true;
 }
 
-bool remember_last_key_user_default(uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods) {
+bool remember_last_key_user_default(uint16_t keycode, keyrecord_t* record, uint8_t* remembered_mods) {
     return true;
 }
 
 // Indirection so that process_record_user() and remember_last_key_user()
 // can be replaced with other functions in the test cases below.
-std::function<bool(uint16_t, keyrecord_t *)>            process_record_user_fun    = process_record_user_default;
-std::function<bool(uint16_t, keyrecord_t *, uint8_t *)> remember_last_key_user_fun = remember_last_key_user_default;
+std::function<bool(uint16_t, keyrecord_t*)>           process_record_user_fun    = process_record_user_default;
+std::function<bool(uint16_t, keyrecord_t*, uint8_t*)> remember_last_key_user_fun = remember_last_key_user_default;
 
-extern "C" bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+extern "C" bool process_record_user(uint16_t keycode, keyrecord_t* record) {
     return process_record_user_fun(keycode, record);
 }
-extern "C" bool remember_last_key_user(uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods) {
+extern "C" bool remember_last_key_user(uint16_t keycode, keyrecord_t* record, uint8_t* remembered_mods) {
     return remember_last_key_user_fun(keycode, record, remembered_mods);
 }
 
@@ -62,7 +62,7 @@ class RepeatKey : public TestFixture {
 
     void ExpectProcessRecordUserCalledWith(bool expected_press, uint16_t expected_keycode, int8_t expected_repeat_key_count) {
         process_record_user_was_called_ = false;
-        process_record_user_fun         = [=](uint16_t keycode, keyrecord_t *record) {
+        process_record_user_fun         = [=](uint16_t keycode, keyrecord_t* record) {
             EXPECT_EQ(record->event.pressed, expected_press);
             EXPECT_KEYCODE_EQ(keycode, expected_keycode);
             EXPECT_EQ(get_repeat_key_count(), expected_repeat_key_count);
@@ -74,7 +74,7 @@ class RepeatKey : public TestFixture {
 
     // Expects that the characters of `s` are sent.
     // NOTE: This implementation is limited to chars a-z, A-Z.
-    void ExpectString(TestDriver &driver, const std::string &s) {
+    void ExpectString(TestDriver& driver, const std::string& s) {
         InSequence seq;
         for (int c : s) {
             switch (c) {
@@ -154,7 +154,7 @@ TEST_F(RepeatKey, Macro) {
     set_keymap({key_foo, key_repeat});
 
     // Define process_record_user() to handle FOO_MACRO.
-    process_record_user_fun = [](uint16_t keycode, keyrecord_t *record) {
+    process_record_user_fun = [](uint16_t keycode, keyrecord_t* record) {
         switch (keycode) {
             case FOO_MACRO:
                 if (record->event.pressed) {
@@ -187,7 +187,7 @@ TEST_F(RepeatKey, MacroCustomRepeat) {
     KeymapKey  key_repeat(0, 1, 0, QK_REP);
     set_keymap({key_foo, key_repeat});
 
-    process_record_user_fun = [](uint16_t keycode, keyrecord_t *record) {
+    process_record_user_fun = [](uint16_t keycode, keyrecord_t* record) {
         switch (keycode) {
             case FOO_MACRO:
                 if (record->event.pressed) {
@@ -616,7 +616,7 @@ TEST_F(RepeatKey, FilterRememberedMods) {
     KeymapKey  key_repeat(0, 3, 0, QK_REP);
     set_keymap({key_a, key_ctrl, key_shift, key_repeat});
 
-    remember_last_key_user_fun = [](uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods) {
+    remember_last_key_user_fun = [](uint16_t keycode, keyrecord_t* record, uint8_t* remembered_mods) {
         *remembered_mods &= ~MOD_MASK_SHIFT;
         return true;
     };

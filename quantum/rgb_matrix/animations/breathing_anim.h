@@ -7,7 +7,7 @@ hsv_t BREATHING_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool BREATHING(effect_params_t *params) {
+bool BREATHING(effect_params_t* params) {
     return effect_runner_i(params, &BREATHING_math);
 }
 

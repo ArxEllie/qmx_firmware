@@ -31,7 +31,7 @@ void advance_time(uint32_t ms);
 using testing::_;
 
 /* This is used for dynamic dispatching keymap_key_to_keycode calls to the current active test_fixture. */
-TestFixture *TestFixture::m_this = nullptr;
+TestFixture* TestFixture::m_this = nullptr;
 
 /* Override weak QMK function to allow the usage of isolated per-test keymaps in unit-tests.
  * The actual call is dynamicaly dispatched to the current active test fixture, which in turn has it's own keymap. */
@@ -113,7 +113,7 @@ void TestFixture::tap_key(KeymapKey key, unsigned delay_ms) {
     run_one_scan_loop();
 }
 
-void TestFixture::tap_combo(const std::vector<KeymapKey> &chord_keys, unsigned delay_ms) {
+void TestFixture::tap_combo(const std::vector<KeymapKey>& chord_keys, unsigned delay_ms) {
     for (KeymapKey key : chord_keys) { // Press each key.
         key.press();
         run_one_scan_loop();
@@ -131,12 +131,12 @@ void TestFixture::tap_combo(const std::vector<KeymapKey> &chord_keys, unsigned d
 
 void TestFixture::set_keymap(std::initializer_list<KeymapKey> keys) {
     this->keymap.clear();
-    for (auto &key : keys) {
+    for (auto& key : keys) {
         add_key(key);
     }
 }
 
-const KeymapKey *TestFixture::find_key(layer_t layer, keypos_t position) const {
+const KeymapKey* TestFixture::find_key(layer_t layer, keypos_t position) const {
     auto keymap_key_predicate = [&](KeymapKey candidate) { return candidate.layer == layer && candidate.position.col == position.col && candidate.position.row == position.row; };
 
     auto result = std::find_if(this->keymap.begin(), this->keymap.end(), keymap_key_predicate);
@@ -147,7 +147,7 @@ const KeymapKey *TestFixture::find_key(layer_t layer, keypos_t position) const {
     return nullptr;
 }
 
-void TestFixture::get_keycode(const layer_t layer, const keypos_t position, uint16_t *result) const {
+void TestFixture::get_keycode(const layer_t layer, const keypos_t position, uint16_t* result) const {
     bool key_is_out_of_bounds = position.col >= MATRIX_COLS && position.row >= MATRIX_ROWS;
 
     if (key_is_out_of_bounds) {
@@ -186,7 +186,7 @@ void TestFixture::idle_for(unsigned time) {
 }
 
 void TestFixture::print_test_log() const {
-    const ::testing::TestInfo *const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
     if (HasFailure()) {
         std::cerr << test_info->test_case_name() << "." << test_info->name() << " failed!" << std::endl;
         test_logger.print_header();

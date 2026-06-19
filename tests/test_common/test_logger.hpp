@@ -22,15 +22,15 @@
 class TestLogger : public std::ostream {
    public:
     TestLogger() : std::ostream(&m_log) {};
-    TestLogger &info();
-    TestLogger &trace();
-    TestLogger &error();
+    TestLogger& info();
+    TestLogger& trace();
+    TestLogger& error();
     void        print_log();
     void        print_header();
     void        reset();
 
    private:
-    TestLogger    &timestamp();
+    TestLogger&    timestamp();
     std::stringbuf m_log;
 };
 

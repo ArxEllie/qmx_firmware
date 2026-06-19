@@ -5,18 +5,24 @@
 #include "wait.h"
 #include "platforms/timer.h"
 
-unsigned long millis(void) {
+
+unsigned long millis(void)
+{
     return timer_read32();
 }
-unsigned long micros(void) {
+unsigned long micros(void)
+{
     return timer_read32() * 1000UL;
 }
-void delay(unsigned long ms) {
+void delay(unsigned long ms)
+{
     wait_ms(ms);
 }
-void delayMicroseconds(unsigned int us) {
+void delayMicroseconds(unsigned int us)
+{
     wait_us(us);
 }
-void init(void) {
+void init(void)
+{
     timer_init();
 }

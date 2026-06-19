@@ -16,284 +16,316 @@ e-mail   :  support@circuitsathome.com
  */
 #include "cdcacm.h"
 
-const uint8_t ACM::epDataInIndex      = 1;
-const uint8_t ACM::epDataOutIndex     = 2;
+const uint8_t ACM::epDataInIndex = 1;
+const uint8_t ACM::epDataOutIndex = 2;
 const uint8_t ACM::epInterruptInIndex = 3;
 
-ACM::ACM(USB *p, CDCAsyncOper *pasync) : pUsb(p), pAsync(pasync), bAddress(0), bControlIface(0), bDataIface(0), bNumEP(1), qNextPollTime(0), bPollEnable(false), ready(false) {
-    _enhanced_status = enhanced_features(); // Set up features
-    for (uint8_t i = 0; i < ACM_MAX_ENDPOINTS; i++) {
-        epInfo[i].epAddr     = 0;
-        epInfo[i].maxPktSize = (i) ? 0 : 8;
-        epInfo[i].epAttribs  = 0;
-        epInfo[i].bmNakPower = (i == epDataInIndex) ? USB_NAK_NOWAIT : USB_NAK_MAX_POWER;
-    }
-    if (pUsb) pUsb->RegisterDeviceClass(this);
+ACM::ACM(USB *p, CDCAsyncOper *pasync) :
+pUsb(p),
+pAsync(pasync),
+bAddress(0),
+bControlIface(0),
+bDataIface(0),
+bNumEP(1),
+qNextPollTime(0),
+bPollEnable(false),
+ready(false) {
+        _enhanced_status = enhanced_features(); // Set up features
+        for(uint8_t i = 0; i < ACM_MAX_ENDPOINTS; i++) {
+                epInfo[i].epAddr = 0;
+                epInfo[i].maxPktSize = (i) ? 0 : 8;
+                epInfo[i].epAttribs = 0;
+                epInfo[i].bmNakPower = (i == epDataInIndex) ? USB_NAK_NOWAIT : USB_NAK_MAX_POWER;
+
+        }
+        if(pUsb)
+                pUsb->RegisterDeviceClass(this);
 }
 
 uint8_t ACM::Init(uint8_t parent, uint8_t port, bool lowspeed) {
-    const uint8_t constBufSize = sizeof(USB_DEVICE_DESCRIPTOR);
 
-    uint8_t                buf[constBufSize];
-    USB_DEVICE_DESCRIPTOR *udd = reinterpret_cast<USB_DEVICE_DESCRIPTOR *>(buf);
+        const uint8_t constBufSize = sizeof (USB_DEVICE_DESCRIPTOR);
 
-    uint8_t    rcode;
-    UsbDevice *p         = NULL;
-    EpInfo    *oldep_ptr = NULL;
-    uint8_t    num_of_conf; // number of configurations
+        uint8_t buf[constBufSize];
+        USB_DEVICE_DESCRIPTOR * udd = reinterpret_cast<USB_DEVICE_DESCRIPTOR*>(buf);
 
-    AddressPool &addrPool = pUsb->GetAddressPool();
+        uint8_t rcode;
+        UsbDevice *p = NULL;
+        EpInfo *oldep_ptr = NULL;
+        uint8_t num_of_conf; // number of configurations
 
-    USBTRACE("ACM Init\r\n");
+        AddressPool &addrPool = pUsb->GetAddressPool();
 
-    if (bAddress) return USB_ERROR_CLASS_INSTANCE_ALREADY_IN_USE;
+        USBTRACE("ACM Init\r\n");
 
-    // Get pointer to pseudo device with address 0 assigned
-    p = addrPool.GetUsbDevicePtr(0);
+        if(bAddress)
+                return USB_ERROR_CLASS_INSTANCE_ALREADY_IN_USE;
 
-    if (!p) return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
+        // Get pointer to pseudo device with address 0 assigned
+        p = addrPool.GetUsbDevicePtr(0);
 
-    if (!p->epinfo) {
-        USBTRACE("epinfo\r\n");
-        return USB_ERROR_EPINFO_IS_NULL;
-    }
+        if(!p)
+                return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
 
-    // Save old pointer to EP_RECORD of address 0
-    oldep_ptr = p->epinfo;
+        if(!p->epinfo) {
+                USBTRACE("epinfo\r\n");
+                return USB_ERROR_EPINFO_IS_NULL;
+        }
 
-    // Temporary assign new pointer to epInfo to p->epinfo in order to avoid toggle inconsistence
-    p->epinfo = epInfo;
+        // Save old pointer to EP_RECORD of address 0
+        oldep_ptr = p->epinfo;
 
-    p->lowspeed = lowspeed;
+        // Temporary assign new pointer to epInfo to p->epinfo in order to avoid toggle inconsistence
+        p->epinfo = epInfo;
 
-    // Get device descriptor
-    rcode = pUsb->getDevDescr(0, 0, constBufSize, (uint8_t *)buf);
+        p->lowspeed = lowspeed;
 
-    // Restore p->epinfo
-    p->epinfo = oldep_ptr;
+        // Get device descriptor
+        rcode = pUsb->getDevDescr(0, 0, constBufSize, (uint8_t*)buf);
 
-    if (rcode) goto FailGetDevDescr;
+        // Restore p->epinfo
+        p->epinfo = oldep_ptr;
 
-    // Allocate new address according to device class
-    bAddress = addrPool.AllocAddress(parent, false, port);
+        if(rcode)
+                goto FailGetDevDescr;
 
-    if (!bAddress) return USB_ERROR_OUT_OF_ADDRESS_SPACE_IN_POOL;
+        // Allocate new address according to device class
+        bAddress = addrPool.AllocAddress(parent, false, port);
 
-    // Extract Max Packet Size from the device descriptor
-    epInfo[0].maxPktSize = udd->bMaxPacketSize0;
+        if(!bAddress)
+                return USB_ERROR_OUT_OF_ADDRESS_SPACE_IN_POOL;
 
-    // Assign new address to the device
-    rcode = pUsb->setAddr(0, 0, bAddress);
+        // Extract Max Packet Size from the device descriptor
+        epInfo[0].maxPktSize = udd->bMaxPacketSize0;
 
-    if (rcode) {
+        // Assign new address to the device
+        rcode = pUsb->setAddr(0, 0, bAddress);
+
+        if(rcode) {
+                p->lowspeed = false;
+                addrPool.FreeAddress(bAddress);
+                bAddress = 0;
+                USBTRACE2("setAddr:", rcode);
+                return rcode;
+        }
+
+        USBTRACE2("Addr:", bAddress);
+
         p->lowspeed = false;
-        addrPool.FreeAddress(bAddress);
-        bAddress = 0;
-        USBTRACE2("setAddr:", rcode);
-        return rcode;
-    }
 
-    USBTRACE2("Addr:", bAddress);
+        p = addrPool.GetUsbDevicePtr(bAddress);
 
-    p->lowspeed = false;
+        if(!p)
+                return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
 
-    p = addrPool.GetUsbDevicePtr(bAddress);
+        p->lowspeed = lowspeed;
 
-    if (!p) return USB_ERROR_ADDRESS_NOT_FOUND_IN_POOL;
+        num_of_conf = udd->bNumConfigurations;
 
-    p->lowspeed = lowspeed;
+        // Assign epInfo to epinfo pointer
+        rcode = pUsb->setEpInfoEntry(bAddress, 1, epInfo);
 
-    num_of_conf = udd->bNumConfigurations;
+        if(rcode)
+                goto FailSetDevTblEntry;
 
-    // Assign epInfo to epinfo pointer
-    rcode = pUsb->setEpInfoEntry(bAddress, 1, epInfo);
+        USBTRACE2("NC:", num_of_conf);
 
-    if (rcode) goto FailSetDevTblEntry;
+        for(uint8_t i = 0; i < num_of_conf; i++) {
+                ConfigDescParser< USB_CLASS_COM_AND_CDC_CTRL,
+                        CDC_SUBCLASS_ACM,
+                        CDC_PROTOCOL_ITU_T_V_250,
+                        CP_MASK_COMPARE_CLASS |
+                        CP_MASK_COMPARE_SUBCLASS |
+                        CP_MASK_COMPARE_PROTOCOL > CdcControlParser(this);
 
-    USBTRACE2("NC:", num_of_conf);
+                ConfigDescParser<USB_CLASS_CDC_DATA, 0, 0,
+                        CP_MASK_COMPARE_CLASS> CdcDataParser(this);
 
-    for (uint8_t i = 0; i < num_of_conf; i++) {
-        ConfigDescParser<USB_CLASS_COM_AND_CDC_CTRL, CDC_SUBCLASS_ACM, CDC_PROTOCOL_ITU_T_V_250, CP_MASK_COMPARE_CLASS | CP_MASK_COMPARE_SUBCLASS | CP_MASK_COMPARE_PROTOCOL> CdcControlParser(this);
+                rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcControlParser);
 
-        ConfigDescParser<USB_CLASS_CDC_DATA, 0, 0, CP_MASK_COMPARE_CLASS> CdcDataParser(this);
+                if(rcode)
+                        goto FailGetConfDescr;
 
-        rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcControlParser);
+                rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcDataParser);
 
-        if (rcode) goto FailGetConfDescr;
+                if(rcode)
+                        goto FailGetConfDescr;
 
-        rcode = pUsb->getConfDescr(bAddress, 0, i, &CdcDataParser);
+                if(bNumEP > 1)
+                        break;
+        } // for
 
-        if (rcode) goto FailGetConfDescr;
+        if(bNumEP < 4)
+                return USB_DEV_CONFIG_ERROR_DEVICE_NOT_SUPPORTED;
 
-        if (bNumEP > 1) break;
-    } // for
+        // Assign epInfo to epinfo pointer
+        rcode = pUsb->setEpInfoEntry(bAddress, bNumEP, epInfo);
 
-    if (bNumEP < 4) return USB_DEV_CONFIG_ERROR_DEVICE_NOT_SUPPORTED;
+        USBTRACE2("Conf:", bConfNum);
 
-    // Assign epInfo to epinfo pointer
-    rcode = pUsb->setEpInfoEntry(bAddress, bNumEP, epInfo);
+        // Set Configuration Value
+        rcode = pUsb->setConf(bAddress, 0, bConfNum);
 
-    USBTRACE2("Conf:", bConfNum);
+        if(rcode)
+                goto FailSetConfDescr;
 
-    // Set Configuration Value
-    rcode = pUsb->setConf(bAddress, 0, bConfNum);
+        // Set up features status
+        _enhanced_status = enhanced_features();
+        half_duplex(false);
+        autoflowRTS(false);
+        autoflowDSR(false);
+        autoflowXON(false);
+        wide(false); // Always false, because this is only available in custom mode.
+        rcode = pAsync->OnInit(this);
 
-    if (rcode) goto FailSetConfDescr;
+        if(rcode)
+                goto FailOnInit;
 
-    // Set up features status
-    _enhanced_status = enhanced_features();
-    half_duplex(false);
-    autoflowRTS(false);
-    autoflowDSR(false);
-    autoflowXON(false);
-    wide(false); // Always false, because this is only available in custom mode.
-    rcode = pAsync->OnInit(this);
+        USBTRACE("ACM configured\r\n");
 
-    if (rcode) goto FailOnInit;
+        ready = true;
 
-    USBTRACE("ACM configured\r\n");
+        //bPollEnable = true;
 
-    ready = true;
-
-    // bPollEnable = true;
-
-    // USBTRACE("Poll enabled\r\n");
-    return 0;
+        //USBTRACE("Poll enabled\r\n");
+        return 0;
 
 FailGetDevDescr:
 #ifdef DEBUG_USB_HOST
-    NotifyFailGetDevDescr();
-    goto Fail;
+        NotifyFailGetDevDescr();
+        goto Fail;
 #endif
 
 FailSetDevTblEntry:
 #ifdef DEBUG_USB_HOST
-    NotifyFailSetDevTblEntry();
-    goto Fail;
+        NotifyFailSetDevTblEntry();
+        goto Fail;
 #endif
 
 FailGetConfDescr:
 #ifdef DEBUG_USB_HOST
-    NotifyFailGetConfDescr();
-    goto Fail;
+        NotifyFailGetConfDescr();
+        goto Fail;
 #endif
 
 FailSetConfDescr:
 #ifdef DEBUG_USB_HOST
-    NotifyFailSetConfDescr();
-    goto Fail;
+        NotifyFailSetConfDescr();
+        goto Fail;
 #endif
 
 FailOnInit:
 #ifdef DEBUG_USB_HOST
-    USBTRACE("OnInit:");
+        USBTRACE("OnInit:");
 #endif
 
 #ifdef DEBUG_USB_HOST
 Fail:
-    NotifyFail(rcode);
+        NotifyFail(rcode);
 #endif
-    Release();
-    return rcode;
+        Release();
+        return rcode;
 }
 
 void ACM::EndpointXtract(uint8_t conf, uint8_t iface, uint8_t alt, uint8_t proto, const USB_ENDPOINT_DESCRIPTOR *pep) {
-    // ErrorMessage<uint8_t > (PSTR("Conf.Val"), conf);
-    // ErrorMessage<uint8_t > (PSTR("Iface Num"), iface);
-    // ErrorMessage<uint8_t > (PSTR("Alt.Set"), alt);
+        //ErrorMessage<uint8_t > (PSTR("Conf.Val"), conf);
+        //ErrorMessage<uint8_t > (PSTR("Iface Num"), iface);
+        //ErrorMessage<uint8_t > (PSTR("Alt.Set"), alt);
 
-    bConfNum = conf;
+        bConfNum = conf;
 
-    uint8_t index;
+        uint8_t index;
 
-    if ((pep->bmAttributes & 0x03) == 3 && (pep->bEndpointAddress & 0x80) == 0x80)
-        index = epInterruptInIndex;
-    else if ((pep->bmAttributes & 0x02) == 2)
-        index = ((pep->bEndpointAddress & 0x80) == 0x80) ? epDataInIndex : epDataOutIndex;
-    else
-        return;
+        if((pep->bmAttributes & 0x03) == 3 && (pep->bEndpointAddress & 0x80) == 0x80)
+                index = epInterruptInIndex;
+        else
+                if((pep->bmAttributes & 0x02) == 2)
+                index = ((pep->bEndpointAddress & 0x80) == 0x80) ? epDataInIndex : epDataOutIndex;
+        else
+                return;
 
-    // Fill in the endpoint info structure
-    epInfo[index].epAddr     = (pep->bEndpointAddress & 0x0F);
-    epInfo[index].maxPktSize = (uint8_t)pep->wMaxPacketSize;
-    epInfo[index].epAttribs  = 0;
+        // Fill in the endpoint info structure
+        epInfo[index].epAddr = (pep->bEndpointAddress & 0x0F);
+        epInfo[index].maxPktSize = (uint8_t)pep->wMaxPacketSize;
+        epInfo[index].epAttribs = 0;
 
-    bNumEP++;
+        bNumEP++;
 
-    PrintEndpointDescriptor(pep);
+        PrintEndpointDescriptor(pep);
 }
 
 uint8_t ACM::Release() {
-    ready = false;
-    pUsb->GetAddressPool().FreeAddress(bAddress);
+        ready = false;
+        pUsb->GetAddressPool().FreeAddress(bAddress);
 
-    bControlIface = 0;
-    bDataIface    = 0;
-    bNumEP        = 1;
+        bControlIface = 0;
+        bDataIface = 0;
+        bNumEP = 1;
 
-    bAddress      = 0;
-    qNextPollTime = 0;
-    bPollEnable   = false;
-    return 0;
+        bAddress = 0;
+        qNextPollTime = 0;
+        bPollEnable = false;
+        return 0;
 }
 
 uint8_t ACM::Poll() {
-    uint8_t rcode = 0;
+        uint8_t rcode = 0;
 
-    if (!bPollEnable) return 0;
+        if(!bPollEnable)
+                return 0;
 
-    return rcode;
+        return rcode;
 }
 
 uint8_t ACM::RcvData(uint16_t *bytes_rcvd, uint8_t *dataptr) {
-    return pUsb->inTransfer(bAddress, epInfo[epDataInIndex].epAddr, bytes_rcvd, dataptr);
+        return pUsb->inTransfer(bAddress, epInfo[epDataInIndex].epAddr, bytes_rcvd, dataptr);
 }
 
 uint8_t ACM::SndData(uint16_t nbytes, uint8_t *dataptr) {
-    return pUsb->outTransfer(bAddress, epInfo[epDataOutIndex].epAddr, nbytes, dataptr);
+        return pUsb->outTransfer(bAddress, epInfo[epDataOutIndex].epAddr, nbytes, dataptr);
 }
 
 uint8_t ACM::SetCommFeature(uint16_t fid, uint8_t nbytes, uint8_t *dataptr) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SET_COMM_FEATURE, (fid & 0xff), (fid >> 8), bControlIface, nbytes, nbytes, dataptr, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SET_COMM_FEATURE, (fid & 0xff), (fid >> 8), bControlIface, nbytes, nbytes, dataptr, NULL));
 }
 
 uint8_t ACM::GetCommFeature(uint16_t fid, uint8_t nbytes, uint8_t *dataptr) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCIN, CDC_GET_COMM_FEATURE, (fid & 0xff), (fid >> 8), bControlIface, nbytes, nbytes, dataptr, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCIN, CDC_GET_COMM_FEATURE, (fid & 0xff), (fid >> 8), bControlIface, nbytes, nbytes, dataptr, NULL));
 }
 
 uint8_t ACM::ClearCommFeature(uint16_t fid) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_CLEAR_COMM_FEATURE, (fid & 0xff), (fid >> 8), bControlIface, 0, 0, NULL, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_CLEAR_COMM_FEATURE, (fid & 0xff), (fid >> 8), bControlIface, 0, 0, NULL, NULL));
 }
 
 uint8_t ACM::SetLineCoding(const LINE_CODING *dataptr) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SET_LINE_CODING, 0x00, 0x00, bControlIface, sizeof(LINE_CODING), sizeof(LINE_CODING), (uint8_t *)dataptr, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SET_LINE_CODING, 0x00, 0x00, bControlIface, sizeof (LINE_CODING), sizeof (LINE_CODING), (uint8_t*)dataptr, NULL));
 }
 
 uint8_t ACM::GetLineCoding(LINE_CODING *dataptr) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCIN, CDC_GET_LINE_CODING, 0x00, 0x00, bControlIface, sizeof(LINE_CODING), sizeof(LINE_CODING), (uint8_t *)dataptr, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCIN, CDC_GET_LINE_CODING, 0x00, 0x00, bControlIface, sizeof (LINE_CODING), sizeof (LINE_CODING), (uint8_t*)dataptr, NULL));
 }
 
 uint8_t ACM::SetControlLineState(uint8_t state) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SET_CONTROL_LINE_STATE, state, 0, bControlIface, 0, 0, NULL, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SET_CONTROL_LINE_STATE, state, 0, bControlIface, 0, 0, NULL, NULL));
 }
 
 uint8_t ACM::SendBreak(uint16_t duration) {
-    return (pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SEND_BREAK, (duration & 0xff), (duration >> 8), bControlIface, 0, 0, NULL, NULL));
+        return ( pUsb->ctrlReq(bAddress, 0, bmREQ_CDCOUT, CDC_SEND_BREAK, (duration & 0xff), (duration >> 8), bControlIface, 0, 0, NULL, NULL));
 }
 
-void ACM::PrintEndpointDescriptor(const USB_ENDPOINT_DESCRIPTOR *ep_ptr) {
-    Notify(PSTR("Endpoint descriptor:"), 0x80);
-    Notify(PSTR("\r\nLength:\t\t"), 0x80);
-    D_PrintHex<uint8_t>(ep_ptr->bLength, 0x80);
-    Notify(PSTR("\r\nType:\t\t"), 0x80);
-    D_PrintHex<uint8_t>(ep_ptr->bDescriptorType, 0x80);
-    Notify(PSTR("\r\nAddress:\t"), 0x80);
-    D_PrintHex<uint8_t>(ep_ptr->bEndpointAddress, 0x80);
-    Notify(PSTR("\r\nAttributes:\t"), 0x80);
-    D_PrintHex<uint8_t>(ep_ptr->bmAttributes, 0x80);
-    Notify(PSTR("\r\nMaxPktSize:\t"), 0x80);
-    D_PrintHex<uint16_t>(ep_ptr->wMaxPacketSize, 0x80);
-    Notify(PSTR("\r\nPoll Intrv:\t"), 0x80);
-    D_PrintHex<uint8_t>(ep_ptr->bInterval, 0x80);
-    Notify(PSTR("\r\n"), 0x80);
+void ACM::PrintEndpointDescriptor(const USB_ENDPOINT_DESCRIPTOR* ep_ptr) {
+        Notify(PSTR("Endpoint descriptor:"), 0x80);
+        Notify(PSTR("\r\nLength:\t\t"), 0x80);
+        D_PrintHex<uint8_t > (ep_ptr->bLength, 0x80);
+        Notify(PSTR("\r\nType:\t\t"), 0x80);
+        D_PrintHex<uint8_t > (ep_ptr->bDescriptorType, 0x80);
+        Notify(PSTR("\r\nAddress:\t"), 0x80);
+        D_PrintHex<uint8_t > (ep_ptr->bEndpointAddress, 0x80);
+        Notify(PSTR("\r\nAttributes:\t"), 0x80);
+        D_PrintHex<uint8_t > (ep_ptr->bmAttributes, 0x80);
+        Notify(PSTR("\r\nMaxPktSize:\t"), 0x80);
+        D_PrintHex<uint16_t > (ep_ptr->wMaxPacketSize, 0x80);
+        Notify(PSTR("\r\nPoll Intrv:\t"), 0x80);
+        D_PrintHex<uint8_t > (ep_ptr->bInterval, 0x80);
+        Notify(PSTR("\r\n"), 0x80);
 }

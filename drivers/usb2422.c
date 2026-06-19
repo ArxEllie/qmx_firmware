@@ -318,7 +318,7 @@ static Usb2422_t config;
 
 /** \brief Handle the conversion to allow simple strings
  */
-static void USB2422_strcpy(const char *str, USB2422_MFRSTR_Type *dest, uint8_t len) {
+static void USB2422_strcpy(const char* str, USB2422_MFRSTR_Type* dest, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
         dest[i] = str[i];
     }
@@ -329,9 +329,9 @@ static void USB2422_strcpy(const char *str, USB2422_MFRSTR_Type *dest, uint8_t l
 static void USB2422_write_block(void) {
     static unsigned char i2c0_buf[34];
 
-    unsigned char *dest = i2c0_buf;
-    unsigned char *src;
-    unsigned char *base = (unsigned char *)&config;
+    unsigned char* dest = i2c0_buf;
+    unsigned char* src;
+    unsigned char* base = (unsigned char*)&config;
 
     for (src = base; src < base + 256; src += 32) {
         dest[0] = src - base;

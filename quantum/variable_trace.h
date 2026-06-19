@@ -25,7 +25,7 @@
 // Start tracing a variable at the memory address addr
 // The name can be anything and is used only for reporting
 // The size should usually be the same size as the variable you are interested in
-#    define ADD_TRACED_VARIABLE(name, addr, size) add_traced_variable(PSTR(name), (void *)addr, size, PSTR(__FILE__), __LINE__)
+#    define ADD_TRACED_VARIABLE(name, addr, size) add_traced_variable(PSTR(name), (void*)addr, size, PSTR(__FILE__), __LINE__)
 
 // Stop tracing the variable with the given name
 #    define REMOVE_TRACED_VARIABLE(name) remove_traced_variable(PSTR(name), PSTR(__FILE__), __LINE__)
@@ -42,6 +42,6 @@
 #endif
 
 // Don't call directly, use the macros instead
-void add_traced_variable(const char *name, void *addr, unsigned size, const char *func, int line);
-void remove_traced_variable(const char *name, const char *func, int line);
-void verify_traced_variables(const char *func, int line);
+void add_traced_variable(const char* name, void* addr, unsigned size, const char* func, int line);
+void remove_traced_variable(const char* name, const char* func, int line);
+void verify_traced_variables(const char* func, int line);

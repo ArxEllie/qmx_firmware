@@ -15,13 +15,13 @@ Web      :  http://www.circuitsathome.com
 e-mail   :  support@circuitsathome.com
  */
 #if !defined(__HIDUSAGETITLEARRAYS_H__)
-#    define __HIDUSAGETITLEARRAYS_H__
+#define __HIDUSAGETITLEARRAYS_H__
 
-#    include "hidusagestr.h"
+#include "hidusagestr.h"
 
 // This is here why?
 
-// const char *usagePageTitles0[]	PROGMEM =
+//const char *usagePageTitles0[]	PROGMEM =
 //{
 //	pstrUsagePageGenericDesktopControls	,
 //	pstrUsagePageSimulationControls		,
@@ -38,9 +38,9 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsagePageDigitizer				,
 //	pstrUsagePagePID					,
 //	pstrUsagePageUnicode
-// };
+//};
 //
-// const char *usagePageTitles1[]	PROGMEM =
+//const char *usagePageTitles1[]	PROGMEM =
 //{
 //	pstrUsagePageBarCodeScanner			,
 //	pstrUsagePageScale					,
@@ -48,8 +48,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsagePagePointOfSale			,
 //	pstrUsagePageCameraControl			,
 //	pstrUsagePageArcade
-// };
-// const char *genDesktopTitles0[] PROGMEM =
+//};
+//const char *genDesktopTitles0[] PROGMEM =
 //{
 //	pstrUsagePointer					,
 //	pstrUsageMouse						,
@@ -60,8 +60,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageMultiAxisController		,
 //	pstrUsageTabletPCSystemControls
 //
-// };
-// const char *genDesktopTitles1[] PROGMEM =
+//};
+//const char *genDesktopTitles1[] PROGMEM =
 //{
 //	pstrUsageX							,
 //	pstrUsageY							,
@@ -88,8 +88,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageVno						,
 //	pstrUsageFeatureNotification		,
 //	pstrUsageResolutionMultiplier
-// };
-// const char *genDesktopTitles2[] PROGMEM =
+//};
+//const char *genDesktopTitles2[] PROGMEM =
 //{
 //	pstrUsageSystemControl		,
 //	pstrUsageSystemPowerDown	,
@@ -111,8 +111,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageDPadDown			,
 //	pstrUsageDPadRight			,
 //	pstrUsageDPadLeft
-// };
-// const char *genDesktopTitles3[] PROGMEM =
+//};
+//const char *genDesktopTitles3[] PROGMEM =
 //{
 //	pstrUsageSystemDock				,
 //	pstrUsageSystemUndock			,
@@ -123,8 +123,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageApplicationDebuggerBreak,
 //	pstrUsageSystemSpeakerMute		,
 //	pstrUsageSystemHibernate
-// };
-// const char *genDesktopTitles4[] PROGMEM =
+//};
+//const char *genDesktopTitles4[] PROGMEM =
 //{
 //	pstrUsageSystemDisplayInvert		,
 //	pstrUsageSystemDisplayInternal		,
@@ -134,8 +134,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageSystemDisplayToggleIntExt	,
 //	pstrUsageSystemDisplaySwapPriSec	,
 //	pstrUsageSystemDisplayLCDAutoscale
-// };
-// const char *simuTitles0[] PROGMEM =
+//};
+//const char *simuTitles0[] PROGMEM =
 //{
 //	pstrUsageFlightSimulationDevice		,
 //	pstrUsageAutomobileSimulationDevice	,
@@ -149,8 +149,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageHelicopterSimulationDevice	,
 //	pstrUsageMagicCarpetSimulationDevice,
 //	pstrUsageBicycleSimulationDevice
-// };
-// const char *simuTitles1[] PROGMEM =
+//};
+//const char *simuTitles1[] PROGMEM =
 //{
 //	pstrUsageFlightControlStick			,
 //	pstrUsageFlightStick				,
@@ -158,8 +158,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageCyclicTrim					,
 //	pstrUsageFlightYoke					,
 //	pstrUsageTrackControl
-// };
-// const char *simuTitles2[] PROGMEM =
+//};
+//const char *simuTitles2[] PROGMEM =
 //{
 //	pstrUsageAileron					,
 //	pstrUsageAileronTrim				,
@@ -194,8 +194,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageHandleBars					,
 //	pstrUsageFrontBrake					,
 //	pstrUsageRearBrake
-// };
-// const char *vrTitles0[]	PROGMEM =
+//};
+//const char *vrTitles0[]	PROGMEM =
 //{
 //	pstrUsageBelt				,
 //	pstrUsageBodySuit			,
@@ -207,20 +207,20 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageOculometer			,
 //	pstrUsageVest				,
 //	pstrUsageAnimatronicDevice
-// };
-// const char *vrTitles1[]	PROGMEM =
+//};
+//const char *vrTitles1[]	PROGMEM =
 //{
 //	pstrUsageStereoEnable	,
 //	pstrUsageDisplayEnable
-// };
-// const char *sportsCtrlTitles0[]	PROGMEM =
+//};
+//const char *sportsCtrlTitles0[]	PROGMEM =
 //{
 //	pstrUsageBaseballBat				,
 //	pstrUsageGolfClub					,
 //	pstrUsageRowingMachine				,
 //	pstrUsageTreadmill
-// };
-// const char *sportsCtrlTitles1[]	PROGMEM =
+//};
+//const char *sportsCtrlTitles1[]	PROGMEM =
 //{
 //	pstrUsageOar						,
 //	pstrUsageSlope						,
@@ -232,8 +232,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageStickTempo					,
 //	pstrUsageStickType					,
 //	pstrUsageStickHeight
-// };
-// const char *sportsCtrlTitles2[]	PROGMEM =
+//};
+//const char *sportsCtrlTitles2[]	PROGMEM =
 //{
 //	pstrUsagePutter						,
 //	pstrUsage1Iron						,
@@ -255,14 +255,14 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsage5Wood						,
 //	pstrUsage7Wood						,
 //	pstrUsage9Wood
-// };
-// const char *gameTitles0[] PROGMEM =
+//};
+//const char *gameTitles0[] PROGMEM =
 //{
 //	pstrUsage3DGameController		,
 //	pstrUsagePinballDevice			,
 //	pstrUsageGunDevice
-// };
-// const char *gameTitles1[] PROGMEM =
+//};
+//const char *gameTitles1[] PROGMEM =
 //{
 //	pstrUsagePointOfView			,
 //	pstrUsageTurnRightLeft			,
@@ -289,8 +289,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageGunSafety				,
 //	pstrUsageGamepadFireJump		,
 //	pstrUsageGamepadTrigger
-// };
-// const char *genDevCtrlTitles[] PROGMEM =
+//};
+//const char *genDevCtrlTitles[] PROGMEM =
 //{
 //	pstrUsageBatteryStrength,
 //	pstrUsageWirelessChannel,
@@ -299,8 +299,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageSecurityCodeCharEntered,
 //	pstrUsageSecurityCodeCharErased,
 //	pstrUsageSecurityCodeCleared
-// };
-// const char *ledTitles[] PROGMEM =
+//};
+//const char *ledTitles[] PROGMEM =
 //{
 //	pstrUsageNumLock						,
 //	pstrUsageCapsLock					,
@@ -379,8 +379,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageGenericIndicator			,
 //	pstrUsageSystemSuspend				,
 //	pstrUsageExternalPowerConnected
-// };
-// const char *telTitles0			[] PROGMEM =
+//};
+//const char *telTitles0			[] PROGMEM =
 //{
 //	pstrUsagePhone				,
 //	pstrUsageAnsweringMachine	,
@@ -389,8 +389,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageHeadset			,
 //	pstrUsageTelephonyKeyPad	,
 //	pstrUsageProgrammableButton
-// };
-// const char *telTitles1			[] PROGMEM =
+//};
+//const char *telTitles1			[] PROGMEM =
 //{
 //	pstrUsageHookSwitch					,
 //	pstrUsageFlash						,
@@ -410,23 +410,23 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsagePhoneMute				,
 //	pstrUsageCallerID				,
 //	pstrUsageSend
-// };
-// const char *telTitles2			[] PROGMEM =
+//};
+//const char *telTitles2			[] PROGMEM =
 //{
 //	pstrUsageSpeedDial		,
 //	pstrUsageStoreNumber	,
 //	pstrUsageRecallNumber	,
 //	pstrUsagePhoneDirectory
-// };
-// const char *telTitles3			[] PROGMEM =
+//};
+//const char *telTitles3			[] PROGMEM =
 //{
 //	pstrUsageVoiceMail		,
 //	pstrUsageScreenCalls	,
 //	pstrUsageDoNotDisturb	,
 //	pstrUsageMessage		,
 //	pstrUsageAnswerOnOff
-// };
-// const char *telTitles4			[] PROGMEM =
+//};
+//const char *telTitles4			[] PROGMEM =
 //{
 //	pstrUsageInsideDialTone			,
 //	pstrUsageOutsideDialTone		,
@@ -443,8 +443,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageTonesOff				,
 //	pstrUsageOutsideRingback		,
 //	pstrUsageRinger
-// };
-// const char *telTitles5			[] PROGMEM =
+//};
+//const char *telTitles5			[] PROGMEM =
 //{
 //	pstrUsagePhoneKey0		,
 //	pstrUsagePhoneKey1		,
@@ -462,8 +462,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsagePhoneKeyB		,
 //	pstrUsagePhoneKeyC		,
 //	pstrUsagePhoneKeyD
-// };
-// const char *consTitles0[]	PROGMEM	=
+//};
+//const char *consTitles0[]	PROGMEM	=
 //{
 //	pstrUsageConsumerControl,
 //	pstrUsageNumericKeyPad,
@@ -471,14 +471,14 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageMicrophone,
 //	pstrUsageHeadphone,
 //	pstrUsageGraphicEqualizer
-// };
-// const char *consTitles1[]	PROGMEM	=
+//};
+//const char *consTitles1[]	PROGMEM	=
 //{
 //	pstrUsagePlus10	,
 //	pstrUsagePlus100,
 //	pstrUsageAMPM
-// };
-// const char *consTitles2[]	PROGMEM	=
+//};
+//const char *consTitles2[]	PROGMEM	=
 //{
 //	pstrUsagePower			,
 //	pstrUsageReset			,
@@ -488,8 +488,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageIllumination	,
 //	pstrUsageFunctionButtons
 //
-// };
-// const char *consTitles3[]	PROGMEM	=
+//};
+//const char *consTitles3[]	PROGMEM	=
 //{
 //	pstrUsageMenu			,
 //	pstrUsageMenuPick		,
@@ -500,8 +500,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageMenuEscape		,
 //	pstrUsageMenuValueIncrease,
 //	pstrUsageMenuValueDecrease
-// };
-// const char *consTitles4[]	PROGMEM	=
+//};
+//const char *consTitles4[]	PROGMEM	=
 //{
 //	pstrUsageDataOnScreen		,
 //	pstrUsageClosedCaption		,
@@ -510,8 +510,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageBroadcastMode		,
 //	pstrUsageSnapshot			,
 //	pstrUsageStill
-// };
-// const char *consTitles5[]	PROGMEM	=
+//};
+//const char *consTitles5[]	PROGMEM	=
 //{
 //	pstrUsageSelection					,
 //	pstrUsageAssignSelection			,
@@ -550,8 +550,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageDaily						,
 //	pstrUsageWeekly						,
 //	pstrUsageMonthly
-// };
-// const char *consTitles6[]	PROGMEM	=
+//};
+//const char *consTitles6[]	PROGMEM	=
 //{
 //	pstrUsagePlay					,
 //	pstrUsagePause					,
@@ -584,8 +584,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageStopEject					,
 //	pstrUsagePlayPause					,
 //	pstrUsagePlaySkip
-// };
-// const char *consTitles7[]	PROGMEM	=
+//};
+//const char *consTitles7[]	PROGMEM	=
 //{
 //	pstrUsageVolume						,
 //	pstrUsageBalance					,
@@ -598,8 +598,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageMPX						,
 //	pstrUsageVolumeIncrement			,
 //	pstrUsageVolumeDecrement
-// };
-// const char *consTitles8[]	PROGMEM	=
+//};
+//const char *consTitles8[]	PROGMEM	=
 //{
 //	pstrUsageSpeedSelect				,
 //	pstrUsagePlaybackSpeed				,
@@ -607,8 +607,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageLongPlay					,
 //	pstrUsageExtendedPlay				,
 //	pstrUsageSlow
-// };
-// const char *consTitles9[]	PROGMEM	=
+//};
+//const char *consTitles9[]	PROGMEM	=
 //{
 //	pstrUsageFanEnable					,
 //	pstrUsageFanSpeed					,
@@ -624,8 +624,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageDuresAlarm					,
 //	pstrUsageHoldupAlarm					,
 //	pstrUsageMedicalAlarm
-// };
-// const char *consTitlesA[]	PROGMEM	=
+//};
+//const char *consTitlesA[]	PROGMEM	=
 //{
 //	pstrUsageBalanceRight				,
 //	pstrUsageBalanceLeft				,
@@ -633,8 +633,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageBassDecrement				,
 //	pstrUsageTrebleIncrement			,
 //	pstrUsageTrebleDecrement
-// };
-// const char *consTitlesB[]	PROGMEM	=
+//};
+//const char *consTitlesB[]	PROGMEM	=
 //{
 //	pstrUsageSpeakerSystem				,
 //	pstrUsageChannelLeft				,
@@ -647,16 +647,16 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageChannelLowFreqEnhancement	,
 //	pstrUsageChannelTop					,
 //	pstrUsageChannelUnknown
-// };
-// const char *consTitlesC[]	PROGMEM	=
+//};
+//const char *consTitlesC[]	PROGMEM	=
 //{
 //	pstrUsageSubChannel					,
 //	pstrUsageSubChannelIncrement		,
 //	pstrUsageSubChannelDecrement		,
 //	pstrUsageAlternateAudioIncrement	,
 //	pstrUsageAlternateAudioDecrement
-// };
-// const char *consTitlesD[]	PROGMEM	=
+//};
+//const char *consTitlesD[]	PROGMEM	=
 //{
 //	pstrUsageApplicationLaunchButtons	,
 //	pstrUsageALLaunchButtonConfigTool	,
@@ -730,8 +730,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageALOnlineActivityBrowser		,
 //	pstrUsageALResearchSearchBrowser		,
 //	pstrUsageALAudioPlayer
-// };
-// const char *consTitlesE[]	PROGMEM	=
+//};
+//const char *consTitlesE[]	PROGMEM	=
 //{
 //	pstrUsageGenericGUIAppControls		,
 //	pstrUsageACNew						,
@@ -874,8 +874,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageACSplit					,
 //	pstrUsageACDistributeHorizontaly	,
 //	pstrUsageACDistributeVerticaly
-// };
-// const char *digitTitles0[] PROGMEM =
+//};
+//const char *digitTitles0[] PROGMEM =
 //{
 //	pstrUsageDigitizer					,
 //	pstrUsagePen						,
@@ -890,15 +890,15 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageArmature					,
 //	pstrUsageMultiplePointDigitizer		,
 //	pstrUsageFreeSpaceWand
-// };
-// const char *digitTitles1[] PROGMEM =
+//};
+//const char *digitTitles1[] PROGMEM =
 //{
 //	pstrUsageStylus						,
 //	pstrUsagePuck						,
 //	pstrUsageFinger
 //
-// };
-// const char *digitTitles2[] PROGMEM =
+//};
+//const char *digitTitles2[] PROGMEM =
 //{
 //	pstrUsageTipPressure			,
 //	pstrUsageBarrelPressure			,
@@ -923,13 +923,13 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageBarrelSwitch			,
 //	pstrUsageEraser					,
 //	pstrUsageTabletPick
-// };
-// const char *aplphanumTitles0[]	PROGMEM =
+//};
+//const char *aplphanumTitles0[]	PROGMEM =
 //{
 //	pstrUsageAlphanumericDisplay,
 //	pstrUsageBitmappedDisplay
-// };
-// const char *aplphanumTitles1[]	PROGMEM =
+//};
+//const char *aplphanumTitles1[]	PROGMEM =
 //{
 //	pstrUsageDisplayAttributesReport	,
 //	pstrUsageASCIICharacterSet			,
@@ -977,8 +977,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageCharAttributeEnhance		,
 //	pstrUsageCharAttributeUnderline		,
 //	pstrUsageCharAttributeBlink
-// };
-// const char *aplphanumTitles2[]	PROGMEM =
+//};
+//const char *aplphanumTitles2[]	PROGMEM =
 //{
 //	pstrUsageBitmapSizeX				,
 //	pstrUsageBitmapSizeY				,
@@ -1001,8 +1001,8 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageSoftButtonOffset1			,
 //	pstrUsageSoftButtonOffset2			,
 //	pstrUsageSoftButtonReport
-// };
-// const char *medInstrTitles0[] PROGMEM =
+//};
+//const char *medInstrTitles0[] PROGMEM =
 //{
 //	pstrUsageVCRAcquisition				,
 //	pstrUsageFreezeThaw					,
@@ -1012,21 +1012,21 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageSave						,
 //	pstrUsagePrint						,
 //	pstrUsageMicrophoneEnable
-// };
-// const char *medInstrTitles1[] PROGMEM =
+//};
+//const char *medInstrTitles1[] PROGMEM =
 //{
 //	pstrUsageCine						,
 //	pstrUsageTransmitPower				,
 //	pstrUsageVolume						,
 //	pstrUsageFocus						,
 //	pstrUsageDepth
-// };
-// const char *medInstrTitles2[] PROGMEM =
+//};
+//const char *medInstrTitles2[] PROGMEM =
 //{
 //	pstrUsageSoftStepPrimary		,
 //	pstrUsageSoftStepSecondary
-// };
-// const char *medInstrTitles3[] PROGMEM =
+//};
+//const char *medInstrTitles3[] PROGMEM =
 //{
 //	pstrUsageZoomSelect					,
 //	pstrUsageZoomAdjust					,
@@ -1038,11 +1038,11 @@ e-mail   :  support@circuitsathome.com
 //	pstrUsageMotionModeAdjust			,
 //	pstrUsage2DModeSelect				,
 //	pstrUsage2DModeAdjust
-// };
-// const char *medInstrTitles4[] PROGMEM =
+//};
+//const char *medInstrTitles4[] PROGMEM =
 //{
 //	pstrUsageSoftControlSelect			,
 //	pstrUsageSoftControlAdjust
-// };
+//};
 
 #endif // __HIDUSAGETITLEARRAYS_H__

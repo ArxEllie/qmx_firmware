@@ -55,7 +55,7 @@ aw20216s_driver_t driver_buffers[AW20216S_DRIVER_COUNT] = {{
     .pwm_buffer_dirty = false,
 }};
 
-bool aw20216s_write(pin_t cs_pin, uint8_t page, uint8_t reg, uint8_t *data, uint8_t len) {
+bool aw20216s_write(pin_t cs_pin, uint8_t page, uint8_t reg, uint8_t* data, uint8_t len) {
     static uint8_t s_spi_transfer_buffer[2] = {0};
 
     if (!spi_start(cs_pin, false, AW20216S_SPI_MODE, AW20216S_SPI_DIVISOR)) {

@@ -78,14 +78,14 @@ bool pca9555_set_output_all(uint8_t slave_addr, uint8_t confA, uint8_t confB);
 /**
  * Read state of a given port
  */
-bool pca9555_read_pins(uint8_t slave_addr, pca9555_port_t port, uint8_t *ret);
+bool pca9555_read_pins(uint8_t slave_addr, pca9555_port_t port, uint8_t* ret);
 
 /**
  * Read state of both ports sequentially
  *
  *  - slightly faster than multiple readPins
  */
-bool pca9555_read_pins_all(uint8_t slave_addr, uint16_t *ret);
+bool pca9555_read_pins_all(uint8_t slave_addr, uint16_t* ret);
 
 // DEPRECATED - DO NOT USE
 

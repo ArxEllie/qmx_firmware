@@ -32,10 +32,10 @@
 #endif
 
 typedef struct {
-    const char *name;
-    void       *addr;
+    const char* name;
+    void*       addr;
     unsigned    size;
-    const char *func;
+    const char* func;
     int         line;
     uint8_t     last_value[MAX_VARIABLE_TRACE_SIZE];
 
@@ -43,7 +43,7 @@ typedef struct {
 
 static traced_variable_t traced_variables[NUM_TRACED_VARIABLES];
 
-void add_traced_variable(const char *name, void *addr, unsigned size, const char *func, int line) {
+void add_traced_variable(const char* name, void* addr, unsigned size, const char* func, int line) {
     verify_traced_variables(func, line);
     if (size > MAX_VARIABLE_TRACE_SIZE) {
 #if defined(__AVR__)
@@ -68,7 +68,7 @@ void add_traced_variable(const char *name, void *addr, unsigned size, const char
         return;
     }
 
-    traced_variable_t *t = &traced_variables[index];
+    traced_variable_t* t = &traced_variables[index];
     t->name              = name;
     t->addr              = addr;
     t->size              = size;
@@ -77,7 +77,7 @@ void add_traced_variable(const char *name, void *addr, unsigned size, const char
     memcpy(&t->last_value[0], addr, size);
 }
 
-void remove_traced_variable(const char *name, const char *func, int line) {
+void remove_traced_variable(const char* name, const char* func, int line) {
     verify_traced_variables(func, line);
     for (int i = 0; i < NUM_TRACED_VARIABLES; i++) {
         if (strcmp_P(name, traced_variables[i].name) == 0) {
@@ -88,9 +88,9 @@ void remove_traced_variable(const char *name, const char *func, int line) {
     }
 }
 
-void verify_traced_variables(const char *func, int line) {
+void verify_traced_variables(const char* func, int line) {
     for (int i = 0; i < NUM_TRACED_VARIABLES; i++) {
-        traced_variable_t *t = &traced_variables[i];
+        traced_variable_t* t = &traced_variables[i];
         if (t->addr != NULL && t->name != NULL) {
             if (memcmp(t->last_value, t->addr, t->size) != 0) {
 #if defined(__AVR__)
@@ -108,7 +108,7 @@ void verify_traced_variables(const char *func, int line) {
                     print_hex8(t->last_value[j]);
                 }
                 xprintf("\nNew value ");
-                uint8_t *addr = (uint8_t *)(t->addr);
+                uint8_t* addr = (uint8_t*)(t->addr);
                 for (int j = 0; j < t->size; j++) {
                     print_hex8(addr[j]);
                 }

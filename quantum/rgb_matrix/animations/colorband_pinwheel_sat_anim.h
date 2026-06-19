@@ -7,7 +7,7 @@ static hsv_t BAND_PINWHEEL_SAT_math(hsv_t hsv, int16_t dx, int16_t dy, uint8_t t
     return hsv;
 }
 
-bool BAND_PINWHEEL_SAT(effect_params_t *params) {
+bool BAND_PINWHEEL_SAT(effect_params_t* params) {
     return effect_runner_dx_dy(params, &BAND_PINWHEEL_SAT_math);
 }
 

@@ -6,7 +6,7 @@ static uint8_t BREATHING_math(uint8_t val, uint8_t i, uint8_t time) {
     return scale8(abs8(sin8(time / 2) - 128) * 2, val);
 }
 
-bool BREATHING(effect_params_t *params) {
+bool BREATHING(effect_params_t* params) {
     return effect_runner_i(params, &BREATHING_math);
 }
 

@@ -25,7 +25,7 @@
 
 class TestFixture : public testing::Test {
    public:
-    static TestFixture *m_this;
+    static TestFixture* m_this;
 
     TestFixture();
     ~TestFixture();
@@ -35,8 +35,8 @@ class TestFixture : public testing::Test {
     void set_keymap(std::initializer_list<KeymapKey> keycodes);
     void add_key(const KeymapKey key);
 
-    const KeymapKey *find_key(const layer_t layer_t, const keypos_t position) const;
-    void             get_keycode(const layer_t layer, const keypos_t position, uint16_t *result) const;
+    const KeymapKey* find_key(const layer_t layer_t, const keypos_t position) const;
+    void             get_keycode(const layer_t layer, const keypos_t position, uint16_t* result) const;
 
     /**
      * @brief Taps `key` with `delay_ms` delay between press and release.
@@ -58,7 +58,7 @@ class TestFixture : public testing::Test {
      *
      * Example: `tap_combo({key_a, key_b})` to tap the chord A + B.
      */
-    void tap_combo(const std::vector<KeymapKey> &chord_keys, unsigned delay_ms = 1);
+    void tap_combo(const std::vector<KeymapKey>& chord_keys, unsigned delay_ms = 1);
 
     void run_one_scan_loop();
     void idle_for(unsigned ms);

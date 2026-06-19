@@ -2,7 +2,7 @@
 RGB_MATRIX_EFFECT(RAINDROPS)
 #    ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
-static void raindrops_set_color(uint8_t i, effect_params_t *params) {
+static void raindrops_set_color(uint8_t i, effect_params_t* params) {
     if (!HAS_ANY_FLAGS(g_led_config.flags[i], params->flags)) return;
     hsv_t hsv = rgb_matrix_config.hsv;
 
@@ -14,7 +14,7 @@ static void raindrops_set_color(uint8_t i, effect_params_t *params) {
     rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
 }
 
-bool RAINDROPS(effect_params_t *params) {
+bool RAINDROPS(effect_params_t* params) {
     static uint16_t index = RGB_MATRIX_LED_COUNT + 1;
 
     // Periodic trigger for LED change

@@ -161,7 +161,7 @@ int16_t i2c_read_nack(uint16_t timeout) {
     return TWDR;
 }
 
-i2c_status_t i2c_transmit(uint8_t address, const uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_transmit(uint8_t address, const uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(address | I2C_ACTION_WRITE, timeout);
 
     for (uint16_t i = 0; i < length && status >= 0; i++) {
@@ -173,11 +173,11 @@ i2c_status_t i2c_transmit(uint8_t address, const uint8_t *data, uint16_t length,
     return status;
 }
 
-i2c_status_t i2c_transmit_P(uint8_t address, const uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_transmit_P(uint8_t address, const uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(address | I2C_ACTION_WRITE, timeout);
 
     for (uint16_t i = 0; i < length && status >= 0; i++) {
-        status = i2c_write(pgm_read_byte((const char *)data++), timeout);
+        status = i2c_write(pgm_read_byte((const char*)data++), timeout);
     }
 
     i2c_stop();
@@ -185,7 +185,7 @@ i2c_status_t i2c_transmit_P(uint8_t address, const uint8_t *data, uint16_t lengt
     return status;
 }
 
-i2c_status_t i2c_receive(uint8_t address, uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(address | I2C_ACTION_READ, timeout);
 
     for (uint16_t i = 0; i < (length - 1) && status >= 0; i++) {
@@ -207,7 +207,7 @@ i2c_status_t i2c_receive(uint8_t address, uint8_t *data, uint16_t length, uint16
     return (status < 0) ? status : I2C_STATUS_SUCCESS;
 }
 
-i2c_status_t i2c_transmit_and_receive(uint8_t address, const uint8_t *tx_data, uint16_t tx_length, uint8_t *rx_data, uint16_t rx_length, uint16_t timeout) {
+i2c_status_t i2c_transmit_and_receive(uint8_t address, const uint8_t* tx_data, uint16_t tx_length, uint8_t* rx_data, uint16_t rx_length, uint16_t timeout) {
     i2c_status_t status = i2c_start(address | I2C_ACTION_WRITE, timeout);
 
     for (uint16_t i = 0; i < tx_length && status >= 0; i++) {
@@ -233,7 +233,7 @@ i2c_status_t i2c_transmit_and_receive(uint8_t address, const uint8_t *tx_data, u
     return status;
 }
 
-i2c_status_t i2c_write_register(uint8_t devaddr, uint8_t regaddr, const uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_write_register(uint8_t devaddr, uint8_t regaddr, const uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(devaddr | 0x00, timeout);
     if (status >= 0) {
         status = i2c_write(regaddr, timeout);
@@ -248,7 +248,7 @@ i2c_status_t i2c_write_register(uint8_t devaddr, uint8_t regaddr, const uint8_t 
     return status;
 }
 
-i2c_status_t i2c_write_register16(uint8_t devaddr, uint16_t regaddr, const uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_write_register16(uint8_t devaddr, uint16_t regaddr, const uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(devaddr | 0x00, timeout);
     if (status >= 0) {
         status = i2c_write(regaddr >> 8, timeout);
@@ -267,7 +267,7 @@ i2c_status_t i2c_write_register16(uint8_t devaddr, uint16_t regaddr, const uint8
     return status;
 }
 
-i2c_status_t i2c_read_register(uint8_t devaddr, uint8_t regaddr, uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_read_register(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(devaddr, timeout);
     if (status < 0) {
         goto error;
@@ -300,7 +300,7 @@ error:
     return (status < 0) ? status : I2C_STATUS_SUCCESS;
 }
 
-i2c_status_t i2c_read_register16(uint8_t devaddr, uint16_t regaddr, uint8_t *data, uint16_t length, uint16_t timeout) {
+i2c_status_t i2c_read_register16(uint8_t devaddr, uint16_t regaddr, uint8_t* data, uint16_t length, uint16_t timeout) {
     i2c_status_t status = i2c_start(devaddr, timeout);
     if (status < 0) {
         goto error;

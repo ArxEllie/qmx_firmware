@@ -62,7 +62,7 @@ static inline bool react_to_transaction(void) {
 
     split_shared_memory_lock_autounlock();
 
-    split_transaction_desc_t *transaction = &split_transaction_table[transaction_id];
+    split_transaction_desc_t* transaction = &split_transaction_table[transaction_id];
 
     /* Send back the handshake which is XORed as a simple checksum,
      to signal that the slave is ready to receive possible transaction buffers  */
@@ -119,7 +119,7 @@ static inline bool initiate_transaction(uint8_t transaction_id) {
 
     split_shared_memory_lock_autounlock();
 
-    split_transaction_desc_t *transaction = &split_transaction_table[transaction_id];
+    split_transaction_desc_t* transaction = &split_transaction_table[transaction_id];
 
     /* Send transaction table index to the slave, which doubles as basic handshake token. */
     if (unlikely(!serial_transport_send(&transaction_id, sizeof(transaction_id)))) {
