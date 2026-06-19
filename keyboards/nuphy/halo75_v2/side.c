@@ -227,9 +227,30 @@ void side_mode_b_control(uint8_t dir) {
  * @brief  set left side leds.
  * @param  ...
  */
-void set_left_rgb(uint8_t r, uint8_t g, uint8_t b) {
+static rgb_t side_status_rgb[5] = {0};
+
+static void set_left_rgb_no_cache(uint8_t r, uint8_t g, uint8_t b) {
     for (int i = 0; i < 5; i++)
         rgb_matrix_set_color(SIDE_INDEX + i, r, g, b);
+}
+
+static void side_status_led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
+    if (index >= 5) return;
+
+    side_status_rgb[index] = (rgb_t){r, g, b};
+    side_bat_led_set(index, r, g, b);
+}
+
+void set_left_rgb(uint8_t r, uint8_t g, uint8_t b) {
+    for (int i = 0; i < 5; i++)
+        side_status_rgb[i] = (rgb_t){r, g, b};
+
+    set_left_rgb_no_cache(r, g, b);
+}
+
+static void restore_left_rgb(void) {
+    for (int i = 0; i < 5; i++)
+        rgb_matrix_set_color(SIDE_INDEX + i, side_status_rgb[i].r, side_status_rgb[i].g, side_status_rgb[i].b);
 }
 
 void set_all_side_off(void) {
@@ -311,16 +332,24 @@ void sleep_sw_led_show(void) {
  * @brief  host system led indicate.
  */
 void sys_led_show(void) {
+    static bool was_on = false;
+    bool        is_on  = false;
+
     if (dev_info.link_mode == LINK_USB) {
-        // caps lock led
-        if (host_keyboard_led_state().caps_lock) {
-            set_left_rgb(colour_lib[4][0], colour_lib[4][1], colour_lib[4][2]);
-        }
+        is_on = host_keyboard_led_state().caps_lock;
     } else {
-        if (dev_info.rf_led & 0x02) {
-            set_left_rgb(colour_lib[4][0], colour_lib[4][1], colour_lib[4][2]);
-        }
+        is_on = dev_info.rf_led & 0x02;
     }
+
+    if (is_on) {
+        // ponytail: Caps/RF is a temporary overlay; keep the cached base status
+        // color intact so the falling edge can restore it without a second render.
+        set_left_rgb_no_cache(colour_lib[4][0], colour_lib[4][1], colour_lib[4][2]);
+    } else if (was_on) {
+        restore_left_rgb();
+    }
+
+    was_on = is_on;
 }
 
 /**
@@ -835,7 +864,7 @@ void bat_percent_led(uint8_t bat_percent) {
         bat_end_led       = 4;
         low_bat_blink_cnt = 6;
         for (i = 0; i <= bat_end_led; i++)
-            side_bat_led_set(i, bat_r, bat_g, bat_b);
+            side_status_led_set(i, bat_r, bat_g, bat_b);
     }
 }
 
