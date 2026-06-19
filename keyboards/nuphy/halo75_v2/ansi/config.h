@@ -39,6 +39,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SD1_RX_PIN                  B7
 #define SD1_RX_PAL_MODE             0
 
+// QMK's uart_serial.c driver uses UART_TX_PIN/UART_RX_PIN (not SD1_*).
+// Without these overrides it defaults to A9/A10 — which are matrix
+// columns 13/14 — causing phantom key presses when rf_uart_init() runs.
+#define UART_TX_PIN                 B6
+#define UART_RX_PIN                 B7
+
 // This is a 7-bit address, that gets left-shifted and bit 0
 // set to 0 for write, 1 for read (as per I2C protocol)
 // The address will vary depending on your wiring:

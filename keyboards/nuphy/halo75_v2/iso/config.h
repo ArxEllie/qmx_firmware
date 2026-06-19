@@ -39,6 +39,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SD1_RX_PIN                  B7
 #define SD1_RX_PAL_MODE             0
 
+// QMK's uart_serial.c driver uses UART_TX_PIN/UART_RX_PIN (not SD1_*).
+// Without these overrides it defaults to A9/A10 — which are matrix
+// columns 13/14 — causing phantom key presses when rf_uart_init() runs.
+#define UART_TX_PIN                 B6
+#define UART_RX_PIN                 B7
+
 // This is a 7-bit address, that gets left-shifted and bit 0
 // set to 0 for write, 1 for read (as per I2C protocol)
 // The address will vary depending on your wiring:
@@ -46,8 +52,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // 0b1110111 AD <-> VCC
 // 0b1110101 AD <-> SCL
 // 0b1110110 AD <-> SDA
-#define IS31FL3733_I2C_ADDRESS_1 IS31FL3733_I2C_ADDRESS_SDA_GND
-#define IS31FL3733_I2C_ADDRESS_2 IS31FL3733_I2C_ADDRESS_SDA_SCL
+#define DRIVER_ADDR_1              0b1010000
+#define DRIVER_ADDR_2              0b1010011
 
 #define ISSI_TIMEOUT               1
 
@@ -81,5 +87,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGB_MATRIX_KEYPRESSES
 #define RGB_MATRIX_KEYRELEASES
 
-#define IS31FL3733_SW_PULLUP IS31FL3733_PUR_0K5_OHM
-#define IS31FL3733_CS_PULLDOWN IS31FL3733_PDR_0K5_OHM
+#define IS31FL3733_SW_PULLUP PUR_05KR
+#define IS31FL3733_CS_PULLDOWN PUR_05KR

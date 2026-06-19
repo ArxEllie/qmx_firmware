@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "iso.h"
 #include "usb_main.h"
 #include "rf_driver.h"
+#include "i2c_master.h"
 
 
 user_config_t user_config;
@@ -97,6 +98,19 @@ extern void side_mode_a_control(uint8_t dir);
 extern void side_mode_b_control(uint8_t dir);
 extern bool low_bat_flag;
 
+
+static void rgb_driver_gpio_init(void)
+{
+    // RGB Matrix initializes before keyboard_post_init_kb(), so only the
+    // LED power rail and IS31FL3733 shutdown pins are released here.
+    gpio_set_pin_output(DC_BOOST_PIN);
+    gpio_write_pin_high(DC_BOOST_PIN);
+
+    gpio_set_pin_output(RGB_DRIVER_SDB1);
+    gpio_write_pin_high(RGB_DRIVER_SDB1);
+    gpio_set_pin_output(RGB_DRIVER_SDB2);
+    gpio_write_pin_high(RGB_DRIVER_SDB2);
+}
 
 /**
  * @brief  gpio initial.
@@ -742,18 +756,27 @@ void m_londing_eeprom_data(void)
 
 
 /**
+   qmk keyboard pre init
+ */
+void keyboard_pre_init_kb(void)
+{
+    rgb_driver_gpio_init();
+    keyboard_pre_init_user();
+}
+
+/**
    qmk keyboard post init
  */
 void keyboard_post_init_kb(void)
 {
     m_gpio_init();
-    // rf_uart_init();
-    // wait_ms(500);
-    // rf_device_init();
+    rf_uart_init();
+    wait_ms(500);
+    rf_device_init();
 
-    // m_break_all_key();
-    // m_londing_eeprom_data();
-    // m_power_on_dial_sw_scan();
+    m_break_all_key();
+    m_londing_eeprom_data();
+    m_power_on_dial_sw_scan();
     keyboard_post_init_user();
 
     // rf_link_show_time = 0;
@@ -776,20 +799,20 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max)
  */
 void housekeeping_task_kb(void)
 {
-    // timer_pro();
+    timer_pro();
 
-    // uart_receive_pro();
+    uart_receive_pro();
 
-    // uart_send_report_func();
+    uart_send_report_func();
 
-    // dev_sts_sync();
+    dev_sts_sync();
 
-    // long_press_key();
+    long_press_key();
 
-    // dial_sw_scan();
+    dial_sw_scan();
 
-    // m_side_led_show();
+    m_side_led_show();
 
-    // Sleep_Handle();
+    Sleep_Handle();
 
 }
