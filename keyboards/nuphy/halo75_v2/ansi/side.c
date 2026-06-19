@@ -457,7 +457,7 @@ static void side_power_mode_show(void)
         side_play_cnt -= side_speed_table[0][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
-    if(power_play_index <= 45) {
+    if(power_play_index < 45) {
         key_pwm_tab[power_play_index] = 0xff;
         power_play_index++;
     }
