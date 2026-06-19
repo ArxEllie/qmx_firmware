@@ -1,55 +1,5 @@
 #include QMK_KEYBOARD_H
 
-// Restore status LEDs (83-87) after built-in RGB matrix effects
-/*
-extern void bat_led_show(void);
-extern void sys_led_show(void);
-extern void sys_sw_led_show(void);
-extern void sleep_sw_led_show(void);
-extern void rf_led_show(void);
-*/
-// Directly restore status LED colors based on current state (bypass timing logic)
-/*
-extern struct {
-    uint8_t sys_sw_state;
-    uint8_t rf_baterry;
-} dev_info;
-
-extern uint8_t colour_lib[][3];
-#define SIDE_INDEX 83
-
-void restore_status_leds(void) {
-    // System switch indicator (MAC vs WIN)
-    if (dev_info.sys_sw_state == 1) { // MAC
-        rgb_matrix_set_color(SIDE_INDEX + 0, colour_lib[7][0], colour_lib[7][1], colour_lib[7][2]);
-    } else { // WIN
-        rgb_matrix_set_color(SIDE_INDEX + 0, colour_lib[5][0], colour_lib[5][1], colour_lib[5][2]);
-    }
-
-    // Battery indicator on remaining status LEDs
-    uint8_t bat_r, bat_g, bat_b;
-    if (dev_info.rf_baterry <= 20) {
-        bat_r = colour_lib[3][0]; bat_g = colour_lib[3][1]; bat_b = colour_lib[3][2];
-    } else if (dev_info.rf_baterry <= 50) {
-        bat_r = colour_lib[2][0]; bat_g = colour_lib[2][1]; bat_b = colour_lib[2][2];
-    } else if (dev_info.rf_baterry <= 80) {
-        bat_r = colour_lib[1][0]; bat_g = colour_lib[1][1]; bat_b = colour_lib[1][2];
-    } else {
-        bat_r = colour_lib[0][0]; bat_g = colour_lib[0][1]; bat_b = colour_lib[0][2];
-    }
-
-    // Set battery indicator on status LEDs 1-4
-    for (int i = 1; i < 5; i++) {
-        rgb_matrix_set_color(SIDE_INDEX + i, bat_r, bat_g, bat_b);
-    }
-}
-
-bool rgb_matrix_indicators_user(void) {
-    // Restore status LED colors after built-in RGB matrix effects
-    restore_status_leds();
-    return false;
-}
-*/
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // layer Mac
@@ -93,4 +43,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	_______,	_______,	_______,	_______,	_______,	_______,	_______,	_______,	_______,	SIDE_SPD,	SIDE_SPI,	SIDE_MOD_B,	_______,	SIDE_VAI,	_______,
 	_______,	_______,	_______,	_______,	_______,	MO(4),		SIDE_MOD_A,	SIDE_VAD,	SIDE_HUI),
 };
-
