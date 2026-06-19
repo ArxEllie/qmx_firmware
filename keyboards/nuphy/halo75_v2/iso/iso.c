@@ -752,6 +752,13 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max)
         rgb_matrix_set_color(72, 0x00, 0x80, 0x00);
     }
 
+    // Side LEDs (83-127) are driven by the dedicated side LED system in
+    // side.c, not by RGB matrix effects.  Render them here — after the
+    // effect has written the buffer but before the PWM flush — so the
+    // side colours always win and don't flicker when a built-in effect
+    // writes to all 128 LEDs.
+    m_side_led_show();
+
     return true;
 }
 
@@ -771,8 +778,6 @@ void housekeeping_task_kb(void)
     long_press_key();
 
     dial_sw_scan();
-
-    m_side_led_show();
 
     Sleep_Handle();
 
