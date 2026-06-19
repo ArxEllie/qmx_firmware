@@ -1,13 +1,15 @@
 #include QMK_KEYBOARD_H
 
 // Restore status LEDs (83-87) after built-in RGB matrix effects
+/*
 extern void bat_led_show(void);
 extern void sys_led_show(void);
 extern void sys_sw_led_show(void);
 extern void sleep_sw_led_show(void);
 extern void rf_led_show(void);
-
+*/
 // Directly restore status LED colors based on current state (bypass timing logic)
+/*
 extern struct {
     uint8_t sys_sw_state;
     uint8_t rf_baterry;
@@ -47,7 +49,7 @@ bool rgb_matrix_indicators_user(void) {
     restore_status_leds();
     return false;
 }
-
+*/
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // layer Mac
