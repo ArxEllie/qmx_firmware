@@ -519,17 +519,23 @@ static void side_wave_mode_show(void) {
 static void side_new_mode_show(void) {
     uint8_t play_index;
 
+    if (side_line <= 5) {
+        set_all_side_off();
+        return;
+    }
+
     if (side_play_cnt <= side_speed_table[side_mode_a][side_speed])
         return;
     else
         side_play_cnt -= side_speed_table[side_mode_a][side_speed];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
-    light_point_playing(0, 1, (side_line - 5), &side_play_point);
+    const uint8_t side_anim_line = side_line - 5;
+
+    light_point_playing(0, 1, side_anim_line, &side_play_point);
     play_index = side_play_point;
-    if (side_line == 0) set_all_side_off();
     for (int i = SIDE_RIM_START; i <= SIDE_ANIM_LOOP_END; i++) {
-        if (play_index < (side_line - 5) / 2) {
+        if (play_index < side_anim_line / 2) {
             r_temp = dual_colour_lib[side_colour][0];
             g_temp = dual_colour_lib[side_colour][1];
             b_temp = dual_colour_lib[side_colour][2];
@@ -539,7 +545,7 @@ static void side_new_mode_show(void) {
             b_temp = dual_colour_lib[side_colour][5];
         }
 
-        light_point_playing(1, 1, (side_line - 5), &play_index);
+        light_point_playing(1, 1, side_anim_line, &play_index);
 
         count_rgb_light(side_light_table[side_light]);
 
