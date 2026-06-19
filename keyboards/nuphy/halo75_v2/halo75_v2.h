@@ -209,7 +209,9 @@ uint8_t              is_side_rgb_on(uint8_t index);
 #    define SIDE_RIM_START 5
 extern const uint8_t side_led_index_tab[44];
 uint8_t              is_side_rgb_on(uint8_t index);
-#    define side_bat_led_set(idx, r, g, b) rgb_matrix_set_color(side_led_index_tab[(idx) + 5], r, g, b)
+/* ISO keeps the five status LEDs at table indices 0-4; battery indicators use
+ * those logical indices directly, while rim animations start at index 5. */
+#    define side_bat_led_set(idx, r, g, b) rgb_matrix_set_color(side_led_index_tab[(idx)], r, g, b)
 #    define side_rgb_off(idx) (void)(idx)
 #endif
 
