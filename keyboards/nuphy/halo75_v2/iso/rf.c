@@ -43,6 +43,19 @@ uint8_t  sync_lost               = 0;
 uint8_t  disconnect_delay        = 0;
 bool     uart_repeat_flag        = 0;
 
+#define UART_DEFERRED_QUEUE_LEN 8
+
+typedef struct {
+    uint8_t  cmd;
+    uint8_t  delayms;
+    uint32_t timer;
+} deferred_uart_cmd_t;
+
+static deferred_uart_cmd_t deferred_uart_queue[UART_DEFERRED_QUEUE_LEN];
+static uint8_t deferred_uart_head = 0;
+static uint8_t deferred_uart_tail = 0;
+static uint8_t deferred_uart_count = 0;
+
 
 extern DEV_INFO_STRUCT dev_info;
 extern host_driver_t  *m_host_driver;
@@ -311,7 +324,9 @@ void RF_Protocol_Receive(void) {
  * @param  delayms: delay before sending.
  */
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
-    wait_ms(delayms);
+    if (delayms) {
+        wait_ms(delayms);
+    }
 
     memset(&Usart_Mgr.TXDBuf[0], 0, UART_MAX_LEN);
 
@@ -466,6 +481,68 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
     return TX_TIMEOUT;
 }
 
+uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms) {
+    if (deferred_uart_count >= UART_DEFERRED_QUEUE_LEN) {
+        return TX_TIMEOUT;
+    }
+
+    deferred_uart_queue[deferred_uart_tail].cmd = cmd;
+    deferred_uart_queue[deferred_uart_tail].delayms = delayms;
+    deferred_uart_queue[deferred_uart_tail].timer = timer_read32();
+    deferred_uart_tail = (deferred_uart_tail + 1) % UART_DEFERRED_QUEUE_LEN;
+    deferred_uart_count++;
+
+    return TX_OK;
+}
+
+void uart_send_cmd_deferred_task(void) {
+    if (!deferred_uart_count) {
+        return;
+    }
+
+    deferred_uart_cmd_t *cmd = &deferred_uart_queue[deferred_uart_head];
+    if (timer_elapsed32(cmd->timer) < cmd->delayms) {
+        return;
+    }
+
+    uart_send_cmd(cmd->cmd, 0, 0);
+    deferred_uart_head = (deferred_uart_head + 1) % UART_DEFERRED_QUEUE_LEN;
+    deferred_uart_count--;
+
+    if (deferred_uart_count) {
+        deferred_uart_queue[deferred_uart_head].timer = timer_read32();
+    }
+}
+
+static bool rf_reset_task(void) {
+    static uint8_t reset_step = 0;
+    static uint32_t reset_timer = 0;
+
+    if (f_rf_reset && reset_step == 0) {
+        f_rf_reset = 0;
+        reset_step = 1;
+        reset_timer = timer_read32();
+    }
+
+    if (reset_step == 0) {
+        return false;
+    }
+
+    if (reset_step == 1 && timer_elapsed32(reset_timer) >= 100) {
+        gpio_write_pin_low(NRF_RESET_PIN);
+        reset_step = 2;
+        reset_timer = timer_read32();
+    } else if (reset_step == 2 && timer_elapsed32(reset_timer) >= 50) {
+        gpio_write_pin_high(NRF_RESET_PIN);
+        reset_step = 3;
+        reset_timer = timer_read32();
+    } else if (reset_step == 3 && timer_elapsed32(reset_timer) >= 50) {
+        reset_step = 0;
+    }
+
+    return reset_step != 0;
+}
+
 /**
  * @brief RF module state sync.
  */
@@ -473,22 +550,18 @@ void dev_sts_sync(void) {
     static uint32_t interval_timer  = 0;
     static uint8_t  link_state_temp = RF_DISCONNECT;
 
+    if (rf_reset_task()) {
+        return;
+    }
+
     if (timer_elapsed32(interval_timer) < 200)
         return;
     else
         interval_timer = timer_read32();
 
-    if (f_rf_reset) {
-        f_rf_reset = 0;
-        wait_ms(100);
-        gpio_write_pin_low(NRF_RESET_PIN);
-        wait_ms(50);
-        gpio_write_pin_high(NRF_RESET_PIN);
-        wait_ms(50);
-    }
-    else if (f_send_channel) {
+    if (f_send_channel) {
         f_send_channel = 0;
-        uart_send_cmd(CMD_SET_LINK, 10, 10);
+        uart_send_cmd_deferred(CMD_SET_LINK, 10);
     }
 
     if (dev_info.link_mode == LINK_USB) {
@@ -524,13 +597,13 @@ void dev_sts_sync(void) {
                 link_state_temp   = RF_CONNECT;
                 rf_link_show_time = 0;
                 if (dev_info.link_mode == LINK_RF_24) {
-                    uart_send_cmd(CMD_SET_24G_NAME, 10, 30);
+                    uart_send_cmd_deferred(CMD_SET_24G_NAME, 30);
                 }
             }
         }
     }
 
-    uart_send_cmd(CMD_RF_STS_SYSC, 1, 1);
+    uart_send_cmd_deferred(CMD_RF_STS_SYSC, 1);
 
     if (dev_info.link_mode != LINK_USB) {
         if (++sync_lost >= 5) {

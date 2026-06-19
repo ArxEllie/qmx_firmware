@@ -82,6 +82,8 @@ void uart_receive_pro(void);
 void Sleep_Handle(void);
 void uart_send_report_func(void);
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
+uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
+void uart_send_cmd_deferred_task(void);
 void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
 void device_reset_show(void);
 void device_reset_init(void);
@@ -143,9 +145,19 @@ void m_gpio_init(void)
 void long_press_key(void)
 {
     static uint32_t long_press_timer = 0;
+    static uint8_t  new_adv_retry = 0;
 
     if (timer_elapsed32(long_press_timer) < 100) return;
     long_press_timer = timer_read32();
+
+    if (new_adv_retry) {
+        if (f_rf_new_adv_ok) {
+            new_adv_retry = 0;
+        } else {
+            uart_send_cmd_deferred(CMD_NEW_ADV, 1);
+            new_adv_retry--;
+        }
+    }
 
     if (f_rf_sw_press) {
         rf_sw_press_delay++;
@@ -154,14 +166,8 @@ void long_press_key(void)
             dev_info.link_mode   = rf_sw_temp;
             dev_info.rf_channel  = rf_sw_temp;
             dev_info.ble_channel = rf_sw_temp;
-
-            uint8_t timeout = 5;
-            while (timeout--) {
-                uart_send_cmd(CMD_NEW_ADV, 0, 1);
-                wait_ms(20);
-                uart_receive_pro();
-                if (f_rf_new_adv_ok) break;
-            }
+            f_rf_new_adv_ok      = 0;
+            new_adv_retry        = 5;
         }
     } else {
         rf_sw_press_delay = 0;
@@ -406,6 +412,32 @@ void m_power_on_dial_sw_scan(void)
 }
 
 
+static uint16_t macro_tap_keycode = KC_NO;
+static uint32_t macro_tap_timer = 0;
+
+static void macro_tap_release(void) {
+    if (macro_tap_keycode == KC_NO) {
+        return;
+    }
+
+    unregister_code16(macro_tap_keycode);
+    macro_tap_keycode = KC_NO;
+}
+
+static void macro_tap_deferred(uint16_t keycode) {
+    macro_tap_release();
+    register_code16(keycode);
+    macro_tap_keycode = keycode;
+    macro_tap_timer = timer_read32();
+}
+
+static void macro_tap_task(void) {
+    if (macro_tap_keycode != KC_NO && timer_elapsed32(macro_tap_timer) >= 20) {
+        macro_tap_release();
+    }
+}
+
+
 /**
  * @brief  qmk process record
  */
@@ -418,7 +450,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RF_DFU:
             if (record->event.pressed) {
                 if (dev_info.link_mode != LINK_USB) return false;
-                uart_send_cmd(CMD_RF_DFU, 10, 20);
+                uart_send_cmd_deferred(CMD_RF_DFU, 20);
             }
             return false;
 
@@ -427,7 +459,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 m_break_all_key();
             } else {
                 dev_info.link_mode = LINK_USB;
-                uart_send_cmd(CMD_SET_LINK, 10, 10);
+                uart_send_cmd_deferred(CMD_SET_LINK, 10);
             }
             return false;
 
@@ -444,7 +476,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     dev_info.link_mode   = rf_sw_temp;
                     dev_info.rf_channel  = rf_sw_temp;
                     dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
+                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
                 }
             }
             return false;
@@ -462,7 +494,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     dev_info.link_mode   = rf_sw_temp;
                     dev_info.rf_channel  = rf_sw_temp;
                     dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
+                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
                 }
             }
             return false;
@@ -480,7 +512,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     dev_info.link_mode   = rf_sw_temp;
                     dev_info.rf_channel  = rf_sw_temp;
                     dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
+                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
                 }
             }
             return false;
@@ -498,7 +530,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     dev_info.link_mode   = rf_sw_temp;
                     dev_info.rf_channel  = rf_sw_temp;
                     dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
+                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
                 }
             }
             return false;
@@ -513,11 +545,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case MAC_SEARCH:
             if (record->event.pressed) {
-                register_code(KC_LGUI);
-                register_code(KC_SPACE);
-                wait_ms(20);
-                unregister_code(KC_LGUI);
-                unregister_code(KC_SPACE);
+                macro_tap_deferred(LGUI(KC_SPACE));
             }
             return false;
 
@@ -547,13 +575,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case MAC_PRT:
             if (record->event.pressed) {
-                register_code(KC_LGUI);
-                register_code(KC_LSFT);
-                register_code(KC_3);
-                wait_ms(20);
-                unregister_code(KC_3);
-                unregister_code(KC_LSFT);
-                unregister_code(KC_LGUI);
+                macro_tap_deferred(LGUI(LSFT(KC_3)));
             }
             return false;
 
@@ -561,23 +583,11 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 // win
                 if (keymap_config.nkro) {
-                    register_code(KC_LGUI);
-                    register_code(KC_LSFT);
-                    register_code(KC_S);
-                    wait_ms(20);
-                    unregister_code(KC_S);
-                    unregister_code(KC_LSFT);
-                    unregister_code(KC_LGUI);
+                    macro_tap_deferred(LGUI(LSFT(KC_S)));
                 }
                 // mac
                 else {
-                    register_code(KC_LGUI);
-                    register_code(KC_LSFT);
-                    register_code(KC_4);
-                    wait_ms(20);
-                    unregister_code(KC_4);
-                    unregister_code(KC_LSFT);
-                    unregister_code(KC_LGUI);
+                    macro_tap_deferred(LGUI(LSFT(KC_4)));
                 }
             }
             return false;
@@ -770,6 +780,10 @@ void housekeeping_task_kb(void)
     timer_pro();
 
     uart_receive_pro();
+
+    uart_send_cmd_deferred_task();
+
+    macro_tap_task();
 
     uart_send_report_func();
 

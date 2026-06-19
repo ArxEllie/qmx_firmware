@@ -28,6 +28,7 @@ extern bool             f_wakeup_prepare;
 extern bool             f_goto_sleep;
 
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
+uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
 
 
 /**
@@ -37,10 +38,25 @@ void Sleep_Handle(void) {
     static uint32_t delay_step_timer = 0;
     static uint8_t  usb_suspend_debounce = 0;
     static uint32_t rf_disconnect_time = 0;
+    static uint8_t  usb_wakeup_retry = 0;
+    static bool     usb_wakeup_pending = false;
 
     /* 50ms interval */
     if (timer_elapsed32(delay_step_timer) < 50) return;
     delay_step_timer = timer_read32();
+
+    if (usb_wakeup_pending) {
+        if (USB_DRIVER.state == USB_SUSPENDED && usb_wakeup_retry) {
+            usbWakeupHost(&USB_DRIVER);
+            restart_usb_driver(&USB_DRIVER);
+            usb_wakeup_retry--;
+            return;
+        }
+
+        extern void m_break_all_key(void);
+        m_break_all_key();
+        usb_wakeup_pending = false;
+    }
 
     // sleep process
     if (f_goto_sleep) {
@@ -69,21 +85,14 @@ void Sleep_Handle(void) {
         gpio_write_pin_high(RGB_DRIVER_SDB1);
         gpio_write_pin_high(RGB_DRIVER_SDB2);
 
-        uart_send_cmd(CMD_HAND, 0, 1);
+        uart_send_cmd_deferred(CMD_HAND, 1);
 
         if (dev_info.link_mode == LINK_USB) {
             #define USB_GETSTATUS_REMOTE_WAKEUP_ENABLED (2U)
             if ((USB_DRIVER.status & USB_GETSTATUS_REMOTE_WAKEUP_ENABLED) ) {
                 usb_lld_wakeup_host(&USB_DRIVER);
-                wait_ms(50);
-                uint8_t timeout = 10;
-                while ((USB_DRIVER.state == USB_SUSPENDED) && (timeout--)) {
-                    usbWakeupHost(&USB_DRIVER);
-                    restart_usb_driver(&USB_DRIVER);
-                    wait_ms(50);
-                }
-                extern void m_break_all_key(void);
-                m_break_all_key();
+                usb_wakeup_retry = 10;
+                usb_wakeup_pending = true;
             }
         }
     }
