@@ -353,12 +353,18 @@ reset_rx:
 }
 
 /**
- * @brief  Uart send cmd.
+ * @brief  Uart send cmd (fire-and-forget).
  * @param  cmd: cmd.
- * @param  wait_ack: wait time for ack after sending.
- * @param  delayms: delay before sending.
+ * @param  wait_ack: unused — kept for call-site compatibility.
+ * @param  delayms: delay before sending (blocking, boot-time only).
+ *
+ * The former ack-wait loop was a no-op: f_uart_ack is set by
+ * RF_Protocol_Receive(), which is only called from uart_receive_pro(),
+ * and neither is serviced inside this function.  No caller uses the
+ * return value, so the wait was a pure blocking delay with no effect.
  */
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
+    (void)wait_ack;
     if (delayms) {
         wait_ms(delayms);
     }
@@ -504,16 +510,7 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
     f_uart_ack = 0;
     UART_Send_Bytes(Usart_Mgr.TXDBuf, Usart_Mgr.TXDBuf[3] + 5);
 
-    if (wait_ack) {
-        while (wait_ack--) {
-            wait_ms(1);
-            if (f_uart_ack) return TX_OK;
-        }
-    } else {
-        return TX_OK;
-    }
-
-    return TX_TIMEOUT;
+    return TX_OK;
 }
 
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms) {

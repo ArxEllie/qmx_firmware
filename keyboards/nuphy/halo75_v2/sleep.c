@@ -27,7 +27,6 @@ extern uint16_t        no_act_time;
 extern bool f_wakeup_prepare;
 extern bool f_goto_sleep;
 
-uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
 
 /**
@@ -63,9 +62,9 @@ void Sleep_Handle(void) {
 
         if (f_dev_sleep_enable) {
             if (dev_info.rf_state == RF_CONNECT)
-                uart_send_cmd(CMD_SET_CONFIG, 5, 5);
+                uart_send_cmd_deferred(CMD_SET_CONFIG, 5);
             else
-                uart_send_cmd(CMD_SLEEP, 5, 5);
+                uart_send_cmd_deferred(CMD_SLEEP, 5);
 
             // power off led
             gpio_write_pin_low(DC_BOOST_PIN);
