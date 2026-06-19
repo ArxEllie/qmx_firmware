@@ -1,0 +1,97 @@
+# Release build flow.
+# Triggered when a git tag is pushed to Forgejo (e.g. `git tag v1.0.0 && git push --tags`).
+# Builds the firmware and publishes a Forgejo release with the binaries attached.
+
+when:
+  - event: tag
+    ref: refs/tags/v*
+
+steps:
+  - name: build
+    image: qmkfm/qmk_cli
+    commands:
+      - pip install -q -r requirements.txt
+      - make git-submodule
+      - mkdir -p dist
+      - make -j"$(nproc)" nuphy/halo75_v2/ansi:default
+      - make -j"$(nproc)" nuphy/halo75_v2/ansi:via
+      - make -j"$(nproc)" nuphy/halo75_v2/iso:default
+      - make -j"$(nproc)" nuphy/halo75_v2/iso:via
+      - for ext in bin hex uf2; do for f in *.$ext; do [ -f "$f" ] && mv "$f" dist/; done; done
+      - (cd dist && sha256sum -- * > SHA256SUMS)
+      - ls -la dist
+
+  - name: publish
+    image: alpine:3.20
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+    commands:
+      - apk add --no-cache curl jq
+      - |
+        set -eu
+        if [ -n "${CI_REPO_LINK:-}" ] && [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
+          FORGE_URL="${CI_REPO_LINK%/}"
+          FORGE_URL="${FORGE_URL%/$CI_REPO_NAME}"
+          FORGE_URL="${FORGE_URL%/$CI_REPO_OWNER}"
+        else
+          FORGE_URL="${CI_FORGE_URL%/}"
+        fi
+        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+
+        if [ -n "${CI_REPO_OWNER:-}" ] && [ -n "${CI_REPO_NAME:-}" ]; then
+          REPO_SLUG="$CI_REPO_OWNER/$CI_REPO_NAME"
+        else
+          REPO_SLUG="${CI_REPO:?CI_REPO is not set}"
+        fi
+
+        REPO_API="$FORGE_URL/api/v1/repos/$REPO_SLUG"
+        API="$REPO_API/releases"
+
+        AUTH="Authorization: token $FORGEJO_TOKEN"
+        auth_status="$(curl -sS -o /tmp/auth.json -w '%{http_code}' -H "$AUTH" "$FORGE_URL/api/v1/user")"
+        if [ "$auth_status" != "200" ]; then
+          AUTH="Authorization: Bearer $FORGEJO_TOKEN"
+          auth_status="$(curl -sS -o /tmp/auth.json -w '%{http_code}' -H "$AUTH" "$FORGE_URL/api/v1/user")"
+        fi
+        if [ "$auth_status" != "200" ]; then
+          echo "Forgejo token authentication failed with HTTP $auth_status"
+          cat /tmp/auth.json
+          exit 1
+        fi
+
+        echo "Publishing $CI_COMMIT_TAG to $REPO_SLUG"
+        repo_status="$(curl -sS -o /tmp/repo.json -w '%{http_code}' -H "$AUTH" "$REPO_API")"
+        if [ "$repo_status" != "200" ]; then
+          echo "Forgejo repo lookup failed with HTTP $repo_status for $REPO_SLUG"
+          cat /tmp/repo.json
+          exit 1
+        fi
+
+        existing="$(curl -fsSL -H "$AUTH" "$API/tags/$CI_COMMIT_TAG" 2>/dev/null || echo '{}')"
+        existing_id="$(printf '%s' "$existing" | jq -r '.id // empty')"
+        if [ -n "$existing_id" ]; then
+          curl -fsSL -X DELETE -H "$AUTH" "$API/$existing_id"
+        fi
+
+        body="Automated release from commit ${CI_COMMIT_SHA:-unknown} on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+        release_payload="$(jq -nc --arg t "$CI_COMMIT_TAG" --arg n "NuPhy Halo75 V2 $CI_COMMIT_TAG" --arg b "$body" '{tag_name:$t,name:$n,body:$b,prerelease:false,draft:false}')"
+        release_status="$(curl -sS -o /tmp/release.json -w '%{http_code}' -X POST -H "$AUTH" -H 'Content-Type: application/json' "$API" -d "$release_payload")"
+        if [ "$release_status" != "201" ]; then
+          echo "Forgejo release creation failed with HTTP $release_status"
+          cat /tmp/release.json
+          exit 1
+        fi
+        rel_response="$(cat /tmp/release.json)"
+        rel_id="$(printf '%s' "$rel_response" | jq -r '.id // empty')"
+        test -n "$rel_id"
+
+        for f in dist/*; do
+          [ -f "$f" ] || continue
+          asset_status="$(curl -sS -o /tmp/asset.json -w '%{http_code}' -X POST -H "$AUTH" -F "attachment=@$f" "$API/$rel_id/assets?name=$(basename "$f")")"
+          if [ "$asset_status" != "201" ]; then
+            echo "Forgejo asset upload failed with HTTP $asset_status for $(basename "$f")"
+            cat /tmp/asset.json
+            exit 1
+          fi
+        done

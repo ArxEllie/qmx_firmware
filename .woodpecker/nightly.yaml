@@ -1,0 +1,75 @@
+# Nightly build flow.
+# Run on a schedule via a Woodpecker cron job named "nightly"
+# (Repo Settings -> Crons).
+#
+# Publishes a rolling "nightly" pre-release visible in Forgejo's Releases tab.
+
+when:
+  - event: cron
+    cron: nightly
+  - event: manual
+
+steps:
+  - name: build
+    image: qmkfm/qmk_cli
+    commands:
+      - pip install -q -r requirements.txt
+      - make git-submodule
+      - mkdir -p dist
+      - make -j"$(nproc)" nuphy/halo75_v2/ansi:default
+      - make -j"$(nproc)" nuphy/halo75_v2/ansi:via
+      - make -j"$(nproc)" nuphy/halo75_v2/iso:default
+      - make -j"$(nproc)" nuphy/halo75_v2/iso:via
+      - |
+        # Generate timestamp and rename firmware files
+        TIMESTAMP=$(date -u +%Y%m%d-%H%M)
+        echo "Build timestamp: $TIMESTAMP"
+        for ext in bin hex uf2; do
+          for f in *.$ext; do
+            [ -f "$f" ] || continue
+            # Insert timestamp before extension
+            newname=$(echo "$f" | sed "s/\.${ext}$/-${TIMESTAMP}.${ext}/")
+            mv "$f" "dist/$newname"
+          done
+        done
+      - cp keyboards/nuphy/halo75_v2/iso/keymaps/via/NuPhy\ Halo75\ via3.json dist/
+      - (cd dist && sha256sum -- * > SHA256SUMS)
+      - ls -la dist
+
+  - name: publish-release
+    image: alpine:3.20
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+      CI_REPO: "${CI_REPO}"
+      CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
+      CI_FORGE_URL: "${CI_FORGE_URL}"
+    commands:
+      - apk add --no-cache curl jq
+      - |
+        set -eu
+        FORGE_URL="${CI_FORGE_URL%/}"
+        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+        REPO_API="$FORGE_URL/api/v1/repos/$CI_REPO"
+        RELEASES_API="$REPO_API/releases"
+        AUTH="Authorization: token $FORGEJO_TOKEN"
+        TIMESTAMP=$(date -u +%Y%m%d-%H%M)
+        TAG="nightly-$${TIMESTAMP}"
+        NAME="Nightly Build $${TIMESTAMP}"
+        BODY="Automated nightly build from commit ${CI_COMMIT_SHA:0:8} on $${TIMESTAMP}"
+        existing=$(curl -fsSL -H "$AUTH" "$RELEASES_API/tags/$TAG" 2>/dev/null || echo '{}')
+        id=$(echo "$existing" | jq -r '.id // empty')
+        [ -n "$id" ] && curl -fsSL -X DELETE -H "$AUTH" "$RELEASES_API/$id" 2>/dev/null || true
+        curl -fsSL -X DELETE -H "$AUTH" "$REPO_API/git/refs/tags/$TAG" 2>/dev/null || true
+        release=$(curl -fsSL -X POST -H "$AUTH" -H "Content-Type: application/json" \
+          "$RELEASES_API" -d "{\"tag_name\":\"$TAG\",\"target_commitish\":\"$CI_COMMIT_SHA\",\"name\":\"$NAME\",\"body\":\"$BODY\",\"prerelease\":true}")
+        rel_id=$(echo "$release" | jq -r '.id')
+        for f in dist/*; do
+          [ -f "$f" ] || continue
+          name=$(basename "$f")
+          echo "Uploading $name"
+          curl -fsSL -X POST -H "$AUTH" -F "attachment=@$f" \
+            --url-query "name=$name" \
+            "$RELEASES_API/$rel_id/assets" >/dev/null
+        done
+        echo "Published: $FORGE_URL/$CI_REPO/releases/tag/$TAG"
