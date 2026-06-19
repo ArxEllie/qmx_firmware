@@ -29,7 +29,7 @@
  */
 uint8_t has_anykey(void) {
     uint8_t  cnt = 0;
-    uint8_t* p   = keyboard_report->keys;
+    uint8_t *p   = keyboard_report->keys;
     uint8_t  lp  = sizeof(keyboard_report->keys);
 #ifdef NKRO_ENABLE
     if (host_can_send_nkro() && keymap_config.nkro) {
@@ -89,7 +89,7 @@ bool is_key_pressed(uint8_t key) {
  *
  * FIXME: Needs doc
  */
-void add_key_byte(report_keyboard_t* keyboard_report, uint8_t code) {
+void add_key_byte(report_keyboard_t *keyboard_report, uint8_t code) {
     int8_t i     = 0;
     int8_t empty = -1;
     for (; i < KEYBOARD_REPORT_KEYS; i++) {
@@ -111,7 +111,7 @@ void add_key_byte(report_keyboard_t* keyboard_report, uint8_t code) {
  *
  * FIXME: Needs doc
  */
-void del_key_byte(report_keyboard_t* keyboard_report, uint8_t code) {
+void del_key_byte(report_keyboard_t *keyboard_report, uint8_t code) {
     for (uint8_t i = 0; i < KEYBOARD_REPORT_KEYS; i++) {
         if (keyboard_report->keys[i] == code) {
             keyboard_report->keys[i] = 0;
@@ -124,7 +124,7 @@ void del_key_byte(report_keyboard_t* keyboard_report, uint8_t code) {
  *
  * FIXME: Needs doc
  */
-void add_key_bit(report_nkro_t* nkro_report, uint8_t code) {
+void add_key_bit(report_nkro_t *nkro_report, uint8_t code) {
     if ((code >> 3) < NKRO_REPORT_BITS) {
         nkro_report->bits[code >> 3] |= 1 << (code & 7);
     } else {
@@ -136,7 +136,7 @@ void add_key_bit(report_nkro_t* nkro_report, uint8_t code) {
  *
  * FIXME: Needs doc
  */
-void del_key_bit(report_nkro_t* nkro_report, uint8_t code) {
+void del_key_bit(report_nkro_t *nkro_report, uint8_t code) {
     if ((code >> 3) < NKRO_REPORT_BITS) {
         nkro_report->bits[code >> 3] &= ~(1 << (code & 7));
     } else {
@@ -197,7 +197,7 @@ void clear_keys_from_report(void) {
  * @param[in] old_report report_mouse_t
  * @return bool result
  */
-__attribute__((weak)) bool has_mouse_report_changed(report_mouse_t* new_report, report_mouse_t* old_report) {
+__attribute__((weak)) bool has_mouse_report_changed(report_mouse_t *new_report, report_mouse_t *old_report) {
     // memcmp doesn't work here because of the `report_id` field when using
     // shared mouse endpoint
     bool changed = ((new_report->buttons != old_report->buttons) ||

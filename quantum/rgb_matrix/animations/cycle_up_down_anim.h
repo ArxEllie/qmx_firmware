@@ -7,7 +7,7 @@ static hsv_t CYCLE_UP_DOWN_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool CYCLE_UP_DOWN(effect_params_t* params) {
+bool CYCLE_UP_DOWN(effect_params_t *params) {
     return effect_runner_i(params, &CYCLE_UP_DOWN_math);
 }
 

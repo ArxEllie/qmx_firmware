@@ -6,7 +6,7 @@ static uint8_t CYCLE_UP_DOWN_math(uint8_t val, uint8_t i, uint8_t time) {
     return scale8(g_led_config.point[i].y - time, val);
 }
 
-bool CYCLE_UP_DOWN(effect_params_t* params) {
+bool CYCLE_UP_DOWN(effect_params_t *params) {
     return effect_runner_i(params, &CYCLE_UP_DOWN_math);
 }
 

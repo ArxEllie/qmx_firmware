@@ -6,7 +6,7 @@ static uint8_t WAVE_LEFT_RIGHT_math(uint8_t val, uint8_t i, uint8_t time) {
     return scale8(sin8(g_led_config.point[i].x - time), val);
 }
 
-bool WAVE_LEFT_RIGHT(effect_params_t* params) {
+bool WAVE_LEFT_RIGHT(effect_params_t *params) {
     return effect_runner_i(params, &WAVE_LEFT_RIGHT_math);
 }
 

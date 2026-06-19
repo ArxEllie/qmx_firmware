@@ -6,7 +6,7 @@
 #include "gpio.h"
 
 #ifndef BATTERY_ADC_PIN
-#    error("BATTERY_ADC_PIN not configured!")
+#    error ("BATTERY_ADC_PIN not configured!")
 #endif
 
 #ifndef BATTERY_ADC_REF_VOLTAGE_MV

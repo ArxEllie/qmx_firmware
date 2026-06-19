@@ -11,7 +11,7 @@ static hsv_t HUE_PENDULUM_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool HUE_PENDULUM(effect_params_t* params) {
+bool HUE_PENDULUM(effect_params_t *params) {
     return effect_runner_i(params, &HUE_PENDULUM_math);
 }
 

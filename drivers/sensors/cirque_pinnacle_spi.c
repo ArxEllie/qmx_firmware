@@ -9,7 +9,7 @@
 
 /*  RAP Functions */
 // Reads <count> Pinnacle registers starting at <address>
-void RAP_ReadBytes(uint8_t address, uint8_t* data, uint8_t count) {
+void RAP_ReadBytes(uint8_t address, uint8_t *data, uint8_t count) {
     uint8_t cmdByte = READ_MASK | address; // Form the READ command byte
 
     if (spi_start(CIRQUE_PINNACLE_SPI_CS_PIN, CIRQUE_PINNACLE_SPI_LSBFIRST, CIRQUE_PINNACLE_SPI_MODE, CIRQUE_PINNACLE_SPI_DIVISOR)) {

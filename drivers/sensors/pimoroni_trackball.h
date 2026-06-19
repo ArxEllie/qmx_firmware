@@ -57,5 +57,5 @@ void           pimoroni_trackball_set_rgbw(uint8_t red, uint8_t green, uint8_t b
 int16_t        pimoroni_trackball_get_offsets(uint8_t negative_dir, uint8_t positive_dir, uint8_t scale);
 uint16_t       pimoroni_trackball_get_cpi(void);
 void           pimoroni_trackball_set_cpi(uint16_t cpi);
-i2c_status_t   read_pimoroni_trackball(pimoroni_data_t* data);
+i2c_status_t   read_pimoroni_trackball(pimoroni_data_t *data);
 report_mouse_t pimoroni_trackball_get_report(report_mouse_t mouse_report);

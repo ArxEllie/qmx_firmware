@@ -74,7 +74,7 @@ bool mcp23018_set_output_all(uint8_t slave_addr, uint8_t confA, uint8_t confB) {
     return true;
 }
 
-bool mcp23018_read_pins(uint8_t slave_addr, mcp23018_port_t port, uint8_t* out) {
+bool mcp23018_read_pins(uint8_t slave_addr, mcp23018_port_t port, uint8_t *out) {
     uint8_t addr = SLAVE_TO_ADDR(slave_addr);
     uint8_t cmd  = port ? CMD_GPIOB : CMD_GPIOA;
 
@@ -87,7 +87,7 @@ bool mcp23018_read_pins(uint8_t slave_addr, mcp23018_port_t port, uint8_t* out) 
     return true;
 }
 
-bool mcp23018_read_pins_all(uint8_t slave_addr, uint16_t* out) {
+bool mcp23018_read_pins_all(uint8_t slave_addr, uint16_t *out) {
     uint8_t addr = SLAVE_TO_ADDR(slave_addr);
 
     typedef union {

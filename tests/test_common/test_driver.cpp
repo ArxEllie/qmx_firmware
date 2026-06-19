@@ -17,7 +17,7 @@
 #include "test_driver.hpp"
 #include <iomanip>
 
-TestDriver* TestDriver::m_this = nullptr;
+TestDriver *TestDriver::m_this = nullptr;
 
 namespace {
 // Given a hex digit between 0 and 15, returns the corresponding keycode.
@@ -45,26 +45,26 @@ uint8_t TestDriver::keyboard_leds(void) {
     return m_this->m_leds;
 }
 
-void TestDriver::send_keyboard(report_keyboard_t* report) {
+void TestDriver::send_keyboard(report_keyboard_t *report) {
     test_logger.trace() << *report;
     m_this->send_keyboard_mock(*report);
 }
 
-void TestDriver::send_nkro(report_nkro_t* report) {
+void TestDriver::send_nkro(report_nkro_t *report) {
     m_this->send_nkro_mock(*report);
 }
 
-void TestDriver::send_mouse(report_mouse_t* report) {
+void TestDriver::send_mouse(report_mouse_t *report) {
     test_logger.trace() << std::setw(10) << std::left << "send_mouse: (X:" << (int)report->x << ", Y:" << (int)report->y << ", H:" << (int)report->h << ", V:" << (int)report->v << ", B:" << (int)report->buttons << ")" << std::endl;
     m_this->send_mouse_mock(*report);
 }
 
-void TestDriver::send_extra(report_extra_t* report) {
+void TestDriver::send_extra(report_extra_t *report) {
     m_this->send_extra_mock(*report);
 }
 
 namespace internal {
-void expect_unicode_code_point(TestDriver& driver, uint32_t code_point) {
+void expect_unicode_code_point(TestDriver &driver, uint32_t code_point) {
     testing::InSequence seq;
     EXPECT_REPORT(driver, (KC_LEFT_CTRL, KC_LEFT_SHIFT));
     EXPECT_REPORT(driver, (KC_LEFT_CTRL, KC_LEFT_SHIFT, KC_U));

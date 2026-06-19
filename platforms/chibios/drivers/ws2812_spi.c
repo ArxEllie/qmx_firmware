@@ -134,7 +134,7 @@ static uint8_t get_protocol_eq(uint8_t data, int pos) {
 }
 
 static void set_led_color_rgb(ws2812_led_t color, int pos) {
-    uint8_t* tx_start = &txbuf[PREAMBLE_SIZE];
+    uint8_t *tx_start = &txbuf[PREAMBLE_SIZE];
 
 #if (WS2812_BYTE_ORDER == WS2812_BYTE_ORDER_GRB)
     for (int j = 0; j < 4; j++)

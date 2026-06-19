@@ -96,7 +96,7 @@ void pio_serve_interrupt(void) {
 
     if (irqs & (PIO_IRQ0_INTF_SM0_RXNEMPTY_BITS << state_machine)) {
         osalSysLockFromISR();
-        uint32_t* frame_buffer = (uint32_t*)ibqGetEmptyBufferI(&pio_rx_queue);
+        uint32_t *frame_buffer = (uint32_t *)ibqGetEmptyBufferI(&pio_rx_queue);
         if (frame_buffer == NULL) {
             osalSysUnlockFromISR();
             return;
@@ -231,7 +231,7 @@ uint8_t ps2_host_recv_response(void) {
     uint32_t frame = 0;
     msg_t    msg   = MSG_OK;
 
-    msg = ibqReadTimeout(&pio_rx_queue, (uint8_t*)&frame, sizeof(uint32_t), TIME_MS2I(100));
+    msg = ibqReadTimeout(&pio_rx_queue, (uint8_t *)&frame, sizeof(uint32_t), TIME_MS2I(100));
     if (msg < MSG_OK) {
         ps2_error = PS2_ERR_NODATA;
         return 0;
@@ -255,7 +255,7 @@ uint8_t ps2_host_recv(void) {
 
     uint8_t has_data = pbuf_has_data();
     if (has_data) {
-        msg = ibqReadTimeout(&pio_rx_queue, (uint8_t*)&frame, sizeof(uint32_t), TIME_MS2I(100));
+        msg = ibqReadTimeout(&pio_rx_queue, (uint8_t *)&frame, sizeof(uint32_t), TIME_MS2I(100));
         if (msg < MSG_OK) {
             ps2_error = PS2_ERR_NODATA;
             return 0;

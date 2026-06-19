@@ -17,7 +17,7 @@ class WearLevelingGeneral : public ::testing::Test {
  * This test verifies that even if there is consolidated data present, if the checksum doesn't match then the cache is zero'd after reading the consolidated area, but before write log is played back.
  */
 TEST_F(WearLevelingGeneral, InvalidChecksum_ConsolidatedDataIgnored) {
-    auto& inst     = MockBackingStore::Instance();
+    auto &inst     = MockBackingStore::Instance();
     auto  logstart = inst.storage_begin() + (WEAR_LEVELING_LOGICAL_SIZE / sizeof(backing_store_int_t));
 
     // Generate a test block of data
@@ -49,7 +49,7 @@ TEST_F(WearLevelingGeneral, InvalidChecksum_ConsolidatedDataIgnored) {
  * This test verifies that writing the same data multiple times does not result in subsequent writes to the backing store.
  */
 TEST_F(WearLevelingGeneral, SameValue_SingleBackingWrite) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     uint8_t test_val = 0x14;
     EXPECT_EQ(wear_leveling_write(0x02, &test_val, sizeof(test_val)), WEAR_LEVELING_SUCCESS) << "First overall write operation should have succeeded";
@@ -73,7 +73,7 @@ TEST_F(WearLevelingGeneral, SameValue_SingleBackingWrite) {
  * This test verifies that no other invocations occur if `backing_store_init()` fails.
  */
 TEST_F(WearLevelingGeneral, InitFailure) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
     inst.reset_instance(); // make sure the counters are all zero
     inst.set_init_callback([](std::uint64_t count) { return false; });
 
@@ -92,7 +92,7 @@ TEST_F(WearLevelingGeneral, InitFailure) {
  * This test verifies that no invocations occur if the supplied address is out of range while writing.
  */
 TEST_F(WearLevelingGeneral, WriteFailure_OOB) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     uint8_t test_val = 0x14;
     EXPECT_EQ(wear_leveling_write(0x21349830, &test_val, sizeof(test_val)), WEAR_LEVELING_FAILED) << "Overall write operation should have failed";
@@ -107,7 +107,7 @@ TEST_F(WearLevelingGeneral, WriteFailure_OOB) {
  * This test verifies that a single write occurs if the supplied address and data length hits the edge of the logical area.
  */
 TEST_F(WearLevelingGeneral, WriteSuccess_BoundaryOK) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     uint16_t test_val = 0x14;
     EXPECT_EQ(wear_leveling_write(WEAR_LEVELING_LOGICAL_SIZE - sizeof(test_val), &test_val, sizeof(test_val)), WEAR_LEVELING_SUCCESS) << "Overall write operation should have succeeded";
@@ -122,7 +122,7 @@ TEST_F(WearLevelingGeneral, WriteSuccess_BoundaryOK) {
  * This test verifies that no invocations occur if the supplied address and length would generate writes outside the logical range.
  */
 TEST_F(WearLevelingGeneral, WriteFailure_BoundaryOverflow) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     uint16_t test_val = 0x14;
     EXPECT_EQ(wear_leveling_write(WEAR_LEVELING_LOGICAL_SIZE - sizeof(test_val) + 1, &test_val, sizeof(test_val)), WEAR_LEVELING_FAILED) << "Overall write operation should have failed";
@@ -137,7 +137,7 @@ TEST_F(WearLevelingGeneral, WriteFailure_BoundaryOverflow) {
  * This test verifies that no invocations occur if the supplied address is out of range while reading.
  */
 TEST_F(WearLevelingGeneral, ReadFailure_OOB) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     uint8_t test_val = 0;
     EXPECT_EQ(wear_leveling_read(0x21349830, &test_val, sizeof(test_val)), WEAR_LEVELING_FAILED) << "Overall read operation should have failed";
@@ -152,7 +152,7 @@ TEST_F(WearLevelingGeneral, ReadFailure_OOB) {
  * This test verifies that no write invocations occur if `backing_store_unlock()` fails.
  */
 TEST_F(WearLevelingGeneral, UnlockFailure_NoWrite) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
     inst.set_unlock_callback([](std::uint64_t count) { return false; });
 
     uint8_t test_val = 0x14;
@@ -172,7 +172,7 @@ TEST_F(WearLevelingGeneral, UnlockFailure_NoWrite) {
  * This test verifies that no erase invocations occur if `backing_store_unlock()` fails.
  */
 TEST_F(WearLevelingGeneral, UnlockFailure_NoErase) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
     inst.set_unlock_callback([](std::uint64_t count) { return false; });
 
     EXPECT_EQ(wear_leveling_erase(), WEAR_LEVELING_FAILED) << "Overall erase operation should have failed";
@@ -187,7 +187,7 @@ TEST_F(WearLevelingGeneral, UnlockFailure_NoErase) {
  * This test verifies that only one write invocation occurs if `backing_store_write()` fails.
  */
 TEST_F(WearLevelingGeneral, WriteFailure_NoSubsequentWrites) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
     inst.set_write_callback([](std::uint64_t count, std::uint32_t address) { return false; });
 
     uint8_t test_val = 0x14;

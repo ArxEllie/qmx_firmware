@@ -19,11 +19,11 @@
 #include "action_util.h"
 
 // Default implementation of remember_last_key_user().
-__attribute__((weak)) bool remember_last_key_user(uint16_t keycode, keyrecord_t* record, uint8_t* remembered_mods) {
+__attribute__((weak)) bool remember_last_key_user(uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods) {
     return true;
 }
 
-static bool remember_last_key(uint16_t keycode, keyrecord_t* record, uint8_t* remembered_mods) {
+static bool remember_last_key(uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods) {
     switch (keycode) {
         // Ignore MO, TO, TG, TT, and TL layer switch keys.
         case QK_MOMENTARY ... QK_MOMENTARY_MAX:
@@ -77,7 +77,7 @@ static bool remember_last_key(uint16_t keycode, keyrecord_t* record, uint8_t* re
     return remember_last_key_user(keycode, record, remembered_mods);
 }
 
-bool process_last_key(uint16_t keycode, keyrecord_t* record) {
+bool process_last_key(uint16_t keycode, keyrecord_t *record) {
     if (get_repeat_key_count()) {
         return true;
     }
@@ -97,7 +97,7 @@ bool process_last_key(uint16_t keycode, keyrecord_t* record) {
     return true;
 }
 
-bool process_repeat_key(uint16_t keycode, keyrecord_t* record) {
+bool process_repeat_key(uint16_t keycode, keyrecord_t *record) {
     if (get_repeat_key_count()) {
         return true;
     }

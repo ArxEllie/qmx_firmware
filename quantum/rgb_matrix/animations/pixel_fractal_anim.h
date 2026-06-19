@@ -6,7 +6,7 @@
 RGB_MATRIX_EFFECT(PIXEL_FRACTAL)
 #    ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
-static bool PIXEL_FRACTAL(effect_params_t* params) {
+static bool PIXEL_FRACTAL(effect_params_t *params) {
 #        if MATRIX_COLS < 2
 #            define MID_COL 1
 #        else

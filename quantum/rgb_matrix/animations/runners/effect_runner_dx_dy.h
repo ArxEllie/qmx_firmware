@@ -2,7 +2,7 @@
 
 typedef hsv_t (*dx_dy_f)(hsv_t hsv, int16_t dx, int16_t dy, uint8_t time);
 
-bool effect_runner_dx_dy(effect_params_t* params, dx_dy_f effect_func) {
+bool effect_runner_dx_dy(effect_params_t *params, dx_dy_f effect_func) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint8_t time = scale16by8(g_rgb_timer, rgb_matrix_config.speed / 2);

@@ -18,4 +18,4 @@
 #include <stdbool.h>
 #include "action.h"
 
-bool process_layer_lock(uint16_t keycode, keyrecord_t* record);
+bool process_layer_lock(uint16_t keycode, keyrecord_t *record);

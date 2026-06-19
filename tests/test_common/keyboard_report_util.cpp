@@ -30,7 +30,7 @@ extern std::map<uint16_t, std::string> KEYCODE_ID_TABLE;
 
 namespace {
 
-std::vector<uint8_t> get_keys(const report_keyboard_t& report) {
+std::vector<uint8_t> get_keys(const report_keyboard_t &report) {
     std::vector<uint8_t> result;
 #if defined(NKRO_ENABLE)
 #    error NKRO support not implemented yet
@@ -45,7 +45,7 @@ std::vector<uint8_t> get_keys(const report_keyboard_t& report) {
     return result;
 }
 
-std::vector<uint8_t> get_mods(const report_keyboard_t& report) {
+std::vector<uint8_t> get_mods(const report_keyboard_t &report) {
     std::vector<uint8_t> result;
     for (size_t i = 0; i < 8; i++) {
         if (report.mods & (1 << i)) {
@@ -59,13 +59,13 @@ std::vector<uint8_t> get_mods(const report_keyboard_t& report) {
 
 } // namespace
 
-bool operator==(const report_keyboard_t& lhs, const report_keyboard_t& rhs) {
+bool operator==(const report_keyboard_t &lhs, const report_keyboard_t &rhs) {
     auto lhskeys = get_keys(lhs);
     auto rhskeys = get_keys(rhs);
     return lhs.mods == rhs.mods && lhskeys == rhskeys;
 }
 
-std::ostream& operator<<(std::ostream& os, const report_keyboard_t& report) {
+std::ostream &operator<<(std::ostream &os, const report_keyboard_t &report) {
     auto keys = get_keys(report);
     auto mods = get_mods(report);
 
@@ -97,7 +97,7 @@ std::ostream& operator<<(std::ostream& os, const report_keyboard_t& report) {
     return os << "]" << std::endl;
 }
 
-KeyboardReportMatcher::KeyboardReportMatcher(const std::vector<uint8_t>& keys) {
+KeyboardReportMatcher::KeyboardReportMatcher(const std::vector<uint8_t> &keys) {
     memset(&m_report, 0, sizeof(report_keyboard_t));
     for (auto k : keys) {
         if (IS_MODIFIER_KEYCODE(k)) {
@@ -108,14 +108,14 @@ KeyboardReportMatcher::KeyboardReportMatcher(const std::vector<uint8_t>& keys) {
     }
 }
 
-bool KeyboardReportMatcher::MatchAndExplain(report_keyboard_t& report, MatchResultListener* listener) const {
+bool KeyboardReportMatcher::MatchAndExplain(report_keyboard_t &report, MatchResultListener *listener) const {
     return m_report == report;
 }
 
-void KeyboardReportMatcher::DescribeTo(::std::ostream* os) const {
+void KeyboardReportMatcher::DescribeTo(::std::ostream *os) const {
     *os << "is equal to " << m_report;
 }
 
-void KeyboardReportMatcher::DescribeNegationTo(::std::ostream* os) const {
+void KeyboardReportMatcher::DescribeNegationTo(::std::ostream *os) const {
     *os << "is not equal to " << m_report;
 }

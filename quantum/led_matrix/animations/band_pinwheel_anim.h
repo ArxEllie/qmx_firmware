@@ -6,7 +6,7 @@ static uint8_t BAND_PINWHEEL_math(uint8_t val, int16_t dx, int16_t dy, uint8_t t
     return scale8(val - time - atan2_8(dy, dx) * 3, val);
 }
 
-bool BAND_PINWHEEL(effect_params_t* params) {
+bool BAND_PINWHEEL(effect_params_t *params) {
     return effect_runner_dx_dy(params, &BAND_PINWHEEL_math);
 }
 

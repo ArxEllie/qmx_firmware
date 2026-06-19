@@ -15,7 +15,7 @@ class WearLeveling4Byte : public ::testing::Test {
 
 static std::array<std::uint8_t, WEAR_LEVELING_LOGICAL_SIZE> verify_data;
 
-static wear_leveling_status_t test_write(const uint32_t address, const void* value, size_t length) {
+static wear_leveling_status_t test_write(const uint32_t address, const void *value, size_t length) {
     memcpy(&verify_data[address], value, length);
     return wear_leveling_write(address, value, length);
 }
@@ -24,7 +24,7 @@ static wear_leveling_status_t test_write(const uint32_t address, const void* val
  * This test verifies that the first write after initialisation occurs after the FNV1a_64 hash location.
  */
 TEST_F(WearLeveling4Byte, FirstWriteOccursAfterHash) {
-    auto&   inst       = MockBackingStore::Instance();
+    auto   &inst       = MockBackingStore::Instance();
     uint8_t test_value = 0x15;
     test_write(0x02, &test_value, sizeof(test_value));
     EXPECT_EQ(inst.log_begin()->address, WEAR_LEVELING_LOGICAL_SIZE + 8) << "Invalid first write address.";
@@ -34,7 +34,7 @@ TEST_F(WearLeveling4Byte, FirstWriteOccursAfterHash) {
  * This test verifies that the first write after initialisation occurs after the FNV1a_64 hash location, after an erase has occurred.
  */
 TEST_F(WearLeveling4Byte, FirstWriteOccursAfterHash_AfterErase) {
-    auto&   inst       = MockBackingStore::Instance();
+    auto   &inst       = MockBackingStore::Instance();
     uint8_t test_value = 0x15;
     wear_leveling_erase();
     test_write(0x02, &test_value, sizeof(test_value));
@@ -45,7 +45,7 @@ TEST_F(WearLeveling4Byte, FirstWriteOccursAfterHash_AfterErase) {
  * This test ensures the correct number of backing store writes occurs with a multibyte write, given the input buffer size.
  */
 TEST_F(WearLeveling4Byte, MultibyteBackingStoreWriteCounts) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     for (std::size_t length = 1; length <= 5; ++length) {
         // Clear things out
@@ -77,7 +77,7 @@ TEST_F(WearLeveling4Byte, MultibyteBackingStoreWriteCounts) {
  * base logical area.
  */
 TEST_F(WearLeveling4Byte, ConsolidationOverflow) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     // Generate a test block of data
     std::array<std::uint8_t, WEAR_LEVELING_LOGICAL_SIZE> testvalue;
@@ -154,7 +154,7 @@ TEST_F(WearLeveling4Byte, ConsolidationOverflow) {
  * This test verifies multibyte readback gets canceled with an out-of-bounds address.
  */
 TEST_F(WearLeveling4Byte, PlaybackReadbackMultibyte_OOB) {
-    auto& inst     = MockBackingStore::Instance();
+    auto &inst     = MockBackingStore::Instance();
     auto  logstart = inst.storage_begin() + (WEAR_LEVELING_LOGICAL_SIZE / sizeof(backing_store_int_t));
 
     // Invalid FNV1a_64 hash

@@ -3,7 +3,7 @@ LED_MATRIX_EFFECT(ALPHAS_MODS)
 #    ifdef LED_MATRIX_CUSTOM_EFFECT_IMPLS
 
 // alphas = val1, mods = val2
-bool ALPHAS_MODS(effect_params_t* params) {
+bool ALPHAS_MODS(effect_params_t *params) {
     LED_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint8_t val1 = led_matrix_eeconfig.val;

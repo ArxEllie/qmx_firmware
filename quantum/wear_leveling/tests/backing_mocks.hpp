@@ -44,7 +44,7 @@ class MockBackingStoreElement {
     backing_store_int_t get() const {
         return value;
     }
-    void set(const backing_store_int_t& v) {
+    void set(const backing_store_int_t &v) {
         EXPECT_TRUE(is_erased()) << "Attempted write at index which isn't empty.";
         value = v;
         ++writes;
@@ -109,14 +109,14 @@ class MockBackingStore {
     std::function<bool(std::uint64_t)> lock_success_callback;
 
     template <typename... Args>
-    void append_log(Args&&... args) {
+    void append_log(Args &&...args) {
         if (write_log.size() < MOCK_WRITE_LOG_MAX_ENTRIES::value) {
             write_log.emplace_back(std::forward<Args>(args)...);
         }
     }
 
    public:
-    static MockBackingStore& Instance() {
+    static MockBackingStore &Instance() {
         static MockBackingStore instance;
         return instance;
     }
@@ -161,7 +161,7 @@ class MockBackingStore {
     bool erase();
     bool write(std::uint32_t address, backing_store_int_t value);
     bool lock();
-    bool read(std::uint32_t address, backing_store_int_t& value) const;
+    bool read(std::uint32_t address, backing_store_int_t &value) const;
 
     // Control over when init/writes/erases should succeed
     void set_init_callback(std::function<bool(std::uint64_t)> callback) {

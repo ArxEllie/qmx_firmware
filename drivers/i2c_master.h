@@ -40,7 +40,7 @@ void i2c_init(void);
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_transmit(uint8_t address, const uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_transmit(uint8_t address, const uint8_t *data, uint16_t length, uint16_t timeout);
 
 #if defined(__AVR__) || defined(__DOXYGEN__)
 /**
@@ -55,7 +55,7 @@ i2c_status_t i2c_transmit(uint8_t address, const uint8_t* data, uint16_t length,
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_transmit_P(uint8_t address, const uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_transmit_P(uint8_t address, const uint8_t *data, uint16_t length, uint16_t timeout);
 #else
 #    define i2c_transmit_P(address, data, length, timeout) i2c_transmit(address, data, length, timeout)
 #endif
@@ -70,7 +70,7 @@ i2c_status_t i2c_transmit_P(uint8_t address, const uint8_t* data, uint16_t lengt
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_receive(uint8_t address, uint8_t *data, uint16_t length, uint16_t timeout);
 
 /**
  * \brief Send multiple bytes and then receive multiple bytes from the selected I2C device.
@@ -85,7 +85,7 @@ i2c_status_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length, uint16
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
 
-i2c_status_t i2c_transmit_and_receive(uint8_t address, const uint8_t* tx_data, uint16_t tx_length, uint8_t* rx_data, uint16_t rx_length, uint16_t timeout);
+i2c_status_t i2c_transmit_and_receive(uint8_t address, const uint8_t *tx_data, uint16_t tx_length, uint8_t *rx_data, uint16_t rx_length, uint16_t timeout);
 
 /**
  * \brief Write to a register with an 8-bit address on the I2C device.
@@ -98,7 +98,7 @@ i2c_status_t i2c_transmit_and_receive(uint8_t address, const uint8_t* tx_data, u
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_write_register(uint8_t devaddr, uint8_t regaddr, const uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_write_register(uint8_t devaddr, uint8_t regaddr, const uint8_t *data, uint16_t length, uint16_t timeout);
 
 /**
  * \brief Write to a register with a 16-bit address (big endian) on the I2C device.
@@ -111,7 +111,7 @@ i2c_status_t i2c_write_register(uint8_t devaddr, uint8_t regaddr, const uint8_t*
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_write_register16(uint8_t devaddr, uint16_t regaddr, const uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_write_register16(uint8_t devaddr, uint16_t regaddr, const uint8_t *data, uint16_t length, uint16_t timeout);
 
 /**
  * \brief Read from a register with an 8-bit address on the I2C device.
@@ -124,7 +124,7 @@ i2c_status_t i2c_write_register16(uint8_t devaddr, uint16_t regaddr, const uint8
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_read_register(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_read_register(uint8_t devaddr, uint8_t regaddr, uint8_t *data, uint16_t length, uint16_t timeout);
 
 /**
  * \brief Read from a register with a 16-bit address (big endian) on the I2C device.
@@ -137,7 +137,7 @@ i2c_status_t i2c_read_register(uint8_t devaddr, uint8_t regaddr, uint8_t* data, 
  *
  * \return `I2C_STATUS_TIMEOUT` if the timeout period elapses, `I2C_STATUS_ERROR` if some other error occurs, otherwise `I2C_STATUS_SUCCESS`.
  */
-i2c_status_t i2c_read_register16(uint8_t devaddr, uint16_t regaddr, uint8_t* data, uint16_t length, uint16_t timeout);
+i2c_status_t i2c_read_register16(uint8_t devaddr, uint16_t regaddr, uint8_t *data, uint16_t length, uint16_t timeout);
 
 /**
  * \brief Ping the I2C bus for a specific address.

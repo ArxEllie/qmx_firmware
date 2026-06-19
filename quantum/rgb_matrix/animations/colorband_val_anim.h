@@ -8,7 +8,7 @@ static hsv_t BAND_VAL_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool BAND_VAL(effect_params_t* params) {
+bool BAND_VAL(effect_params_t *params) {
     return effect_runner_i(params, &BAND_VAL_math);
 }
 

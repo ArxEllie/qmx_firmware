@@ -26,7 +26,7 @@
  * @return true    Continue processing keycodes, and send to host
  * @return false   Stop processing keycodes, and don't send to host
  */
-bool process_last_key(uint16_t keycode, keyrecord_t* record);
+bool process_last_key(uint16_t keycode, keyrecord_t *record);
 
 /**
  * @brief Optional callback defining which keys are remembered.
@@ -51,7 +51,7 @@ bool process_last_key(uint16_t keycode, keyrecord_t* record);
  *         *remembered_mods = 0;
  *     }
  */
-bool remember_last_key_user(uint16_t keycode, keyrecord_t* record, uint8_t* remembered_mods);
+bool remember_last_key_user(uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods);
 
 /**
  * @brief Process handler for Repeat Key feature.
@@ -61,4 +61,4 @@ bool remember_last_key_user(uint16_t keycode, keyrecord_t* record, uint8_t* reme
  * @return true    Continue processing keycodes, and send to host
  * @return false   Stop processing keycodes, and don't send to host
  */
-bool process_repeat_key(uint16_t keycode, keyrecord_t* record);
+bool process_repeat_key(uint16_t keycode, keyrecord_t *record);

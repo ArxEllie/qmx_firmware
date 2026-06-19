@@ -41,7 +41,7 @@ wear_leveling_status_t wear_leveling_erase(void);
  * @param length[in] length of the data
  * @return Status of the request
  */
-wear_leveling_status_t wear_leveling_write(uint32_t address, const void* value, size_t length);
+wear_leveling_status_t wear_leveling_write(uint32_t address, const void *value, size_t length);
 
 /**
  * Reads logical data from the cache.
@@ -51,4 +51,4 @@ wear_leveling_status_t wear_leveling_write(uint32_t address, const void* value, 
  * @param length[in] length of the data
  * @return Status of the request
  */
-wear_leveling_status_t wear_leveling_read(uint32_t address, void* value, size_t length);
+wear_leveling_status_t wear_leveling_read(uint32_t address, void *value, size_t length);

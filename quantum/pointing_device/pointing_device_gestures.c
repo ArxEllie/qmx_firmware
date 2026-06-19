@@ -22,12 +22,12 @@
 #        error POINTING_DEVICE_MOTION_PIN not supported when using inertial cursor. Need repeated calls to get_report() to generate glide events.
 #    endif
 
-static void cursor_glide_stop(cursor_glide_context_t* glide) {
+static void cursor_glide_stop(cursor_glide_context_t *glide) {
     memset(&glide->status, 0, sizeof(glide->status));
 }
 
-static cursor_glide_t cursor_glide(cursor_glide_context_t* glide) {
-    cursor_glide_status_t* status = &glide->status;
+static cursor_glide_t cursor_glide(cursor_glide_context_t *glide) {
+    cursor_glide_status_t *status = &glide->status;
     cursor_glide_t         report;
     int32_t                p;
     int32_t                x, y;
@@ -65,9 +65,9 @@ exit:
     return report;
 }
 
-cursor_glide_t cursor_glide_check(cursor_glide_context_t* glide) {
+cursor_glide_t cursor_glide_check(cursor_glide_context_t *glide) {
     cursor_glide_t         invalid_report = {0, 0, false};
-    cursor_glide_status_t* status         = &glide->status;
+    cursor_glide_status_t *status         = &glide->status;
 
     if (status->z || (status->dx0 == 0 && status->dy0 == 0) || timer_elapsed(status->timer) < glide->config.interval) {
         return invalid_report;
@@ -103,9 +103,9 @@ static inline uint16_t sqrt32(uint32_t x) {
     return l;
 }
 
-cursor_glide_t cursor_glide_start(cursor_glide_context_t* glide) {
+cursor_glide_t cursor_glide_start(cursor_glide_context_t *glide) {
     cursor_glide_t         invalid_report = {0, 0, false};
-    cursor_glide_status_t* status         = &glide->status;
+    cursor_glide_status_t *status         = &glide->status;
 
     status->timer   = timer_read();
     status->counter = 0;
@@ -123,8 +123,8 @@ cursor_glide_t cursor_glide_start(cursor_glide_context_t* glide) {
     return cursor_glide(glide);
 }
 
-void cursor_glide_update(cursor_glide_context_t* glide, mouse_xy_report_t dx, mouse_xy_report_t dy, uint16_t z) {
-    cursor_glide_status_t* status = &glide->status;
+void cursor_glide_update(cursor_glide_context_t *glide, mouse_xy_report_t dx, mouse_xy_report_t dy, uint16_t z) {
+    cursor_glide_status_t *status = &glide->status;
 
     status->dx0 = dx;
     status->dy0 = dy;

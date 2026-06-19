@@ -5,7 +5,7 @@
 RGB_MATRIX_EFFECT(PIXEL_FLOW)
 #    ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
-static bool PIXEL_FLOW(effect_params_t* params) {
+static bool PIXEL_FLOW(effect_params_t *params) {
     // LED state array
     static rgb_t led[RGB_MATRIX_LED_COUNT];
 

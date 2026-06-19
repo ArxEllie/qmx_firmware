@@ -2,7 +2,7 @@
 
 typedef uint8_t (*i_f)(uint8_t val, uint8_t i, uint8_t time);
 
-bool effect_runner_i(effect_params_t* params, i_f effect_func) {
+bool effect_runner_i(effect_params_t *params, i_f effect_func) {
     LED_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint8_t time = scale16by8(g_led_timer, led_matrix_eeconfig.speed / 4);

@@ -20,13 +20,13 @@ hsv_t SPLASH_math(hsv_t hsv, int16_t dx, int16_t dy, uint8_t dist, uint16_t tick
 }
 
 #            ifdef ENABLE_RGB_MATRIX_SPLASH
-bool SPLASH(effect_params_t* params) {
+bool SPLASH(effect_params_t *params) {
     return effect_runner_reactive_splash(qsub8(g_last_hit_tracker.count, 1), params, &SPLASH_math);
 }
 #            endif
 
 #            ifdef ENABLE_RGB_MATRIX_MULTISPLASH
-bool MULTISPLASH(effect_params_t* params) {
+bool MULTISPLASH(effect_params_t *params) {
     return effect_runner_reactive_splash(0, params, &SPLASH_math);
 }
 #            endif

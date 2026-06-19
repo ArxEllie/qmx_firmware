@@ -7,7 +7,7 @@ static hsv_t CYCLE_OUT_IN_math(hsv_t hsv, int16_t dx, int16_t dy, uint8_t dist, 
     return hsv;
 }
 
-bool CYCLE_OUT_IN(effect_params_t* params) {
+bool CYCLE_OUT_IN(effect_params_t *params) {
     return effect_runner_dx_dy_dist(params, &CYCLE_OUT_IN_math);
 }
 

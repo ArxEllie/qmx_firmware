@@ -68,12 +68,12 @@
  * @param keycode  QMK keycode.
  * @return         Stringified keycode.
  */
-const char* get_keycode_string(uint16_t keycode);
+const char *get_keycode_string(uint16_t keycode);
 
 /** Defines a human-readable name for a keycode. */
 typedef struct {
     uint16_t    keycode;
-    const char* name;
+    const char *name;
 } keycode_string_name_t;
 
 // clang-format off
@@ -114,9 +114,9 @@ typedef struct {
         { (kc), #kc }
 // clang-format on
 
-extern const keycode_string_name_t* keycode_string_names_data_user;
+extern const keycode_string_name_t *keycode_string_names_data_user;
 extern uint16_t                     keycode_string_names_size_user;
-extern const keycode_string_name_t* keycode_string_names_data_kb;
+extern const keycode_string_name_t *keycode_string_names_data_kb;
 extern uint16_t                     keycode_string_names_size_kb;
 
 #else
@@ -125,7 +125,7 @@ extern uint16_t                     keycode_string_names_size_kb;
 // as decimal values, using get_u16_str() from quantum.c.
 #    define get_keycode_string(kc) get_u16_str(kc, ' ')
 
-const char* get_u16_str(uint16_t curr_num, char curr_pad);
+const char *get_u16_str(uint16_t curr_num, char curr_pad);
 
 #    define KEYCODE_STRING_NAMES_USER(...)
 #    define KEYCODE_STRING_NAMES_KB(...)

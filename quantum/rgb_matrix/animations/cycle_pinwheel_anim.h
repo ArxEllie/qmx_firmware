@@ -7,7 +7,7 @@ static hsv_t CYCLE_PINWHEEL_math(hsv_t hsv, int16_t dx, int16_t dy, uint8_t time
     return hsv;
 }
 
-bool CYCLE_PINWHEEL(effect_params_t* params) {
+bool CYCLE_PINWHEEL(effect_params_t *params) {
     return effect_runner_dx_dy(params, &CYCLE_PINWHEEL_math);
 }
 

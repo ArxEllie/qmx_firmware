@@ -32,23 +32,23 @@ typedef struct {
     byteQueueIndex_t start;
     byteQueueIndex_t end;
     byteQueueIndex_t length;
-    uint8_t*         data;
+    uint8_t         *data;
 } byteQueue_t;
 
 // you must have a queue, an array of data which the queue will use, and the length of that array
-void bytequeue_init(byteQueue_t* queue, uint8_t* dataArray, byteQueueIndex_t arrayLen);
+void bytequeue_init(byteQueue_t *queue, uint8_t *dataArray, byteQueueIndex_t arrayLen);
 
 // add an item to the queue, returns false if the queue is full
-bool bytequeue_enqueue(byteQueue_t* queue, uint8_t item);
+bool bytequeue_enqueue(byteQueue_t *queue, uint8_t item);
 
 // get the length of the queue
-byteQueueIndex_t bytequeue_length(byteQueue_t* queue);
+byteQueueIndex_t bytequeue_length(byteQueue_t *queue);
 
 // this grabs data at the index given [starting at queue->start]
-uint8_t bytequeue_get(byteQueue_t* queue, byteQueueIndex_t index);
+uint8_t bytequeue_get(byteQueue_t *queue, byteQueueIndex_t index);
 
 // update the index in the queue to reflect data that has been dealt with
-void bytequeue_remove(byteQueue_t* queue, byteQueueIndex_t numToRemove);
+void bytequeue_remove(byteQueue_t *queue, byteQueueIndex_t numToRemove);
 
 #ifdef __cplusplus
 }

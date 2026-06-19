@@ -7,7 +7,7 @@ static uint8_t SOLID_REACTIVE_SIMPLE_math(uint8_t val, uint16_t offset) {
     return scale8(255 - offset, val);
 }
 
-bool SOLID_REACTIVE_SIMPLE(effect_params_t* params) {
+bool SOLID_REACTIVE_SIMPLE(effect_params_t *params) {
     return effect_runner_reactive(params, &SOLID_REACTIVE_SIMPLE_math);
 }
 

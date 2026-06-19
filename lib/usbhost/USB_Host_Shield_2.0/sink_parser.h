@@ -15,9 +15,9 @@ Web      :  http://www.circuitsathome.com
 e-mail   :  support@circuitsathome.com
  */
 #if !defined(_usb_h_) || defined(__SINK_PARSER_H__)
-#error "Never include hexdump.h directly; include Usb.h instead"
+#    error "Never include hexdump.h directly; include Usb.h instead"
 #else
-#define __SINK_PARSER_H__
+#    define __SINK_PARSER_H__
 
 extern int UsbDEBUGlvl;
 
@@ -25,17 +25,12 @@ extern int UsbDEBUGlvl;
 
 template <class BASE_CLASS, class LEN_TYPE, class OFFSET_TYPE>
 class SinkParser : public BASE_CLASS {
-public:
+   public:
+    SinkParser() {};
 
-        SinkParser() {
-        };
+    void Initialize() {};
 
-        void Initialize() {
-        };
-
-        void Parse(const LEN_TYPE len, const uint8_t *pbuf, const OFFSET_TYPE &offset) {
-        };
+    void Parse(const LEN_TYPE len, const uint8_t *pbuf, const OFFSET_TYPE &offset) {};
 };
-
 
 #endif // __HEXDUMP_H__

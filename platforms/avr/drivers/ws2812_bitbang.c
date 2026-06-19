@@ -173,7 +173,7 @@ void ws2812_set_color_all(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 void ws2812_flush(void) {
-    uint8_t masklo = ~(pinmask(WS2812_DI_PIN))&PORTx_ADDRESS(WS2812_DI_PIN);
+    uint8_t masklo = ~(pinmask(WS2812_DI_PIN)) & PORTx_ADDRESS(WS2812_DI_PIN);
     uint8_t maskhi = pinmask(WS2812_DI_PIN) | PORTx_ADDRESS(WS2812_DI_PIN);
 
     ws2812_sendarray_mask((uint8_t *)ws2812_leds, WS2812_LED_COUNT * sizeof(ws2812_led_t), masklo, maskhi);

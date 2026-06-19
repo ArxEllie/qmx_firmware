@@ -53,7 +53,7 @@ static uint16_t heatmap_decrease_timer;
 // Whether we should decrement the heatmap values during the next update.
 static bool decrease_heatmap_values;
 
-bool TYPING_HEATMAP(effect_params_t* params) {
+bool TYPING_HEATMAP(effect_params_t *params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
     if (params->init) {

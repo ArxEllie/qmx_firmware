@@ -4,7 +4,7 @@
 
 typedef hsv_t (*reactive_f)(hsv_t hsv, uint16_t offset);
 
-bool effect_runner_reactive(effect_params_t* params, reactive_f effect_func) {
+bool effect_runner_reactive(effect_params_t *params, reactive_f effect_func) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
     uint16_t max_tick = 65535 / qadd8(rgb_matrix_config.speed, 1);

@@ -7,7 +7,7 @@ static hsv_t RAINBOW_BEACON_math(hsv_t hsv, int8_t sin, int8_t cos, uint8_t i, u
     return hsv;
 }
 
-bool RAINBOW_BEACON(effect_params_t* params) {
+bool RAINBOW_BEACON(effect_params_t *params) {
     return effect_runner_sin_cos_i(params, &RAINBOW_BEACON_math);
 }
 

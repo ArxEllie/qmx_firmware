@@ -50,7 +50,7 @@ static QMKSerialConfig serial_config = {
 #    error MCU Familiy not supported by default, supply your own serial_config by defining SERIAL_USART_CONFIG in your keyboard files.
 #endif
 
-static QMKSerialDriver* serial_driver = (QMKSerialDriver*)&SERIAL_USART_DRIVER;
+static QMKSerialDriver *serial_driver = (QMKSerialDriver *)&SERIAL_USART_DRIVER;
 
 #if HAL_USE_SERIAL
 
@@ -108,7 +108,7 @@ inline void serial_transport_driver_clear(void) {
 
 #endif
 
-inline bool serial_transport_send(const uint8_t* source, const size_t size) {
+inline bool serial_transport_send(const uint8_t *source, const size_t size) {
     bool success = (size_t)chnWriteTimeout(serial_driver, source, size, TIME_MS2I(SERIAL_USART_TIMEOUT)) == size;
 
 #if !defined(SERIAL_USART_FULL_DUPLEX)
@@ -155,12 +155,12 @@ inline bool serial_transport_send(const uint8_t* source, const size_t size) {
     return success;
 }
 
-inline bool serial_transport_receive(uint8_t* destination, const size_t size) {
+inline bool serial_transport_receive(uint8_t *destination, const size_t size) {
     bool success = (size_t)chnReadTimeout(serial_driver, destination, size, TIME_MS2I(SERIAL_USART_TIMEOUT)) == size;
     return success;
 }
 
-inline bool serial_transport_receive_blocking(uint8_t* destination, const size_t size) {
+inline bool serial_transport_receive_blocking(uint8_t *destination, const size_t size) {
     bool success = (size_t)chnRead(serial_driver, destination, size) == size;
     return success;
 }
@@ -219,7 +219,7 @@ __attribute__((weak)) void usart_init(void) {
 /**
  * @brief Overridable master specific initializations.
  */
-__attribute__((weak, nonnull)) void usart_master_init(QMKSerialDriver** driver) {
+__attribute__((weak, nonnull)) void usart_master_init(QMKSerialDriver **driver) {
     (void)driver;
     usart_init();
 }
@@ -227,7 +227,7 @@ __attribute__((weak, nonnull)) void usart_master_init(QMKSerialDriver** driver) 
 /**
  * @brief Overridable slave specific initializations.
  */
-__attribute__((weak, nonnull)) void usart_slave_init(QMKSerialDriver** driver) {
+__attribute__((weak, nonnull)) void usart_slave_init(QMKSerialDriver **driver) {
     (void)driver;
     usart_init();
 }

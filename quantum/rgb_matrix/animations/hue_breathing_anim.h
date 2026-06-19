@@ -10,7 +10,7 @@ hsv_t HUE_BREATHING_math(hsv_t hsv, uint8_t i, uint8_t time) {
     return hsv;
 }
 
-bool HUE_BREATHING(effect_params_t* params) {
+bool HUE_BREATHING(effect_params_t *params) {
     return effect_runner_i(params, &HUE_BREATHING_math);
 }
 

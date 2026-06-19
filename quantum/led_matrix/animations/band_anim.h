@@ -7,7 +7,7 @@ static uint8_t BAND_math(uint8_t val, uint8_t i, uint8_t time) {
     return scale8(v < 0 ? 0 : v, val);
 }
 
-bool BAND(effect_params_t* params) {
+bool BAND(effect_params_t *params) {
     return effect_runner_i(params, &BAND_math);
 }
 

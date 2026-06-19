@@ -22,11 +22,11 @@
 
 using namespace testing;
 
-bool operator==(const report_mouse_t& lhs, const report_mouse_t& rhs) {
+bool operator==(const report_mouse_t &lhs, const report_mouse_t &rhs) {
     return lhs.x == rhs.x && lhs.y == rhs.y && lhs.h == rhs.h && lhs.v == rhs.v && lhs.buttons == rhs.buttons;
 }
 
-std::ostream& operator<<(std::ostream& os, const report_mouse_t& report) {
+std::ostream &operator<<(std::ostream &os, const report_mouse_t &report) {
     os << std::setw(10) << std::left << "mouse report: ";
 
     if (report.x == 0 && report.y == 0 && report.h == 0 && report.v == 0 && report.buttons == 0) {
@@ -46,14 +46,14 @@ MouseReportMatcher::MouseReportMatcher(int16_t x, int16_t y, int8_t h, int8_t v,
     m_report.buttons = button_mask;
 }
 
-bool MouseReportMatcher::MatchAndExplain(report_mouse_t& report, MatchResultListener* listener) const {
+bool MouseReportMatcher::MatchAndExplain(report_mouse_t &report, MatchResultListener *listener) const {
     return m_report == report;
 }
 
-void MouseReportMatcher::DescribeTo(::std::ostream* os) const {
+void MouseReportMatcher::DescribeTo(::std::ostream *os) const {
     *os << "is equal to " << m_report;
 }
 
-void MouseReportMatcher::DescribeNegationTo(::std::ostream* os) const {
+void MouseReportMatcher::DescribeNegationTo(::std::ostream *os) const {
     *os << "is not equal to " << m_report;
 }

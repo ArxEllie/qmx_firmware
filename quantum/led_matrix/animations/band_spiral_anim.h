@@ -6,7 +6,7 @@ static uint8_t BAND_SPIRAL_math(uint8_t val, int16_t dx, int16_t dy, uint8_t dis
     return scale8(val + dist - time - atan2_8(dy, dx), val);
 }
 
-bool BAND_SPIRAL(effect_params_t* params) {
+bool BAND_SPIRAL(effect_params_t *params) {
     return effect_runner_dx_dy_dist(params, &BAND_SPIRAL_math);
 }
 

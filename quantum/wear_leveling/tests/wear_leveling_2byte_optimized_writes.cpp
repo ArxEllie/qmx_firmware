@@ -15,7 +15,7 @@ class WearLeveling2ByteOptimizedWrites : public ::testing::Test {
 
 static std::array<std::uint8_t, WEAR_LEVELING_LOGICAL_SIZE> verify_data;
 
-static wear_leveling_status_t test_write(const uint32_t address, const void* value, size_t length) {
+static wear_leveling_status_t test_write(const uint32_t address, const void *value, size_t length) {
     memcpy(&verify_data[address], value, length);
     return wear_leveling_write(address, value, length);
 }
@@ -24,7 +24,7 @@ static wear_leveling_status_t test_write(const uint32_t address, const void* val
  * This test ensures the correct number of backing store writes occurs with a multibyte write, given the input buffer size.
  */
 TEST_F(WearLeveling2ByteOptimizedWrites, MultibyteBackingStoreWriteCounts) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     for (std::size_t length = 1; length <= 5; ++length) {
         // Clear things out
@@ -59,7 +59,7 @@ TEST_F(WearLeveling2ByteOptimizedWrites, MultibyteBackingStoreWriteCounts) {
  *  - Higher addresses will result in a multibyte write of 3 backing writes
  */
 TEST_F(WearLeveling2ByteOptimizedWrites, WriteOneThenZeroToEvenAddresses) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     // Only attempt writes for each address up to a limit that would NOT force a consolidated data write.
     std::size_t writes_per_loop = (MOCK_WRITE_LOG_MAX_ENTRIES::value / 6) - 1; // Worst case is 6 writes for each pair of writes of 0/1
@@ -148,7 +148,7 @@ TEST_F(WearLeveling2ByteOptimizedWrites, WriteOneThenZeroToEvenAddresses) {
  *  - Higher addresses will result in a multibyte write of 3 backing writes
  */
 TEST_F(WearLeveling2ByteOptimizedWrites, WriteOneThenZeroToOddAddresses) {
-    auto& inst = MockBackingStore::Instance();
+    auto &inst = MockBackingStore::Instance();
 
     // Only attempt writes for each address up to a limit that would NOT force a consolidated data write.
     std::size_t writes_per_loop = (MOCK_WRITE_LOG_MAX_ENTRIES::value / 6) - 1; // Worst case is 6 writes for each pair of writes of 0/1
@@ -250,7 +250,7 @@ TEST_F(WearLeveling2ByteOptimizedWrites, WriteOneThenZeroToOddAddresses) {
  * This test verifies readback after playback of the write log, simulating power loss and reboot.
  */
 TEST_F(WearLeveling2ByteOptimizedWrites, PlaybackReadbackOptimized64_Success) {
-    auto& inst     = MockBackingStore::Instance();
+    auto &inst     = MockBackingStore::Instance();
     auto  logstart = inst.storage_begin() + (WEAR_LEVELING_LOGICAL_SIZE / sizeof(backing_store_int_t));
 
     // Invalid FNV1a_64 hash
@@ -274,7 +274,7 @@ TEST_F(WearLeveling2ByteOptimizedWrites, PlaybackReadbackOptimized64_Success) {
  * This test verifies readback after playback of the write log, simulating power loss and reboot.
  */
 TEST_F(WearLeveling2ByteOptimizedWrites, PlaybackReadbackWord01_Success) {
-    auto& inst     = MockBackingStore::Instance();
+    auto &inst     = MockBackingStore::Instance();
     auto  logstart = inst.storage_begin() + (WEAR_LEVELING_LOGICAL_SIZE / sizeof(backing_store_int_t));
 
     // Invalid FNV1a_64 hash

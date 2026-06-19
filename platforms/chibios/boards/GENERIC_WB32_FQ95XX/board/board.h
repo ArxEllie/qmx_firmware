@@ -21,7 +21,7 @@
  */
 
 #ifndef BOARD_H
-#define BOARD_H
+#    define BOARD_H
 
 /*===========================================================================*/
 /* Driver constants.                                                         */
@@ -34,26 +34,26 @@
 /*
  * Board identifier.
  */
-#if !(defined(WB32FQ95x9) || defined(WB32FQ95xB) || defined(WB32FQ95xC))
-  #define WB32FQ95xB
-#endif
+#    if !(defined(WB32FQ95x9) || defined(WB32FQ95xB) || defined(WB32FQ95xC))
+#        define WB32FQ95xB
+#    endif
 
-#if !defined(WB32FQ95xx)
-  #define WB32FQ95xx
-#endif
+#    if !defined(WB32FQ95xx)
+#        define WB32FQ95xx
+#    endif
 
 /*===========================================================================*/
 /* External declarations.                                                    */
 /*===========================================================================*/
 
-#if !defined(_FROM_ASM_)
-#ifdef __cplusplus
+#    if !defined(_FROM_ASM_)
+#        ifdef __cplusplus
 extern "C" {
-#endif
-  void boardInit(void);
-#ifdef __cplusplus
+#        endif
+void boardInit(void);
+#        ifdef __cplusplus
 }
-#endif
-#endif /* _FROM_ASM_ */
+#        endif
+#    endif /* _FROM_ASM_ */
 
 #endif /* BOARD_H */

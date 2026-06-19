@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void MockBackingStore::reset_instance() {
-    for (auto&& e : backing_storage)
+    for (auto &&e : backing_storage)
         e.reset();
 
     locked = true;
@@ -113,7 +113,7 @@ bool MockBackingStore::lock(void) {
     return true;
 }
 
-bool MockBackingStore::read(uint32_t address, backing_store_int_t& value) const {
+bool MockBackingStore::read(uint32_t address, backing_store_int_t &value) const {
     // precondition: value's buffer size already matches BACKING_STORE_WRITE_SIZE
     EXPECT_TRUE(address % BACKING_STORE_WRITE_SIZE == 0) << "Supplied address was not aligned with the backing store integral size";
     EXPECT_TRUE(address + BACKING_STORE_WRITE_SIZE <= WEAR_LEVELING_BACKING_SIZE) << "Address would result of out-of-bounds access";
@@ -149,6 +149,6 @@ extern "C" bool backing_store_lock(void) {
     return MockBackingStore::Instance().lock();
 }
 
-extern "C" bool backing_store_read(uint32_t address, backing_store_int_t* value) {
+extern "C" bool backing_store_read(uint32_t address, backing_store_int_t *value) {
     return MockBackingStore::Instance().read(address, *value);
 }

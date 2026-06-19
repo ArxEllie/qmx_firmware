@@ -22,14 +22,14 @@ uint16_t scale_data = CIRQUE_PINNACLE_DEFAULT_SCALE;
 
 void cirque_pinnacle_clear_flags(void);
 void cirque_pinnacle_enable_feed(bool feedEnable);
-void RAP_ReadBytes(uint8_t address, uint8_t* data, uint8_t count);
+void RAP_ReadBytes(uint8_t address, uint8_t *data, uint8_t count);
 void RAP_Write(uint8_t address, uint8_t data);
 
 #if CIRQUE_PINNACLE_POSITION_MODE
 /*  Logical Scaling Functions */
 // Clips raw coordinates to "reachable" window of sensor
 // NOTE: values outside this window can only appear as a result of noise
-void ClipCoordinates(pinnacle_data_t* coordinates) {
+void ClipCoordinates(pinnacle_data_t *coordinates) {
     if (coordinates->xValue < CIRQUE_PINNACLE_X_LOWER) {
         coordinates->xValue = CIRQUE_PINNACLE_X_LOWER;
     } else if (coordinates->xValue > CIRQUE_PINNACLE_X_UPPER) {
@@ -51,7 +51,7 @@ void cirque_pinnacle_set_scale(uint16_t scale) {
 }
 
 // Scales data to desired X & Y resolution
-void cirque_pinnacle_scale_data(pinnacle_data_t* coordinates, uint16_t xResolution, uint16_t yResolution) {
+void cirque_pinnacle_scale_data(pinnacle_data_t *coordinates, uint16_t xResolution, uint16_t yResolution) {
 #if CIRQUE_PINNACLE_POSITION_MODE
     uint32_t xTemp = 0;
     uint32_t yTemp = 0;
@@ -108,7 +108,7 @@ void cirque_pinnacle_enable_feed(bool feedEnable) {
 /*  ERA (Extended Register Access) Functions  */
 // Reads <count> bytes from an extended register at <address> (16-bit address),
 // stores values in <*data>
-void ERA_ReadBytes(uint16_t address, uint8_t* data, uint16_t count) {
+void ERA_ReadBytes(uint16_t address, uint8_t *data, uint16_t count) {
     uint8_t  ERAControlValue = 0xFF;
     uint16_t timeout_timer;
 
@@ -337,7 +337,7 @@ pinnacle_data_t cirque_pinnacle_read_data(void) {
     } else {
         result.yDelta = -((int16_t)data[2]);
     }
-    result.wheelCount = ((int8_t*)data)[3];
+    result.wheelCount = ((int8_t *)data)[3];
 #endif
 
 #ifdef CIRQUE_PINNACLE_REACHABLE_CALIBRATION

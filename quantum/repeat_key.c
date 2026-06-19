@@ -62,7 +62,7 @@ void set_last_mods(uint8_t mods) {
     last_mods = mods;
 }
 
-void set_last_record(uint16_t keycode, keyrecord_t* record) {
+void set_last_record(uint16_t keycode, keyrecord_t *record) {
     last_record         = *record;
     last_record.keycode = keycode;
     last_repeat_count   = 0;
@@ -81,7 +81,7 @@ int8_t get_repeat_key_count(void) {
     return processing_repeat_count;
 }
 
-void repeat_key_invoke(const keyevent_t* event) {
+void repeat_key_invoke(const keyevent_t *event) {
     // Since this function calls process_record(), it may recursively call
     // itself. We return early if `processing_repeat_count` is nonzero to
     // prevent infinite recursion.
@@ -130,7 +130,7 @@ void repeat_key_invoke(const keyevent_t* event) {
  * `target` and returns the other keycode in the pair.
  */
 static uint8_t find_alt_keycode(const uint8_t (*table)[2], uint8_t table_size_bytes, uint8_t target) {
-    const uint8_t* keycodes = (const uint8_t*)table;
+    const uint8_t *keycodes = (const uint8_t *)table;
     for (uint8_t i = 0; i < table_size_bytes; ++i) {
         if (target == pgm_read_byte(keycodes + i)) {
             // Xor (i ^ 1) the index to get the other element in the pair.
@@ -254,7 +254,7 @@ uint16_t get_alt_repeat_key_keycode(void) {
     return KC_NO; // No alternate key found.
 }
 
-void alt_repeat_key_invoke(const keyevent_t* event) {
+void alt_repeat_key_invoke(const keyevent_t *event) {
     static keyrecord_t registered_record       = {0};
     static int8_t      registered_repeat_count = 0;
     // Since this function calls process_record(), it may recursively call
