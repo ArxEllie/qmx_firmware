@@ -1,4 +1,3 @@
-
 RGB_MATRIX_EFFECT(game_mode)
 RGB_MATRIX_EFFECT(position_mode)
 
@@ -9,10 +8,12 @@ extern rgb_config_t rgb_matrix_config;
 static bool game_mode(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
-    // Only control main keyboard LEDs (0-82), leave side LEDs (83-127) to side LED system
+    // These effects intentionally own only the main key LEDs; the side LED
+    // driver has its own state machine and should not be blanked here.
     for (uint8_t i = led_min; i < led_max; i++) {
-        if(i < 83)
+        if (i < 83) {
             rgb_matrix_set_color(i, 0x00, 0x00, 0x00);
+        }
     }
 
     RGB rgb = hsv_to_rgb(rgb_matrix_config.hsv);
@@ -34,10 +35,12 @@ static bool game_mode(effect_params_t* params) {
 static bool position_mode(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
-    // Only control main keyboard LEDs (0-82), leave side LEDs (83-127) to side LED system
+    // Keep side LEDs outside this effect for the same reason as game_mode:
+    // RGB Matrix paints the key field, while side.c owns the side channels.
     for (uint8_t i = led_min; i < led_max; i++) {
-        if(i < 83)
+        if (i < 83) {
             rgb_matrix_set_color(i, 0x00, 0x00, 0x00);
+        }
     }
 
     RGB rgb = hsv_to_rgb(rgb_matrix_config.hsv);
