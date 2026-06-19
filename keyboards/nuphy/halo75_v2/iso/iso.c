@@ -219,30 +219,26 @@ void m_break_all_key(void)
 {
 
     uint8_t report_buf[16];
-    bool nkro_temp = keymap_config.nkro;
 
     clear_weak_mods();
     clear_mods();
     clear_keyboard();
 
-    keymap_config.nkro = 1;
-    memset(nkro_report, 0, sizeof(report_nkro_t));
-    host_nkro_send(nkro_report);
-    wait_ms(10);
-
-    keymap_config.nkro = 0;
+    /* Send empty report on the *current* interface only.
+     * Do NOT toggle keymap_config.nkro — switching the HID interface
+     * mid-keystroke makes macOS drop held modifiers (Cmd+V garbled output). */
     memset(keyboard_report, 0, sizeof(report_keyboard_t));
-    host_keyboard_send(keyboard_report);
-    wait_ms(10);
-
-    keymap_config.nkro = nkro_temp;
+    memset(nkro_report, 0, sizeof(report_nkro_t));
+    if (keymap_config.nkro) {
+        host_nkro_send(nkro_report);
+    } else {
+        host_keyboard_send(keyboard_report);
+    }
 
     if (dev_info.link_mode != LINK_USB) {
         memset(report_buf, 0, 16);
         uart_send_report(CMD_RPT_BIT_KB, report_buf, 16);
-        wait_ms(10);
         uart_send_report(CMD_RPT_BYTE_KB, report_buf, 8);
-        wait_ms(10);
     }
 
     memset(uart_bit_report_buf, 0, sizeof(uart_bit_report_buf));
@@ -285,6 +281,7 @@ void dial_sw_scan(void)
     static uint8_t debounce         = 0;
     static uint32_t dial_scan_timer = 0;
     static bool flag_power_on       = 1;
+    static uint8_t dial_change_cnt  = 0;
 
     if (!flag_power_on) {
         if (timer_elapsed32(dial_scan_timer) < 20) return;
@@ -298,6 +295,8 @@ void dial_sw_scan(void)
     if (gpio_read_pin(SYS_MODE_PIN)) dial_scan |= 0X02;
 
     if (dial_save != dial_scan) {
+        if (++dial_change_cnt < 3) return;
+        dial_change_cnt = 0;
         m_break_all_key();
         dial_save         = dial_scan;
         no_act_time         = 0;
@@ -305,9 +304,12 @@ void dial_sw_scan(void)
         debounce            = 25;
         f_dial_sw_init_ok   = 0;
         return;
-    } else if (debounce) {
-        debounce--;
-        return;
+    } else {
+        dial_change_cnt = 0;
+        if (debounce) {
+            debounce--;
+            return;
+        }
     }
 
     if (dial_scan & 0x01) {
