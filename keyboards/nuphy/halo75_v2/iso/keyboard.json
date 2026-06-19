@@ -25,7 +25,7 @@
   },
   "debounce": 5,
   "build": {
-    "debounce_type": "sym_eager_pk"
+    "debounce_type": "sym_defer_pk"
   },
   "matrix_pins": {
     "cols": [

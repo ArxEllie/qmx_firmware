@@ -19,6 +19,65 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "rf_driver.h"
 #include "i2c_master.h"
+#ifdef CONSOLE_ENABLE
+#    include "debug.h"
+#    include "matrix.h"
+#endif
+
+#ifdef CONSOLE_ENABLE
+#    if (DIODE_DIRECTION == COL2ROW)
+#        define DIODE_DIRECTION_STR "COL2ROW"
+#    else
+#        define DIODE_DIRECTION_STR "ROW2COL"
+#    endif
+
+/* Per-column row-mask logger for ghosting investigation.
+ * Runs inside housekeeping_task_kb every loop but short-circuits
+ * when no matrix row changed — O(MATRIX_ROWS) compare, zero allocation. */
+static void debug_matrix_scan(void) {
+    if (!debug_config.matrix) return;
+
+    static matrix_row_t prev[MATRIX_ROWS] = {0};
+    matrix_row_t        curr[MATRIX_ROWS];
+    bool                changed = false;
+
+    for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+        curr[r] = matrix_get_row(r);
+        if (curr[r] != prev[r]) changed = true;
+    }
+    if (!changed) return;
+
+    extern matrix_row_t raw_matrix[MATRIX_ROWS];
+    dprintf("RAW ");
+    for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+        dprintf("%08lX ", (uint32_t)raw_matrix[r]);
+    }
+    dprintf("\n");
+    dprintf("DBN ");
+    for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+        dprintf("%08lX ", (uint32_t)curr[r]);
+    }
+    dprintf("\n");
+
+    for (uint8_t c = 0; c < MATRIX_COLS; c++) {
+        uint8_t mask = 0, prev_mask = 0, count = 0;
+        char    rows_str[MATRIX_ROWS + 1];
+        for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+            if (curr[r] & (matrix_row_t)(1 << c)) {
+                mask |= (1 << r);
+                rows_str[count++] = '0' + r;
+            }
+            if (prev[r] & (matrix_row_t)(1 << c)) prev_mask |= (1 << r);
+        }
+        rows_str[count] = '\0';
+        if (mask != prev_mask) {
+            dprintf("C%d mask=%02X rows[0..%d]=%s\n", c, mask, count ? count - 1 : 0, rows_str);
+        }
+    }
+
+    memcpy(prev, curr, sizeof(prev));
+}
+#endif /* CONSOLE_ENABLE */
 
 user_config_t   user_config;
 DEV_INFO_STRUCT dev_info = {
@@ -438,6 +497,19 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
     }
+
+#ifdef CONSOLE_ENABLE
+    if (debug_config.matrix) {
+        dprintf("EV k=%04X r=%d c=%d %s layer=%d mods=%02X weak=%02X oneshot=%02X row=%08lX\n",
+                keycode,
+                record->event.key.row, record->event.key.col,
+                record->event.pressed ? "down" : "up",
+                get_highest_layer(layer_state),
+                get_mods(), get_weak_mods(), get_oneshot_mods(),
+                (uint32_t)matrix_get_row(record->event.key.row));
+    }
+#endif
+
     no_act_time = 0;
     switch (keycode) {
         case RF_DFU:
@@ -737,6 +809,19 @@ void keyboard_post_init_kb(void) {
     keyboard_post_init_user();
 
     rf_link_show_time = 0;
+
+#ifdef CONSOLE_ENABLE
+    debug_enable   = true;
+    debug_matrix   = true;
+    debug_keyboard = true;
+#    ifdef MOUSEKEY_ENABLE
+    debug_mouse = true;
+#    endif
+    dprintf("DBG %s console enabled\n", PRODUCT);
+    dprintf("rows=%d cols=%d diode=%s default_layer=%ld layer_state=%08lX\n",
+            MATRIX_ROWS, MATRIX_COLS, DIODE_DIRECTION_STR,
+            (uint32_t)default_layer_state, (uint32_t)layer_state);
+#endif
 }
 
 /**
@@ -761,6 +846,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
    housekeeping_task_kb
  */
 void housekeeping_task_kb(void) {
+#ifdef CONSOLE_ENABLE
+    debug_matrix_scan();
+#endif
     timer_pro();
 
     uart_receive_pro();
