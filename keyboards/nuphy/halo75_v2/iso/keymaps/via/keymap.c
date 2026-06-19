@@ -230,27 +230,3 @@ const is31fl3733_led_t PROGMEM g_is31fl3733_leds[RGB_MATRIX_LED_COUNT] = {
     {1, SW7_CS15,   SW8_CS15,   SW9_CS15},
     {1, SW7_CS16,   SW8_CS16,   SW9_CS16},
 };
-
-void matrix_scan_user(void) {
-    static matrix_row_t previous_matrix[6] = {0};
-    matrix_row_t current_matrix[6];
-    
-    for (uint8_t row = 0; row < 6; row++) {
-        current_matrix[row] = matrix_get_row(row);
-        
-        if (current_matrix[row] != previous_matrix[row]) {
-            uprintf("Row %d changed: 0x%04lX -> 0x%04lX\n", row, previous_matrix[row], current_matrix[row]);
-            
-            // Print which columns changed
-            matrix_row_t changed = current_matrix[row] ^ previous_matrix[row];
-            for (uint8_t col = 0; col < 17; col++) {
-                if (changed & (1 << col)) {
-                    bool pressed = (current_matrix[row] >> col) & 1;
-                    uprintf("  Key [%d,%d] %s\n", row, col, pressed ? "PRESSED" : "RELEASED");
-                }
-            }
-            
-            previous_matrix[row] = current_matrix[row];
-        }
-    }
-}

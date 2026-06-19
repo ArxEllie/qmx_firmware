@@ -36,9 +36,7 @@ uint16_t no_act_time                = 0;
 host_driver_t *m_host_driver        = 0;
 uint16_t dev_reset_press_delay      = 0;
 uint16_t rf_sw_press_delay          = 0;
-uint16_t rgb_test_press_delay       = 0;
 uint8_t rf_sw_temp                  = 0;
-uint8_t rgb_light_old               = 0;
 uint8_t host_mode;
 
 extern uint8_t side_mode_a;
@@ -74,7 +72,6 @@ bool f_dial_sw_init_ok  = 0;
 bool f_goto_sleep       = 0;
 bool f_rf_sw_press      = 0;
 bool f_dev_reset_press  = 0;
-bool f_rgb_test_press   = 0;
 bool f_win_lock         = 0;
 
 void rf_device_init(void);
@@ -88,7 +85,6 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
 void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
 void device_reset_show(void);
 void device_reset_init(void);
-void rgb_test_show(void);
 void m_deinit_usb_072(void);
 
 extern void light_speed_control(uint8_t fast);
@@ -207,16 +203,6 @@ void long_press_key(void)
         }
     } else {
         dev_reset_press_delay = 0;
-    }
-
-    if (f_rgb_test_press) {
-        rgb_test_press_delay++;
-        if (rgb_test_press_delay >= RGB_TEST_PRESS_DELAY) {
-            f_rgb_test_press = 0;
-            rgb_test_show();
-        }
-    } else {
-        rgb_test_press_delay = 0;
     }
 }
 

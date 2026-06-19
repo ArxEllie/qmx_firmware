@@ -4,14 +4,13 @@
     "usb": {
         "vid": "0x19F5",
         "pid": "0x32F5",
-        "device_version": "1.1.9",
-        "no_startup_check": true
+        "device_version": "1.1.9"
     },
     "features": {
         "bootmagic": true,
         "mousekey": true,
         "extrakey": true,
-        "console": true,
+        "console": false,
         "command": false,
         "nkro": true,
         "key_lock": true,
