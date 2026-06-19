@@ -56,6 +56,20 @@ static uint8_t             deferred_uart_head  = 0;
 static uint8_t             deferred_uart_tail  = 0;
 static uint8_t             deferred_uart_count = 0;
 
+static bool deferred_uart_cmd_pending(uint8_t cmd) {
+    for (uint8_t i = 0; i < deferred_uart_count; i++) {
+        // ponytail: The queue is fixed at 8 entries, so a linear scan is the
+        // smallest reliable coalescing rule. If the queue grows meaningfully,
+        // replace this with per-command pending flags.
+        uint8_t index = (deferred_uart_head + i) % UART_DEFERRED_QUEUE_LEN;
+        if (deferred_uart_queue[index].cmd == cmd) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 extern DEV_INFO_STRUCT dev_info;
 extern host_driver_t  *m_host_driver;
 extern uint8_t         host_mode;
@@ -473,6 +487,16 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
 }
 
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms) {
+    if (cmd == CMD_RF_STS_SYSC) {
+        if (deferred_uart_cmd_pending(cmd)) {
+            return TX_OK;
+        }
+
+        if (deferred_uart_count >= UART_DEFERRED_QUEUE_LEN) {
+            return TX_OK;
+        }
+    }
+
     if (deferred_uart_count >= UART_DEFERRED_QUEUE_LEN) {
         return TX_TIMEOUT;
     }
