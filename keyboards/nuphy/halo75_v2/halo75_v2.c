@@ -663,12 +663,18 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (low_bat_flag && (side_light == 1)) return false;
                 light_level_control(1);
+                if (rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_lesbian_pride) {
+                    rgb_matrix_increase_val();
+                }
             }
             return false;
 
         case SIDE_VAD:
             if (record->event.pressed) {
                 light_level_control(0);
+                if (rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_lesbian_pride) {
+                    rgb_matrix_decrease_val();
+                }
             }
             return false;
 

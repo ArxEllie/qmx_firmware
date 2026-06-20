@@ -9,7 +9,14 @@ extern rgb_config_t rgb_matrix_config;
 #define HALO75_KEY_LED_COUNT 83
 
 static void set_halo75_key_color(uint8_t index, RGB color) {
-    rgb_matrix_set_color(index, color.r, color.g, color.b);
+    // Custom RGB writes bypass the normal HSV conversion path, so apply the
+    // configured RGB Matrix value here. VIA brightness and RGB_VAI/RGB_VAD
+    // then dim the static flag the same way they dim built-in effects.
+    uint8_t intensity = rgb_matrix_config.hsv.v;
+    rgb_matrix_set_color(index,
+                         ((uint16_t)color.r * intensity) / RGB_MATRIX_MAXIMUM_BRIGHTNESS,
+                         ((uint16_t)color.g * intensity) / RGB_MATRIX_MAXIMUM_BRIGHTNESS,
+                         ((uint16_t)color.b * intensity) / RGB_MATRIX_MAXIMUM_BRIGHTNESS);
 }
 
 static bool pride_flag(effect_params_t* params, const RGB* stripes, uint8_t stripe_count) {
