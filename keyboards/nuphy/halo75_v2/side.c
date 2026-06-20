@@ -612,6 +612,48 @@ static void side_spectrum_mode_show(void) {
     }
 }
 
+static void side_pride_rainbow_show(void) {
+    // This is deliberately slower than the built-in rainbow side modes: a
+    // broad moving ribbon reads as pride rainbow without turning the rim into
+    // a busy chase animation.
+    if (side_play_cnt <= 70) return;
+    side_play_cnt -= 70;
+    if (side_play_cnt > 20) side_play_cnt = 0;
+
+    light_point_playing(1, 1, FLOW_COLOUR_TAB_LEN, &side_play_point);
+
+    uint8_t play_index = side_play_point;
+    for (int i = SIDE_RIM_START; i <= SIDE_ANIM_LOOP_END; i++) {
+        r_temp = flow_rainbow_colour_tab[play_index][0];
+        g_temp = flow_rainbow_colour_tab[play_index][1];
+        b_temp = flow_rainbow_colour_tab[play_index][2];
+
+        // ponytail: one shared calm rainbow for both pride effects. If the
+        // side LEDs ever get denser, upgrade this step to a geometry-based
+        // gradient instead of table index spacing.
+        light_point_playing(1, 3, FLOW_COLOUR_TAB_LEN, &play_index);
+
+        count_rgb_light(side_light_table[side_light]);
+
+        if (i == 40) {
+            for (; i < SIDE_LED_COUNT; i++) {
+                r_temp = flow_rainbow_colour_tab[play_index][0] * 0.3;
+                g_temp = flow_rainbow_colour_tab[play_index][1] * 0.3;
+                b_temp = flow_rainbow_colour_tab[play_index][2] * 0.3;
+                count_rgb_light(side_light_table[side_light]);
+                rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
+            }
+            return;
+        }
+
+        if (is_side_rgb_on(i)) {
+            rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
+        } else {
+            side_rgb_off(i);
+        }
+    }
+}
+
 static void side_breathe_mode_show(void) {
     static uint8_t play_point = 0;
     static uint8_t colour     = 0;
@@ -1028,6 +1070,18 @@ void m_side_led_show(void) {
 
     if (f_power_show) {
         side_power_mode_show();
+        return;
+    }
+
+    if (rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_lesbian_pride) {
+        side_line   = SIDE_LED_COUNT;
+        f_side_flag = 0x1f;
+        side_pride_rainbow_show();
+        bat_led_show();
+        sys_led_show();
+        sys_sw_led_show();
+        sleep_sw_led_show();
+        rf_led_show();
         return;
     }
 
