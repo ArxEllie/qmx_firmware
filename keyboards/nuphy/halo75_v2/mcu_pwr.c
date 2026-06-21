@@ -219,17 +219,11 @@ void exit_deep_sleep(void) {
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-    /* Re-initialize the matrix pin configuration (rows as output,
-     * cols as input).  QMK's default matrix driver does this in
-     * matrix_init(), but that also resets matrix state.  Instead,
-     * we replicate just the pin setup. */
-    for (int i = 0; i < ARRAY_SIZE(col_pins); i++) {
-        gpio_set_pin_input_high(col_pins[i]);
-    }
-    for (int i = 0; i < ARRAY_SIZE(row_pins); i++) {
-        gpio_set_pin_output(row_pins[i]);
-        gpio_write_pin_high(row_pins[i]);
-    }
+    /* Re-initialize the matrix pin configuration using the custom
+     * matrix driver's init function.  This sets up port-level group
+     * modes correctly for the fast palReadPort-based scanner. */
+    extern void matrix_init_custom(void);
+    matrix_init_custom();
 
     /* Power LEDs back on. */
     led_pwr_wake_handle();
