@@ -144,17 +144,20 @@ DBG prog=LEDSTEP led=42/127 status=[000000 000000 000000 000000 000000]
 
 The `status=[...]` field shows the hex RGB values (RRGGBB) of all 5 status LEDs (indices 83–87), so you can verify exactly which segments are lit and what colour each one is.
 
-#### Battery Bar Graph Colour Palette
+#### Battery Display Behaviour
 
-The BATTERY program uses the same colour mapping as the real battery display:
+The BATTERY program uses the same colour mapping as the real battery display, ported from NuPhy's original firmware (Halo65 V2, commit `f1856912d6`):
 
-| Battery Range | Segments Lit | Colour | Hex |
-|---------------|-------------|-------|-----|
-| 0–20% | 1 | Red | `FF0000` |
-| 21–40% | 2 | Orange-Red | `FF4500` |
-| 41–60% | 3 | Orange | `FF8C00` |
-| 61–80% | 4 | Yellow | `FFFF00` |
-| 81–100% | 5 | Green | `00FF00` |
+- **Steady state (not charging, bat ≥ 10%):** All 5 status LEDs light the same colour based on battery level. This matches the official manual — the colour indicates the level, not the number of lit segments.
+- **Charging:** Breathing animation in amber (`#804000`) at quarter brightness, or shifting segment animation if `CHARGING_SHIFT` is defined.
+- **Low battery (< 10%):** Red blink — all 5 LEDs flash red 6 times at 500ms intervals.
+
+| Battery Range | Colour | Hex | Segments (charging anim only) |
+|---------------|-------|-----|-------------------------------|
+| ≤ 20% | Red | `FF0000` | 1 |
+| ≤ 50% | Orange-Red | `FF2000` | 2 |
+| ≤ 80% | Dark Orange | `804000` | 4 |
+| > 80% | Green | `008000` | 5 |
 
 #### Implementation Files
 

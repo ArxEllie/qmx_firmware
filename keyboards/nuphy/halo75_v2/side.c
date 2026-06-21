@@ -876,31 +876,30 @@ uint8_t bat_end_led        = 0;
 uint8_t bat_r, bat_g, bat_b;
 
 /**
- * @brief  Battery level indicator
+ * @brief  Battery level indicator — ported from NuPhy Halo65 V2 (f1856912d6).
+ *
+ * Matches the official manual's behaviour:
+ *  - All 5 status LEDs light the same colour based on battery level.
+ *  - Segment count only affects the charging animation, not the steady display.
+ *  - Colour thresholds: ≤20% red, ≤50% orange-red, ≤80% dark orange, >80% green.
+ *  - Low battery (<10%): red blink.  Charging: breathe or shift animation.
  */
 void bat_percent_led(uint8_t bat_percent) {
     uint8_t i;
 
-    // Five-segment bar graph: one segment per 20%. The segment colour also
-    // walks red -> orange -> yellow -> green with level, so charge reads two
-    // ways (how many lit + what colour) — robust even when the diffuser
-    // bleeds adjacent segments together.
     if (bat_percent <= 20) {
-        bat_r = 0xff; bat_g = 0x00; bat_b = 0x00; // red
-    } else if (bat_percent <= 40) {
-        bat_r = 0xff; bat_g = 0x20; bat_b = 0x00; // orange-red
-    } else if (bat_percent <= 60) {
-        bat_r = 0xff; bat_g = 0x60; bat_b = 0x00; // orange
+        bat_end_led = 1;
+        bat_r = colour_lib[0][0]; bat_g = colour_lib[0][1]; bat_b = colour_lib[0][2];
+    } else if (bat_percent <= 50) {
+        bat_end_led = 2;
+        bat_r = colour_lib[1][0]; bat_g = colour_lib[1][1]; bat_b = colour_lib[1][2];
     } else if (bat_percent <= 80) {
-        bat_r = 0xff; bat_g = 0xff; bat_b = 0x00; // yellow
+        bat_end_led = 4;
+        bat_r = colour_lib[2][0]; bat_g = colour_lib[2][1]; bat_b = colour_lib[2][2];
     } else {
-        bat_r = 0x00; bat_g = 0xff; bat_b = 0x00; // green
+        bat_end_led = 5;
+        bat_r = colour_lib[3][0]; bat_g = colour_lib[3][1]; bat_b = colour_lib[3][2];
     }
-    // Lit segment count: 1 at >0%, +1 per 20%, capped at the 5 LEDs.
-    uint8_t bat_segs = (bat_percent + 19) / 20;
-    if (bat_segs < 1) bat_segs = 1;
-    if (bat_segs > 5) bat_segs = 5;
-    bat_end_led = bat_segs - 1;
     if (f_charging) {
         low_bat_blink_cnt = 6;
 #if (CHARGING_SHIFT)
@@ -911,13 +910,11 @@ void bat_percent_led(uint8_t bat_percent) {
     } else if (bat_percent < 10) {
         low_bat_show();
     } else {
+        /* Steady state: all 5 LEDs same colour — matches NuPhy manual. */
+        bat_end_led = 4;
         low_bat_blink_cnt = 6;
-        for (i = 0; i < 5; i++) {
-            if (i <= bat_end_led)
-                side_status_led_set(i, bat_r, bat_g, bat_b);
-            else
-                side_status_led_set(i, 0, 0, 0);
-        }
+        for (i = 0; i <= bat_end_led; i++)
+            side_status_led_set(i, bat_r, bat_g, bat_b);
     }
 }
 
