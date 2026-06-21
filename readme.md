@@ -90,6 +90,7 @@ To use the [VIA configurator](https://usevia.app/), load the appropriate VIA JSO
 
 ## Contact
 
+- **Matrix Chatroom** [#QMKNuPhy:augustini.wtf](https://matrix.to/#/#QMKNuPhy:augustini.wtf)
 - **Matrix:** [@myceliatrix:augustini.wtf](https://matrix.to/#/@myceliatrix:augustini.wtf)
 - **Mastodon:** [@myceliatrix@social.augustini.wtf](https://social.augustini.wtf/@myceliatrix)
 
