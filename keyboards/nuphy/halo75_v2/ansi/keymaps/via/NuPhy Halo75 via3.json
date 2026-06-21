@@ -281,6 +281,20 @@
                 0,
                 2
               ]
+            },
+            {
+              "label": "NKRO Mode",
+              "type": "dropdown",
+              "options": [
+                "Auto",
+                "On",
+                "Off"
+              ],
+              "content": [
+                "id_custom_nkro_mode",
+                0,
+                7
+              ]
             }
           ]
         },
@@ -467,6 +481,10 @@
     {
       "name": "Deep\nSlp",
       "title": "Deep Sleep Toggle"
+    },
+    {
+      "name": "NKRO\nMode",
+      "title": "NKRO Mode Toggle"
     }
   ]
 }

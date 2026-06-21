@@ -43,6 +43,7 @@ enum custom_keycodes {
     SLEEP_TIMEOUT_INC,
     USB_SLEEP_TOGGLE,
     DEEP_SLEEP_TOGGLE,
+    NKRO_MODE,
 };
 
 extern uint8_t m_sleep_led;
@@ -216,6 +217,17 @@ extern user_config_t user_config;
 #define f_dev_sleep_enable   user_config.ee_dev_config.bit0
 #define f_usb_sleep_enable   user_config.ee_dev_config.bit1
 #define f_deep_sleep_enable  user_config.ee_dev_config.bit2
+#define ee_nkro_mode         user_config.ee_dev_config.bit4
+#define ee_nkro_mode_hi      user_config.ee_dev_config.bit5
+
+/* NKRO override modes: 0=Auto (follow OS switch), 1=On, 2=Off */
+enum nkro_mode {
+    NKRO_AUTO = 0,
+    NKRO_ON   = 1,
+    NKRO_OFF  = 2,
+};
+#define get_nkro_mode()  ((uint8_t)(ee_nkro_mode) | ((uint8_t)(ee_nkro_mode_hi) << 1))
+#define set_nkro_mode(m) do { ee_nkro_mode = ((m) & 1); ee_nkro_mode_hi = (((m) >> 1) & 1); } while(0)
 
 /* Shared side LED constants */
 #define SIDE_INDEX 83

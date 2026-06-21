@@ -1041,6 +1041,7 @@ void device_reset_init(void) {
     f_dev_sleep_enable                  = true;
     f_usb_sleep_enable                  = false;
     f_deep_sleep_enable                 = true;
+    set_nkro_mode(NKRO_AUTO);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 

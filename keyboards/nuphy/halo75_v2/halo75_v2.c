@@ -132,6 +132,25 @@ bool f_rf_sw_press     = 0;
 bool f_dev_reset_press = 0;
 bool f_win_lock        = 0;
 
+void m_break_all_key(void);
+
+/* Apply NKRO override after OS switch logic sets keymap_config.nkro.
+ * In Auto mode, the OS switch value is kept. In On/Off, it's overridden. */
+static void apply_nkro_override(void) {
+    uint8_t mode = get_nkro_mode();
+    if (mode == NKRO_ON) {
+        if (!keymap_config.nkro) {
+            keymap_config.nkro = 1;
+            m_break_all_key();
+        }
+    } else if (mode == NKRO_OFF) {
+        if (keymap_config.nkro) {
+            keymap_config.nkro = 0;
+            m_break_all_key();
+        }
+    }
+}
+
 void    rf_device_init(void);
 void    rf_uart_init(void);
 void    m_side_led_show(void);
@@ -404,6 +423,8 @@ void dial_sw_scan(void) {
             host_set_driver(&rf_host_driver);
         }
     }
+
+    apply_nkro_override();
 }
 
 /**
@@ -466,6 +487,8 @@ void m_power_on_dial_sw_scan(void) {
             m_break_all_key();
         }
     }
+
+    apply_nkro_override();
 }
 
 static uint16_t macro_tap_keycode = KC_NO;
@@ -822,6 +845,16 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        case NKRO_MODE:
+            if (record->event.pressed) {
+                uint8_t mode = get_nkro_mode();
+                mode = (mode + 1) % 3; /* Auto -> On -> Off -> Auto */
+                set_nkro_mode(mode);
+                apply_nkro_override();
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+
         default:
             return true;
     }
@@ -885,6 +918,7 @@ void m_londing_eeprom_data(void) {
         f_dev_sleep_enable                  = true;
         f_usb_sleep_enable                  = false;
         f_deep_sleep_enable                 = true;
+        set_nkro_mode(NKRO_AUTO);
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
     } else {
         side_mode_a = user_config.ee_side_mode_a;
@@ -899,6 +933,8 @@ void m_londing_eeprom_data(void) {
             user_config.ee_debounce_release_ms = 5;
         if (user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MIN || user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MAX)
             user_config.ee_sleep_timeout = SLEEP_TIMEOUT_DEFAULT;
+        if (get_nkro_mode() > NKRO_OFF)
+            set_nkro_mode(NKRO_AUTO);
     }
 }
 
@@ -1054,6 +1090,8 @@ static void dev_reset_task(void) {
                 keymap_config.nkro = 1;
             }
 
+            apply_nkro_override();
+
             dev_reset_state = RESET_IDLE;
             break;
     }
@@ -1099,6 +1137,7 @@ enum via_custom_value_id {
     id_sleep_toggle        = 4,
     id_usb_sleep_toggle    = 5,
     id_deep_sleep_toggle   = 6,
+    id_nkro_mode           = 7,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -1134,6 +1173,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                 case id_deep_sleep_toggle:
                     f_deep_sleep_enable = value_data[0] ? 1 : 0;
                     break;
+                case id_nkro_mode:
+                    set_nkro_mode(value_data[0] > NKRO_OFF ? NKRO_AUTO : value_data[0]);
+                    apply_nkro_override();
+                    break;
                 default:
                     *command_id = id_unhandled;
                     break;
@@ -1159,6 +1202,9 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 case id_deep_sleep_toggle:
                     value_data[0] = f_deep_sleep_enable ? 1 : 0;
+                    break;
+                case id_nkro_mode:
+                    value_data[0] = get_nkro_mode();
                     break;
                 default:
                     *command_id = id_unhandled;
