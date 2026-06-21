@@ -283,6 +283,51 @@
               ]
             }
           ]
+        },
+        {
+          "label": "Sleep",
+          "content": [
+            {
+              "label": "Sleep Timeout (min)",
+              "type": "range",
+              "options": [
+                1,
+                60
+              ],
+              "content": [
+                "id_custom_sleep_timeout",
+                0,
+                3
+              ]
+            },
+            {
+              "label": "Sleep Enable",
+              "type": "toggle",
+              "content": [
+                "id_custom_sleep_toggle",
+                0,
+                4
+              ]
+            },
+            {
+              "label": "USB Sleep",
+              "type": "toggle",
+              "content": [
+                "id_custom_usb_sleep_toggle",
+                0,
+                5
+              ]
+            },
+            {
+              "label": "Deep Sleep",
+              "type": "toggle",
+              "content": [
+                "id_custom_deep_sleep_toggle",
+                0,
+                6
+              ]
+            }
+          ]
         }
       ]
     }
@@ -406,6 +451,22 @@
     {
       "name": "Dbnc\nR~",
       "title": "Debounce Release Show"
+    },
+    {
+      "name": "Sleep\nT-O",
+      "title": "Sleep Timeout Dec"
+    },
+    {
+      "name": "Sleep\nT+O",
+      "title": "Sleep Timeout Inc"
+    },
+    {
+      "name": "USB\nSlp",
+      "title": "USB Sleep Toggle"
+    },
+    {
+      "name": "Deep\nSlp",
+      "title": "Deep Sleep Toggle"
     }
   ]
 }

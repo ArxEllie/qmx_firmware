@@ -38,6 +38,11 @@ enum custom_keycodes {
     DEBOUNCE_RELEASE_DEC,
     DEBOUNCE_RELEASE_INC,
     DEBOUNCE_RELEASE_SHOW,
+
+    SLEEP_TIMEOUT_DEC,
+    SLEEP_TIMEOUT_INC,
+    USB_SLEEP_TOGGLE,
+    DEEP_SLEEP_TOGGLE,
 };
 
 extern uint8_t m_sleep_led;
@@ -174,6 +179,14 @@ typedef struct {
 #define SLEEP_TIME_DELAY (uint32_t)(100 * 360)
 #define POWER_DOWN_DELAY (uint16_t)(24)
 
+#define SLEEP_TIMEOUT_DEFAULT 30   /* minutes */
+#define SLEEP_TIMEOUT_MIN 1
+#define SLEEP_TIMEOUT_MAX 60
+#define SLEEP_TIMEOUT_STEP 1
+
+/* TIMER_STEP is 50ms (Sleep_Handle runs every 50ms). */
+#define SLEEP_TIMEOUT_TO_TICKS(min) ((uint32_t)(min) * 60 * 1000 / 50)
+
 typedef struct {
     uint8_t bit0 : 1;
     uint8_t bit1 : 1;
@@ -195,11 +208,14 @@ typedef struct {
     uint8_t ee_side_colour;
     uint8_t ee_debounce_press_ms;
     uint8_t ee_debounce_release_ms;
+    uint8_t ee_sleep_timeout;     /* minutes, 1-60 */
     m_8bit  ee_dev_config;
 } user_config_t;
 
 extern user_config_t user_config;
-#define f_dev_sleep_enable user_config.ee_dev_config.bit0
+#define f_dev_sleep_enable   user_config.ee_dev_config.bit0
+#define f_usb_sleep_enable   user_config.ee_dev_config.bit1
+#define f_deep_sleep_enable  user_config.ee_dev_config.bit2
 
 /* Shared side LED constants */
 #define SIDE_INDEX 83

@@ -102,4 +102,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Bump when custom VIA values change so VIA Configurator can detect
  * a compatible firmware. */
-#define VIA_FIRMWARE_VERSION 0x00000001
+#define VIA_FIRMWARE_VERSION 0x00000002

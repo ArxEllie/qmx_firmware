@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "rf_driver.h"
 #include "i2c_master.h"
+#include "mcu_pwr.h"
 #ifdef CONSOLE_ENABLE
 #    include "debug.h"
 #    include "matrix.h"
@@ -89,7 +90,7 @@ DEV_INFO_STRUCT dev_info = {
 uint16_t       rf_linking_time       = 0;
 uint16_t       rf_link_show_time     = 0;
 uint8_t        rf_blink_cnt          = 0;
-uint16_t       no_act_time           = 0;
+uint32_t       no_act_time           = 0;
 host_driver_t *m_host_driver         = 0;
 uint16_t       dev_reset_press_delay = 0;
 uint16_t       rf_sw_press_delay     = 0;
@@ -493,6 +494,18 @@ static void macro_tap_task(void) {
 }
 
 /**
+ * @brief  qmk pre-process record — runs before all other record handlers.
+ *         Used for instant wakeup from light sleep on first keypress,
+ *         avoiding the 50ms Sleep_Handle poll delay.
+ */
+bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        wakeup_handle();
+    }
+    return true;
+}
+
+/**
  * @brief  qmk process record
  */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -782,6 +795,33 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        case SLEEP_TIMEOUT_INC:
+            if (record->event.pressed && user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MAX) {
+                user_config.ee_sleep_timeout += SLEEP_TIMEOUT_STEP;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+        case SLEEP_TIMEOUT_DEC:
+            if (record->event.pressed && user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MIN) {
+                user_config.ee_sleep_timeout -= SLEEP_TIMEOUT_STEP;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+
+        case USB_SLEEP_TOGGLE:
+            if (record->event.pressed) {
+                f_usb_sleep_enable = !f_usb_sleep_enable;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+
+        case DEEP_SLEEP_TOGGLE:
+            if (record->event.pressed) {
+                f_deep_sleep_enable = !f_deep_sleep_enable;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+
         default:
             return true;
     }
@@ -814,8 +854,8 @@ void timer_pro(void) {
         rf_link_show_time += (steps < remaining) ? steps : remaining;
     }
 
-    if (no_act_time < 0xffff) {
-        uint32_t remaining = 0xffff - no_act_time;
+    if (no_act_time < 0xffffff) {
+        uint32_t remaining = 0xffffff - no_act_time;
         no_act_time += (steps < remaining) ? steps : remaining;
     }
 
@@ -841,7 +881,10 @@ void m_londing_eeprom_data(void) {
         user_config.ee_side_colour          = side_colour;
         user_config.ee_debounce_press_ms    = 5;
         user_config.ee_debounce_release_ms  = 5;
+        user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
         f_dev_sleep_enable                  = true;
+        f_usb_sleep_enable                  = false;
+        f_deep_sleep_enable                 = true;
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
     } else {
         side_mode_a = user_config.ee_side_mode_a;
@@ -854,6 +897,8 @@ void m_londing_eeprom_data(void) {
             user_config.ee_debounce_press_ms = 5;
         if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99)
             user_config.ee_debounce_release_ms = 5;
+        if (user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MIN || user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MAX)
+            user_config.ee_sleep_timeout = SLEEP_TIMEOUT_DEFAULT;
     }
 }
 
@@ -1050,6 +1095,10 @@ void housekeeping_task_kb(void) {
 enum via_custom_value_id {
     id_debounce_press_ms   = 1,
     id_debounce_release_ms = 2,
+    id_sleep_timeout       = 3,
+    id_sleep_toggle        = 4,
+    id_usb_sleep_toggle    = 5,
+    id_deep_sleep_toggle   = 6,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -1073,6 +1122,18 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                 case id_debounce_release_ms:
                     user_config.ee_debounce_release_ms = value_data[0];
                     break;
+                case id_sleep_timeout:
+                    user_config.ee_sleep_timeout = value_data[0];
+                    break;
+                case id_sleep_toggle:
+                    f_dev_sleep_enable = value_data[0] ? 1 : 0;
+                    break;
+                case id_usb_sleep_toggle:
+                    f_usb_sleep_enable = value_data[0] ? 1 : 0;
+                    break;
+                case id_deep_sleep_toggle:
+                    f_deep_sleep_enable = value_data[0] ? 1 : 0;
+                    break;
                 default:
                     *command_id = id_unhandled;
                     break;
@@ -1086,6 +1147,18 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 case id_debounce_release_ms:
                     value_data[0] = user_config.ee_debounce_release_ms;
+                    break;
+                case id_sleep_timeout:
+                    value_data[0] = user_config.ee_sleep_timeout;
+                    break;
+                case id_sleep_toggle:
+                    value_data[0] = f_dev_sleep_enable ? 1 : 0;
+                    break;
+                case id_usb_sleep_toggle:
+                    value_data[0] = f_usb_sleep_enable ? 1 : 0;
+                    break;
+                case id_deep_sleep_toggle:
+                    value_data[0] = f_deep_sleep_enable ? 1 : 0;
                     break;
                 default:
                     *command_id = id_unhandled;

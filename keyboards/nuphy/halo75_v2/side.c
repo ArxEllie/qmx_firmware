@@ -1035,7 +1035,12 @@ void device_reset_init(void) {
     user_config.ee_side_speed           = side_speed;
     user_config.ee_side_rgb             = side_rgb;
     user_config.ee_side_colour          = side_colour;
+    user_config.ee_debounce_press_ms    = 5;
+    user_config.ee_debounce_release_ms  = 5;
+    user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
     f_dev_sleep_enable                  = true;
+    f_usb_sleep_enable                  = false;
+    f_deep_sleep_enable                 = true;
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 
