@@ -776,19 +776,28 @@ void timer_pro(void) {
         m_host_driver  = host_get_driver();
     }
 
-    if (timer_elapsed32(interval_timer) < 10) {
-        return;
-    } else if (timer_elapsed32(interval_timer) > 20) {
-        interval_timer = timer_read32();
-    } else {
-        interval_timer += 10;
+    /* Count elapsed steps so slower housekeeping loops don't stretch
+     * timeouts.  Each step is 10 ms (TIMER_STEP). */
+    uint32_t elapsed = timer_elapsed32(interval_timer);
+    if (elapsed < 10) return;
+
+    uint32_t steps = elapsed / 10;
+    interval_timer += steps * 10;
+
+    if (rf_link_show_time < RF_LINK_SHOW_TIME) {
+        uint32_t remaining = RF_LINK_SHOW_TIME - rf_link_show_time;
+        rf_link_show_time += (steps < remaining) ? steps : remaining;
     }
 
-    if (rf_link_show_time < RF_LINK_SHOW_TIME) rf_link_show_time++;
+    if (no_act_time < 0xffff) {
+        uint32_t remaining = 0xffff - no_act_time;
+        no_act_time += (steps < remaining) ? steps : remaining;
+    }
 
-    if (no_act_time < 0xffff) no_act_time++;
-
-    if (rf_linking_time < 0xffff) rf_linking_time++;
+    if (rf_linking_time < 0xffff) {
+        uint32_t remaining = 0xffff - rf_linking_time;
+        rf_linking_time += (steps < remaining) ? steps : remaining;
+    }
 }
 
 /**
