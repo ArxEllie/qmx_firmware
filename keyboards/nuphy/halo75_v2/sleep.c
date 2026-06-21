@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "halo75_v2.h"
 #include "hal_usb.h"
 #include "usb_main.h"
+#include "mcu_pwr.h"
 
 extern user_config_t   user_config;
 extern DEV_INFO_STRUCT dev_info;
@@ -28,6 +29,9 @@ extern bool f_wakeup_prepare;
 extern bool f_goto_sleep;
 
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
+
+/* Break all keys before sleeping so the host doesn't see stuck keys. */
+extern void m_break_all_key(void);
 
 /**
  * @brief  Sleep Handle.
@@ -51,7 +55,6 @@ void Sleep_Handle(void) {
             return;
         }
 
-        extern void m_break_all_key(void);
         m_break_all_key();
         usb_wakeup_pending = false;
     }
@@ -59,31 +62,42 @@ void Sleep_Handle(void) {
     // sleep process
     if (f_goto_sleep) {
         f_goto_sleep = 0;
+        usb_suspend_debounce = 0;
+        rf_disconnect_time   = 0;
+        rf_linking_time      = 0;
 
-        if (f_dev_sleep_enable) {
-            if (dev_info.rf_state == RF_CONNECT)
-                uart_send_cmd_deferred(CMD_SET_CONFIG, 5);
-            else
-                uart_send_cmd_deferred(CMD_SLEEP, 5);
-
-            // power off led
-            gpio_write_pin_low(DC_BOOST_PIN);
-            gpio_write_pin_low(RGB_DRIVER_SDB1);
-            gpio_write_pin_low(RGB_DRIVER_SDB2);
+        if (!f_dev_sleep_enable) {
+            /* Sleep disabled by user — just flag wakeup prep. */
+            f_wakeup_prepare = 1;
+        } else if (dev_info.link_mode == LINK_USB) {
+            /* USB connected: light sleep only (MCU must stay awake for
+             * USB suspend/resume signalling). */
+            m_break_all_key();
+            enter_light_sleep();
+            f_wakeup_prepare = 1;
+        } else if ((dev_info.rf_charge & 0x01) != 0 || dev_info.rf_charge == 0x03) {
+            /* RF + charging: light sleep (can't deep sleep while
+             * charging circuit needs MCU supervision). */
+            m_break_all_key();
+            enter_light_sleep();
+            f_wakeup_prepare = 1;
+        } else {
+            /* RF + battery: deep sleep for maximum power savings.
+             * enter_deep_sleep() blocks until a keypress wakes the MCU.
+             * exit_deep_sleep() restores clocks, pins, and LEDs. */
+            m_break_all_key();
+            enter_deep_sleep();
+            exit_deep_sleep();
+            no_act_time = 0; /* prevent immediate re-sleep on wake */
+            /* Don't set f_wakeup_prepare — we're already awake. */
         }
-
-        f_wakeup_prepare = 1;
     }
 
-    // wakeup check
+    // wakeup check (light sleep only)
     if (f_wakeup_prepare && (no_act_time < 10)) {
         f_wakeup_prepare = 0;
 
-        gpio_write_pin_high(DC_BOOST_PIN);
-        gpio_write_pin_high(RGB_DRIVER_SDB1);
-        gpio_write_pin_high(RGB_DRIVER_SDB2);
-
-        uart_send_cmd_deferred(CMD_HAND, 1);
+        exit_light_sleep();
 
         if (dev_info.link_mode == LINK_USB) {
 #define USB_GETSTATUS_REMOTE_WAKEUP_ENABLED (2U)
