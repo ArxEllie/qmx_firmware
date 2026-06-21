@@ -31,6 +31,13 @@ enum custom_keycodes {
     SIDE_HUI,
     SIDE_SPI,
     SIDE_SPD,
+
+    DEBOUNCE_PRESS_DEC,
+    DEBOUNCE_PRESS_INC,
+    DEBOUNCE_PRESS_SHOW,
+    DEBOUNCE_RELEASE_DEC,
+    DEBOUNCE_RELEASE_INC,
+    DEBOUNCE_RELEASE_SHOW,
 };
 
 extern uint8_t m_sleep_led;
@@ -186,6 +193,8 @@ typedef struct {
     uint8_t ee_side_speed;
     uint8_t ee_side_rgb;
     uint8_t ee_side_colour;
+    uint8_t ee_debounce_press_ms;
+    uint8_t ee_debounce_release_ms;
     m_8bit  ee_dev_config;
 } user_config_t;
 

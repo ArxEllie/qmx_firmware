@@ -97,3 +97,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define IS31FL3733_SW_PULLUP PUR_05KR
 #define IS31FL3733_CS_PULLDOWN PUR_05KR
+
+#define DEBOUNCE_STEP 1
+
+/* Bump when custom VIA values change so VIA Configurator can detect
+ * a compatible firmware. */
+#define VIA_FIRMWARE_VERSION 0x00000001

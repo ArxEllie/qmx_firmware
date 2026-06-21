@@ -757,6 +757,31 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        case DEBOUNCE_PRESS_INC:
+            if (record->event.pressed && user_config.ee_debounce_press_ms < 99) {
+                user_config.ee_debounce_press_ms += DEBOUNCE_STEP;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+        case DEBOUNCE_PRESS_DEC:
+            if (record->event.pressed && user_config.ee_debounce_press_ms > 0) {
+                user_config.ee_debounce_press_ms -= DEBOUNCE_STEP;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+        case DEBOUNCE_RELEASE_INC:
+            if (record->event.pressed && user_config.ee_debounce_release_ms < 99) {
+                user_config.ee_debounce_release_ms += DEBOUNCE_STEP;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+        case DEBOUNCE_RELEASE_DEC:
+            if (record->event.pressed && user_config.ee_debounce_release_ms > 0) {
+                user_config.ee_debounce_release_ms -= DEBOUNCE_STEP;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            }
+            return false;
+
         default:
             return true;
     }
@@ -814,6 +839,8 @@ void m_londing_eeprom_data(void) {
         user_config.ee_side_speed           = side_speed;
         user_config.ee_side_rgb             = side_rgb;
         user_config.ee_side_colour          = side_colour;
+        user_config.ee_debounce_press_ms    = 5;
+        user_config.ee_debounce_release_ms  = 5;
         f_dev_sleep_enable                  = true;
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
     } else {
@@ -823,6 +850,10 @@ void m_londing_eeprom_data(void) {
         side_speed  = user_config.ee_side_speed;
         side_rgb    = user_config.ee_side_rgb;
         side_colour = user_config.ee_side_colour;
+        if (user_config.ee_debounce_press_ms == 0 || user_config.ee_debounce_press_ms > 99)
+            user_config.ee_debounce_press_ms = 5;
+        if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99)
+            user_config.ee_debounce_release_ms = 5;
     }
 }
 
@@ -1013,4 +1044,61 @@ void housekeeping_task_kb(void) {
     dial_sw_scan();
 
     Sleep_Handle();
+}
+
+/* VIA custom value IDs for the Hardware settings tab. */
+enum via_custom_value_id {
+    id_debounce_press_ms   = 1,
+    id_debounce_release_ms = 2,
+};
+
+void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
+    /* data = [ command_id, channel_id, value_id, value_data... ] */
+    uint8_t *command_id = &(data[0]);
+    uint8_t *channel_id = &(data[1]);
+    uint8_t *value_id   = &(data[2]);
+    uint8_t *value_data = &(data[3]);
+
+    if (*channel_id != id_custom_channel) {
+        *command_id = id_unhandled;
+        return;
+    }
+
+    switch (*command_id) {
+        case id_custom_set_value:
+            switch (*value_id) {
+                case id_debounce_press_ms:
+                    user_config.ee_debounce_press_ms = value_data[0];
+                    break;
+                case id_debounce_release_ms:
+                    user_config.ee_debounce_release_ms = value_data[0];
+                    break;
+                default:
+                    *command_id = id_unhandled;
+                    break;
+            }
+            break;
+
+        case id_custom_get_value:
+            switch (*value_id) {
+                case id_debounce_press_ms:
+                    value_data[0] = user_config.ee_debounce_press_ms;
+                    break;
+                case id_debounce_release_ms:
+                    value_data[0] = user_config.ee_debounce_release_ms;
+                    break;
+                default:
+                    *command_id = id_unhandled;
+                    break;
+            }
+            break;
+
+        case id_custom_save:
+            eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            break;
+
+        default:
+            *command_id = id_unhandled;
+            break;
+    }
 }
