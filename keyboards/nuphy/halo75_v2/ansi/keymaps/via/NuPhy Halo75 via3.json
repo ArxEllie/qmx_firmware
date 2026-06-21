@@ -342,6 +342,26 @@
               ]
             }
           ]
+        },
+        {
+          "label": "SOCD",
+          "content": [
+            {
+              "label": "SOCD Mode",
+              "type": "dropdown",
+              "options": [
+                "Off",
+                "Neutral",
+                "Last Input Priority",
+                "First Input Priority"
+              ],
+              "content": [
+                "id_custom_socd_mode",
+                0,
+                8
+              ]
+            }
+          ]
         }
       ]
     }

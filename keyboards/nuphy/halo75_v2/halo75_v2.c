@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "halo75_v2.h"
+#include "socd.h"
 #include "usb_main.h"
 #include "rf_driver.h"
 #include "i2c_master.h"
@@ -320,6 +321,8 @@ void m_break_all_key(void) {
     memset(uart_bit_report_buf, 0, sizeof(uart_bit_report_buf));
     memset(bitkb_report_buf, 0, sizeof(bitkb_report_buf));
     memset(bytekb_report_buf, 0, sizeof(bytekb_report_buf));
+
+    socd_reset();
 }
 
 /**
@@ -549,6 +552,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #endif
 
     no_act_time = 0;
+
+    /* SOCD arrow-key interception — must run before the keycode switch
+     * so SOCD can own register/unregister for arrow keys when active. */
+    if (!socd_process_record(keycode, record)) {
+        return false;
+    }
 
 #ifdef RGB_DEBUG
     /* RGB debug harness: repurpose FN-layer RGB matrix keycodes. */
@@ -914,6 +923,8 @@ void m_londing_eeprom_data(void) {
         f_usb_sleep_enable                  = false;
         f_deep_sleep_enable                 = true;
         set_nkro_mode(NKRO_AUTO);
+        user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
+        socd_set_mode(user_config.ee_socd_mode);
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
     } else {
         side_mode_a = side_led_get_mode_a();
@@ -930,6 +941,9 @@ void m_londing_eeprom_data(void) {
             user_config.ee_sleep_timeout = SLEEP_TIMEOUT_DEFAULT;
         if (get_nkro_mode() > NKRO_OFF)
             set_nkro_mode(NKRO_AUTO);
+        if (user_config.ee_socd_mode > SOCD_MODE_MAX)
+            user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
+        socd_set_mode(user_config.ee_socd_mode);
     }
 }
 
@@ -1133,6 +1147,7 @@ enum via_custom_value_id {
     id_usb_sleep_toggle    = 5,
     id_deep_sleep_toggle   = 6,
     id_nkro_mode           = 7,
+    id_socd_mode           = 8,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -1172,6 +1187,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     set_nkro_mode(value_data[0] > NKRO_OFF ? NKRO_AUTO : value_data[0]);
                     apply_nkro_override();
                     break;
+                case id_socd_mode:
+                    user_config.ee_socd_mode = (value_data[0] > SOCD_MODE_MAX) ? SOCD_OFF : value_data[0];
+                    socd_set_mode(user_config.ee_socd_mode);
+                    break;
                 default:
                     *command_id = id_unhandled;
                     break;
@@ -1200,6 +1219,9 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 case id_nkro_mode:
                     value_data[0] = get_nkro_mode();
+                    break;
+                case id_socd_mode:
+                    value_data[0] = socd_get_mode();
                     break;
                 default:
                     *command_id = id_unhandled;

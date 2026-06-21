@@ -233,6 +233,7 @@ typedef struct __attribute__((packed)) {
     uint8_t  ee_debounce_release_ms;
     uint8_t  ee_sleep_timeout;      /* minutes, 1-60 */
     m_8bit   ee_dev_config;
+    uint8_t  ee_socd_mode;          /* SOCD resolution mode (0=off, 1=neutral, 2=last-wins, 3=first-wins) */
 } user_config_t;
 
 extern user_config_t user_config;

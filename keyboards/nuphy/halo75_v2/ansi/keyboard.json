@@ -1082,6 +1082,30 @@
       }
     ]
   },
+  "menus": [
+    "qmk_rgb_matrix",
+    {
+      "label": "Hardware",
+      "content": [
+        {
+          "label": "SOCD",
+          "content": [
+            {
+              "label": "SOCD Mode",
+              "type": "dropdown",
+              "options": [
+                ["Off", 0],
+                ["Neutral", 1],
+                ["Last Input Priority", 2],
+                ["First Input Priority", 3]
+              ],
+              "content": ["id_socd_mode", 0, 8]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "layouts": {
     "LAYOUT": {
       "layout": [

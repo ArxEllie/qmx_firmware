@@ -100,6 +100,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define DEBOUNCE_STEP 1
 
+/* Default SOCD mode on first boot / factory reset.
+ * 0=off, 1=neutral, 2=last-wins, 3=first-wins */
+#define SOCD_DEFAULT_MODE 0
+
 /* Bump when custom VIA values change so VIA Configurator can detect
  * a compatible firmware. */
-#define VIA_FIRMWARE_VERSION 0x00000003
+#define VIA_FIRMWARE_VERSION 0x00000004
