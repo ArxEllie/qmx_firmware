@@ -903,15 +903,10 @@ void timer_pro(void) {
  */
 void m_londing_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config_t));
-    if (user_config.default_brightness_flag != 0xA5) {
+    if (user_config.default_brightness_flag != 0xA6) {
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
-        user_config.default_brightness_flag = 0xA5;
-        user_config.ee_side_mode_a          = side_mode_a;
-        user_config.ee_side_mode_b          = side_mode_b;
-        user_config.ee_side_light           = side_light;
-        user_config.ee_side_speed           = side_speed;
-        user_config.ee_side_rgb             = side_rgb;
-        user_config.ee_side_colour          = side_colour;
+        user_config.default_brightness_flag = 0xA6;
+        user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
         user_config.ee_debounce_press_ms    = 5;
         user_config.ee_debounce_release_ms  = 5;
         user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
@@ -921,12 +916,12 @@ void m_londing_eeprom_data(void) {
         set_nkro_mode(NKRO_AUTO);
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
     } else {
-        side_mode_a = user_config.ee_side_mode_a;
-        side_mode_b = user_config.ee_side_mode_b;
-        side_light  = user_config.ee_side_light;
-        side_speed  = user_config.ee_side_speed;
-        side_rgb    = user_config.ee_side_rgb;
-        side_colour = user_config.ee_side_colour;
+        side_mode_a = side_led_get_mode_a();
+        side_mode_b = side_led_get_mode_b();
+        side_light  = side_led_get_light();
+        side_speed  = side_led_get_speed();
+        side_rgb    = side_led_get_rgb();
+        side_colour = side_led_get_colour();
         if (user_config.ee_debounce_press_ms == 0 || user_config.ee_debounce_press_ms > 99)
             user_config.ee_debounce_press_ms = 5;
         if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99)

@@ -110,7 +110,7 @@ void light_level_control(uint8_t brighten) {
         } else
             side_light--;
     }
-    user_config.ee_side_light = side_light;
+    side_led_set_light(side_light);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 
@@ -127,7 +127,7 @@ void light_speed_control(uint8_t fast) {
     } else {
         if ((side_speed) < LIGHT_SPEED_MAX) side_speed++;
     }
-    user_config.ee_side_speed = side_speed;
+    side_led_set_speed(side_speed);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 
@@ -172,8 +172,8 @@ void    side_colour_control(uint8_t dir) {
             }
         }
     }
-    user_config.ee_side_rgb    = side_rgb;
-    user_config.ee_side_colour = side_colour;
+    side_led_set_rgb(side_rgb);
+    side_led_set_colour(side_colour);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 
@@ -204,7 +204,7 @@ void    side_mode_a_control(uint8_t dir) {
     }
 
     side_play_point            = 0;
-    user_config.ee_side_mode_a = side_mode_a;
+    side_led_set_mode_a(side_mode_a);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 
@@ -222,7 +222,7 @@ void side_mode_b_control(uint8_t dir) {
         }
     }
     side_play_point            = 0;
-    user_config.ee_side_mode_b = side_mode_b;
+    side_led_set_mode_b(side_mode_b);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
 
@@ -1028,13 +1028,8 @@ void device_reset_init(void) {
     rgb_matrix_set_speed(255 - RGB_MATRIX_SPD_STEP * 2);
     rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
 
-    user_config.default_brightness_flag = 0xA5;
-    user_config.ee_side_mode_a          = side_mode_a;
-    user_config.ee_side_mode_b          = side_mode_b;
-    user_config.ee_side_light           = side_light;
-    user_config.ee_side_speed           = side_speed;
-    user_config.ee_side_rgb             = side_rgb;
-    user_config.ee_side_colour          = side_colour;
+    user_config.default_brightness_flag = 0xA6;
+    user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
     user_config.ee_debounce_press_ms    = 5;
     user_config.ee_debounce_release_ms  = 5;
     user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;

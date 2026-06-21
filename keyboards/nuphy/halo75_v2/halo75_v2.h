@@ -199,18 +199,40 @@ typedef struct {
     uint8_t bit7 : 1;
 } m_8bit;
 
-typedef struct {
-    uint8_t default_brightness_flag;
-    uint8_t ee_side_mode_a;
-    uint8_t ee_side_mode_b;
-    uint8_t ee_side_light;
-    uint8_t ee_side_speed;
-    uint8_t ee_side_rgb;
-    uint8_t ee_side_colour;
-    uint8_t ee_debounce_press_ms;
-    uint8_t ee_debounce_release_ms;
-    uint8_t ee_sleep_timeout;     /* minutes, 1-60 */
-    m_8bit  ee_dev_config;
+/* Packed side LED settings in ee_side_led (uint16_t):
+ * bits 0-2:   mode_a (0-4, 5 modes)
+ * bits 3-5:   mode_b (0-6, 7 modes)
+ * bit  6:     rgb (0-1, rainbow vs fixed)
+ * bits 7-9:   colour (0-7, 8 colours)
+ * bits 10-12: light (0-4, 5 brightness levels)
+ * bits 13-15: speed (0-4, 5 speed levels)
+ */
+#define side_led_get_mode_a()  (user_config.ee_side_led & 0x0007)
+#define side_led_get_mode_b()  ((user_config.ee_side_led >> 3) & 0x0007)
+#define side_led_get_rgb()     ((user_config.ee_side_led >> 6) & 0x0001)
+#define side_led_get_colour()  ((user_config.ee_side_led >> 7) & 0x0007)
+#define side_led_get_light()   ((user_config.ee_side_led >> 10) & 0x0007)
+#define side_led_get_speed()   ((user_config.ee_side_led >> 13) & 0x0007)
+
+#define side_led_set_mode_a(v)  (user_config.ee_side_led = (user_config.ee_side_led & ~0x0007) | ((uint16_t)(v) << 0))
+#define side_led_set_mode_b(v)  (user_config.ee_side_led = (user_config.ee_side_led & ~0x0038) | ((uint16_t)(v) << 3))
+#define side_led_set_rgb(v)     (user_config.ee_side_led = (user_config.ee_side_led & ~0x0040) | ((uint16_t)(v) << 6))
+#define side_led_set_colour(v)  (user_config.ee_side_led = (user_config.ee_side_led & ~0x0380) | ((uint16_t)(v) << 7))
+#define side_led_set_light(v)   (user_config.ee_side_led = (user_config.ee_side_led & ~0x1C00) | ((uint16_t)(v) << 10))
+#define side_led_set_speed(v)   (user_config.ee_side_led = (user_config.ee_side_led & ~0xE000) | ((uint16_t)(v) << 13))
+
+#define side_led_pack(ma, mb, rgb, col, light, spd) \
+    ((uint16_t)((ma) & 0x7) | ((uint16_t)((mb) & 0x7) << 3) | \
+     ((uint16_t)((rgb) & 0x1) << 6) | ((uint16_t)((col) & 0x7) << 7) | \
+     ((uint16_t)((light) & 0x7) << 10) | ((uint16_t)((spd) & 0x7) << 13))
+
+typedef struct __attribute__((packed)) {
+    uint8_t  default_brightness_flag;
+    uint16_t ee_side_led;           /* packed side LED settings */
+    uint8_t  ee_debounce_press_ms;
+    uint8_t  ee_debounce_release_ms;
+    uint8_t  ee_sleep_timeout;      /* minutes, 1-60 */
+    m_8bit   ee_dev_config;
 } user_config_t;
 
 extern user_config_t user_config;
