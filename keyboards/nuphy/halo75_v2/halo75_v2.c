@@ -513,6 +513,29 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #endif
 
     no_act_time = 0;
+
+#ifdef RGB_DEBUG
+    /* RGB debug harness: repurpose FN-layer RGB matrix keycodes. */
+    extern void rgb_debug_cycle_program(int8_t dir);
+    extern void rgb_debug_step_value(int8_t dir);
+    switch (keycode) {
+        case RM_NEXT:
+            if (record->event.pressed) rgb_debug_cycle_program(-1);
+            return false;
+        case RM_HUEU:
+            if (record->event.pressed) rgb_debug_cycle_program(1);
+            return false;
+        case RM_SPDD:
+            if (record->event.pressed) rgb_debug_step_value(-1);
+            return false;
+        case RM_SPDU:
+            if (record->event.pressed) rgb_debug_step_value(1);
+            return false;
+        default:
+            break;
+    }
+#endif
+
     switch (keycode) {
         case RF_DFU:
             if (record->event.pressed) {
@@ -819,16 +842,24 @@ void keyboard_post_init_kb(void) {
     rf_link_show_time = 0;
 
 #ifdef CONSOLE_ENABLE
-    debug_enable   = true;
+    debug_enable = true;
+#    ifdef RGB_DEBUG
+    // LED-update logging mode: keep the console on but silence the HID/matrix
+    // event spam so the side/status LED stream is readable.
+    debug_matrix   = false;
+    debug_keyboard = false;
+    dprintf("DBG %s RGB debug console enabled\n", PRODUCT);
+#    else
     debug_matrix   = true;
     debug_keyboard = true;
-#    ifdef MOUSEKEY_ENABLE
+#        ifdef MOUSEKEY_ENABLE
     debug_mouse = true;
-#    endif
+#        endif
     dprintf("DBG %s console enabled\n", PRODUCT);
     dprintf("rows=%d cols=%d diode=%s default_layer=%ld layer_state=%08lX\n",
             MATRIX_ROWS, MATRIX_COLS, DIODE_DIRECTION_STR,
             (uint32_t)default_layer_state, (uint32_t)layer_state);
+#    endif
 #endif
 }
 
@@ -836,6 +867,13 @@ void keyboard_post_init_kb(void) {
    rgb_matrix_indicators_user
  */
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+#ifdef RGB_DEBUG
+    // RGB debug mode: mask all normal effects and side shows, render only
+    // the active debug program (battery simulator or LED stepper).
+    extern void rgb_debug_render(void);
+    rgb_debug_render();
+    return true;
+#else
     if (keymap_config.no_gui) {
         rgb_matrix_set_color(72, 0x00, 0x80, 0x00);
     }
@@ -848,6 +886,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     m_side_led_show();
 
     return true;
+#endif
 }
 
 /**
@@ -941,6 +980,10 @@ static void dev_reset_task(void) {
 void housekeeping_task_kb(void) {
 #ifdef CONSOLE_ENABLE
     debug_matrix_scan();
+#endif
+#ifdef RGB_DEBUG
+    extern void rgb_debug_task(void);
+    rgb_debug_task();
 #endif
     timer_pro();
 

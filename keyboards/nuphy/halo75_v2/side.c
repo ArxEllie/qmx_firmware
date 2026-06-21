@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "halo75_v2.h"
 #include "side.h"
 #include "gpio.h"
+#ifdef RGB_DEBUG
+#    include "print.h"
+#endif
 //------------------------------------------------
 #define SIDE_WAVE 0
 #define SIDE_MIX 1
@@ -55,7 +58,7 @@ const uint8_t side_light_table[5] = {
 };
 
 uint8_t  side_line       = SIDE_LED_COUNT;
-bool     f_charging      = 1;
+bool     f_charging      = 0;
 uint8_t  side_mode_a     = 0;
 uint8_t  side_mode_b     = 3;
 uint8_t  side_light      = 2;
@@ -878,27 +881,26 @@ uint8_t bat_r, bat_g, bat_b;
 void bat_percent_led(uint8_t bat_percent) {
     uint8_t i;
 
+    // Five-segment bar graph: one segment per 20%. The segment colour also
+    // walks red -> orange -> yellow -> green with level, so charge reads two
+    // ways (how many lit + what colour) — robust even when the diffuser
+    // bleeds adjacent segments together.
     if (bat_percent <= 20) {
-        bat_end_led = 1;
-        bat_r       = colour_lib[0][0];
-        bat_g       = colour_lib[0][1];
-        bat_b       = colour_lib[0][2];
-    } else if (bat_percent <= 50) {
-        bat_end_led = 2;
-        bat_r       = colour_lib[1][0];
-        bat_g       = colour_lib[1][1];
-        bat_b       = colour_lib[1][2];
+        bat_r = 0xff; bat_g = 0x00; bat_b = 0x00; // red
+    } else if (bat_percent <= 40) {
+        bat_r = 0xff; bat_g = 0x20; bat_b = 0x00; // orange-red
+    } else if (bat_percent <= 60) {
+        bat_r = 0xff; bat_g = 0x60; bat_b = 0x00; // orange
     } else if (bat_percent <= 80) {
-        bat_end_led = 4;
-        bat_r       = colour_lib[2][0];
-        bat_g       = colour_lib[2][1];
-        bat_b       = colour_lib[2][2];
+        bat_r = 0xff; bat_g = 0xff; bat_b = 0x00; // yellow
     } else {
-        bat_end_led = 5;
-        bat_r       = colour_lib[3][0];
-        bat_g       = colour_lib[3][1];
-        bat_b       = colour_lib[3][2];
+        bat_r = 0x00; bat_g = 0xff; bat_b = 0x00; // green
     }
+    // Lit segment count: 1 at >0%, +1 per 20%, capped at the 5 LEDs.
+    uint8_t bat_segs = (bat_percent + 19) / 20;
+    if (bat_segs < 1) bat_segs = 1;
+    if (bat_segs > 5) bat_segs = 5;
+    bat_end_led = bat_segs - 1;
     if (f_charging) {
         low_bat_blink_cnt = 6;
 #if (CHARGING_SHIFT)
@@ -909,10 +911,13 @@ void bat_percent_led(uint8_t bat_percent) {
     } else if (bat_percent < 10) {
         low_bat_show();
     } else {
-        bat_end_led       = 4;
         low_bat_blink_cnt = 6;
-        for (i = 0; i <= bat_end_led; i++)
-            side_status_led_set(i, bat_r, bat_g, bat_b);
+        for (i = 0; i < 5; i++) {
+            if (i <= bat_end_led)
+                side_status_led_set(i, bat_r, bat_g, bat_b);
+            else
+                side_status_led_set(i, 0, 0, 0);
+        }
     }
 }
 
@@ -928,11 +933,22 @@ void bat_led_show(void) {
     static uint8_t  charge_state     = 0;
     static uint8_t  bat_percent      = 0;
     static bool     f_init           = 1;
+    static uint8_t  prev_rf_state    = 0xff;
 
     if (dev_info.link_mode != LINK_USB) {
         if (rf_link_show_time < RF_LINK_SHOW_TIME) return;
 
-        if (dev_info.rf_state != RF_CONNECT) return;
+        if (dev_info.rf_state != RF_CONNECT) {
+            prev_rf_state = dev_info.rf_state;
+            return;
+        }
+
+        if (prev_rf_state != RF_CONNECT) {
+            f_init        = 1;
+            bat_show_flag = true;
+            f_charging    = false;
+        }
+        prev_rf_state = RF_CONNECT;
     }
 
     if (f_init) {
@@ -1043,6 +1059,114 @@ void rgb_test_show(void) {
     rgb_matrix_update_pwm_buffers();
     wait_ms(1000);
 }
+
+#ifdef RGB_DEBUG
+/**
+ * @brief  Stream side/status LED changes over the console.
+ *
+ * Called every housekeeping loop but short-circuits unless the status LED
+ * buffer or the battery/RF context actually changed — an O(5) compare with
+ * zero output in steady state, so it never floods the console or stalls the
+ * main loop.
+ */
+/* Debug harness state — declared early so rgb_debug_task can read it. */
+#define RGB_DBG_BATTERY 0
+#define RGB_DBG_LEDSTEP 1
+#define RGB_DBG_PROG_COUNT 2
+
+static uint8_t  rgb_dbg_program = RGB_DBG_BATTERY;
+static uint8_t  rgb_dbg_bat     = 100;
+static uint16_t rgb_dbg_led     = 0;
+
+void rgb_debug_task(void) {
+    static rgb_t   last_rgb[5]   = {0};
+    static uint8_t last_dbg_bat  = 0xff;
+    static uint16_t last_dbg_led = 0xffff;
+    static uint8_t last_prog     = 0xff;
+
+    bool changed = false;
+    for (int i = 0; i < 5; i++) {
+        if (side_status_rgb[i].r != last_rgb[i].r || side_status_rgb[i].g != last_rgb[i].g || side_status_rgb[i].b != last_rgb[i].b) {
+            changed = true;
+        }
+    }
+    if (rgb_dbg_program != last_prog || rgb_dbg_bat != last_dbg_bat || rgb_dbg_led != last_dbg_led) {
+        changed = true;
+    }
+    if (!changed) return;
+
+    for (int i = 0; i < 5; i++)
+        last_rgb[i] = side_status_rgb[i];
+    last_prog     = rgb_dbg_program;
+    last_dbg_bat  = rgb_dbg_bat;
+    last_dbg_led  = rgb_dbg_led;
+
+    if (rgb_dbg_program == RGB_DBG_BATTERY) {
+        uprintf("DBG prog=BATTERY sim_bat=%d%% status=[", rgb_dbg_bat);
+    } else {
+        uprintf("DBG prog=LEDSTEP led=%d/%d status=[", rgb_dbg_led, RGB_MATRIX_LED_COUNT - 1);
+    }
+    for (int i = 0; i < 5; i++)
+        uprintf("%02X%02X%02X%s", side_status_rgb[i].r, side_status_rgb[i].g, side_status_rgb[i].b, i < 4 ? " " : "");
+    uprintf("]\n");
+}
+
+/* ---------------------------------------------------------------------------
+ * RGB_DEBUG test harness
+ *
+ * Two interactive test "programs", selected with FN+Left / FN+Right:
+ *   0 BATTERY : simulate the battery display. FN+, / FN+. step the simulated
+ *               percentage in 10%% increments so every segment/colour state
+ *               can be inspected without draining a real battery.
+ *   1 LEDSTEP : light one matrix LED at a time. FN+, / FN+. walk the index
+ *               across all RGB_MATRIX_LED_COUNT LEDs to map the physical
+ *               layout.
+ * All normal effects/side shows are masked while this is active (see
+ * rgb_matrix_indicators_advanced_user).
+ * ------------------------------------------------------------------------- */
+static void rgb_debug_report(void) {
+    if (rgb_dbg_program == RGB_DBG_BATTERY) {
+        uprintf("DBG prog=BATTERY sim_bat=%d%%\n", rgb_dbg_bat);
+    } else {
+        uprintf("DBG prog=LEDSTEP led=%d/%d\n", rgb_dbg_led, RGB_MATRIX_LED_COUNT - 1);
+    }
+}
+
+void rgb_debug_cycle_program(int8_t dir) {
+    rgb_dbg_program = (rgb_dbg_program + RGB_DBG_PROG_COUNT + (dir > 0 ? 1 : -1)) % RGB_DBG_PROG_COUNT;
+    rgb_debug_report();
+}
+
+void rgb_debug_step_value(int8_t dir) {
+    if (rgb_dbg_program == RGB_DBG_BATTERY) {
+        if (dir > 0)
+            rgb_dbg_bat = (rgb_dbg_bat >= 100) ? 100 : rgb_dbg_bat + 10;
+        else
+            rgb_dbg_bat = (rgb_dbg_bat <= 10) ? 0 : rgb_dbg_bat - 10;
+    } else {
+        if (dir > 0)
+            rgb_dbg_led = (rgb_dbg_led + 1) % RGB_MATRIX_LED_COUNT;
+        else
+            rgb_dbg_led = (rgb_dbg_led + RGB_MATRIX_LED_COUNT - 1) % RGB_MATRIX_LED_COUNT;
+    }
+    rgb_debug_report();
+}
+
+void rgb_debug_render(void) {
+    rgb_matrix_set_color_all(0, 0, 0);
+
+    if (rgb_dbg_program == RGB_DBG_BATTERY) {
+        // Force the static bar (not the charging breathe) so the simulated
+        // percentage maps directly onto the segment/colour output.
+        bool save_chg = f_charging;
+        f_charging    = false;
+        bat_percent_led(rgb_dbg_bat);
+        f_charging = save_chg;
+    } else {
+        rgb_matrix_set_color(rgb_dbg_led, 0xff, 0xff, 0xff);
+    }
+}
+#endif
 
 /**
  * @brief  side_led_show.
