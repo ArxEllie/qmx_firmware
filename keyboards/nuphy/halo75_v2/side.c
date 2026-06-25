@@ -1241,6 +1241,16 @@ void rgb_debug_render(void) {
 void m_side_led_show(void) {
     static bool flag_power_on = 1;
 
+    // Throttle the full side LED render (animation + status LEDs) to
+    // ~60 fps.  Must be before side_play_cnt accumulation so we don't
+    // burn cycles on timer reads every call.  side_play_cnt will
+    // capture the full elapsed interval on the next render frame.
+    static uint32_t side_last_refresh = 0;
+    if (timer_elapsed32(side_last_refresh) < SIDE_REFRESH_INTERVAL) {
+        return;
+    }
+    side_last_refresh = timer_read32();
+
     side_play_cnt += timer_elapsed32(side_play_timer);
     side_play_timer = timer_read32();
 
@@ -1248,15 +1258,6 @@ void m_side_led_show(void) {
         if (!kbd_flags.dial_sw_init_ok) return;
         flag_power_on = 0;
     }
-
-    // Throttle the full side LED render (animation + status LEDs) to
-    // ~60 fps.  side_play_cnt is already accumulated above so animation
-    // timing stays accurate even when we skip the render this call.
-    static uint32_t side_last_refresh = 0;
-    if (timer_elapsed32(side_last_refresh) < SIDE_REFRESH_INTERVAL) {
-        return;
-    }
-    side_last_refresh = timer_read32();
 
     if (f_power_show) {
         side_power_mode_show();
