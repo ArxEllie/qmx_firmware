@@ -710,6 +710,9 @@ void uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t re
     if (dev_info.link_mode == LINK_USB) return;
     if (dev_info.rf_state != RF_CONNECT) return;
 
+    /* TXDBuf is UART_MAX_LEN (64) bytes: 4-byte header + payload + 1-byte checksum. */
+    if (report_size + 5 > UART_MAX_LEN) return;
+
     Usart_Mgr.TXDBuf[0] = UART_HEAD;
     Usart_Mgr.TXDBuf[1] = report_type;
     Usart_Mgr.TXDBuf[2] = 0x01;
