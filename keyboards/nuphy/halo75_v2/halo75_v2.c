@@ -867,9 +867,9 @@ void timer_pro(void) {
 }
 
 /**
- * @brief  londing eeprom data.
+ * @brief  loading eeprom data.
  */
-void m_londing_eeprom_data(void) {
+void m_loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config_t));
     if (user_config.default_brightness_flag != 0xA6) {
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
@@ -924,7 +924,7 @@ void keyboard_post_init_kb(void) {
     rf_device_init();
 
     m_break_all_key();
-    m_londing_eeprom_data();
+    m_loading_eeprom_data();
     m_power_on_dial_sw_scan();
     keyboard_post_init_user();
 
