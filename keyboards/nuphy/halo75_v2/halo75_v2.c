@@ -1091,6 +1091,7 @@ enum via_custom_value_id {
     id_deep_sleep_toggle   = 6,
     id_nkro_mode           = 7,
     id_socd_mode           = 8,
+    id_battery_level       = 9,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -1134,6 +1135,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     user_config.ee_socd_mode = (value_data[0] > SOCD_MODE_MAX) ? SOCD_OFF : value_data[0];
                     socd_set_mode(user_config.ee_socd_mode);
                     break;
+                /* id_battery_level is read-only — no set handler. */
                 default:
                     *command_id = id_unhandled;
                     break;
@@ -1165,6 +1167,9 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 case id_socd_mode:
                     value_data[0] = socd_get_mode();
+                    break;
+                case id_battery_level:
+                    value_data[0] = dev_info.rf_baterry;
                     break;
                 default:
                     *command_id = id_unhandled;
