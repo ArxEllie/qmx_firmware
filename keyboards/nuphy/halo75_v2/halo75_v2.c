@@ -875,6 +875,25 @@ void m_loading_eeprom_data(void) {
         side_speed  = side_led_get_speed();
         side_rgb    = side_led_get_rgb();
         side_colour = side_led_get_colour();
+
+        /* Clamp packed EEPROM values to valid lookup-table bounds.
+         * 3-bit fields can hold 0-7, but the tables are smaller.
+         *   mode_a: 0-4 (SIDE_WAVE..SIDE_STATIC)
+         *   mode_b: 0-6 (SIDE_MODE_1..SIDE_MODE_7)
+         *   light:  0-4 (side_light_table[5])
+         *   speed:  0-4 (side_speed_table[5][5])
+         *   colour: 0-7 (colour_lib[9]) */
+        if (side_mode_a > 4) side_mode_a = 0;
+        if (side_mode_b > 6) side_mode_b = 0;
+        if (side_light > 4)  side_light = 2;
+        if (side_speed > 4)  side_speed = 2;
+        if (side_colour > 7) side_colour = 0;
+        side_led_set_mode_a(side_mode_a);
+        side_led_set_mode_b(side_mode_b);
+        side_led_set_light(side_light);
+        side_led_set_speed(side_speed);
+        side_led_set_colour(side_colour);
+
         if (user_config.ee_debounce_press_ms == 0 || user_config.ee_debounce_press_ms > 99)
             user_config.ee_debounce_press_ms = 5;
         if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99)
