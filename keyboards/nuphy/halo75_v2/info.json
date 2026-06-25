@@ -2,7 +2,7 @@
     "keyboard_name": "NuPhy Halo75 V2",
     "manufacturer": "NuPhy",
     "url": "https://www.nuphy.com/",
-    "maintainer": "qmk",
+    "maintainer": "myceliatrix",
     "usb": {
         "vid": "0x19F5",
         "pid": "0x32F5",
