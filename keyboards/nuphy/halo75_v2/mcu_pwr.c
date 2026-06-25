@@ -104,11 +104,13 @@ static void syscfg_exti_config(uint8_t port_source, uint8_t pin_source) {
 
 void enter_deep_sleep(void) {
     /* Tell the RF module we're going to sleep so it doesn't queue
-     * reports that would overflow during STOP. */
+     * reports that would overflow during STOP.  Send directly — the
+     * deferred UART task won't drain before STOP mode. */
     if (dev_info.rf_state == RF_CONNECT) {
-        uart_send_cmd_deferred(CMD_SET_CONFIG, 5);
+        uart_send_cmd(CMD_SET_CONFIG, 0, 0);
+        uart_send_cmd(CMD_SLEEP, 0, 0);
     } else {
-        uart_send_cmd_deferred(CMD_SLEEP, 5);
+        uart_send_cmd(CMD_SLEEP, 0, 0);
     }
 
     /* COL2ROW diode direction: diode anode on column, cathode on row.
