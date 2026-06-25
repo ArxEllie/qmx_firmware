@@ -97,6 +97,9 @@ uint16_t       host_last_consumer_usage(void);
  */
 bool        f_bit_kb_act = 0;
 static void uart_auto_nkey_send(const uint8_t *pre_bit_report, const uint8_t *now_bit_report, uint8_t size) {
+    /* key_code is uint8_t and counts (size-1)*8 bits. Ensure it can't overflow:
+     * max safe size is 32 (31 bytes × 8 = 248 ≤ 255). */
+    _Static_assert(NKRO_REPORT_BITS + 1 <= 32, "NKRO report too large for uint8_t key_code in uart_auto_nkey_send");
     uint8_t i, j, byte_index;
     uint8_t change_mask, offset_mask;
     uint8_t key_code    = 0;
