@@ -6,7 +6,7 @@
 /* ── Shared variables ──────────────────────────────────────────── */
 
 /* Defined in halo75_v2.c */
-extern DEV_INFO_STRUCT dev_info;
+extern dev_info_struct_t dev_info;
 extern host_driver_t  *m_host_driver;
 extern uint8_t         host_mode;
 extern uint16_t        rf_linking_time;

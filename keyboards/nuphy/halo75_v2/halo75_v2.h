@@ -180,7 +180,7 @@ typedef struct {
     uint8_t rf_led;
     uint8_t rf_battery;
     uint8_t sys_sw_state;
-} DEV_INFO_STRUCT;
+} dev_info_struct_t;
 
 /* Consolidated global boolean flags — previously scattered as individual
  * `bool f_xxx` globals.  Grouped here for discoverability and to keep
