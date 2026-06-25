@@ -1102,6 +1102,7 @@ enum via_custom_value_id {
     id_socd_mode           = 8,
     id_battery_level       = 9,
     id_caps_word           = 10,
+    id_win_lock            = 11,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -1164,6 +1165,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                 case id_caps_word:
                     if (value_data[0]) caps_word_on(); else caps_word_off();
                     break;
+                case id_win_lock:
+                    keymap_config.no_gui = value_data[0] ? 1 : 0;
+                    kbd_flags.win_lock   = keymap_config.no_gui;
+                    break;
                 default:
                     *command_id = id_unhandled;
                     break;
@@ -1201,6 +1206,9 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 case id_caps_word:
                     value_data[0] = is_caps_word_on() ? 1 : 0;
+                    break;
+                case id_win_lock:
+                    value_data[0] = keymap_config.no_gui ? 1 : 0;
                     break;
                 default:
                     *command_id = id_unhandled;

@@ -1189,6 +1189,12 @@
               "type": "dropdown",
               "options": [["Off", 0], ["On", 1]],
               "content": ["id_caps_word", 0, 10]
+            },
+            {
+              "label": "Win Lock",
+              "type": "dropdown",
+              "options": [["Off", 0], ["On", 1]],
+              "content": ["id_win_lock", 0, 11]
             }
           ]
         }
