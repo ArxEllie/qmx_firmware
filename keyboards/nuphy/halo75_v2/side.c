@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "halo75_v2.h"
 #include "halo75_v2_internal.h"
 #include "side.h"
+#include "socd.h"
 #include "gpio.h"
 #ifdef RGB_DEBUG
 #    include "print.h"
@@ -1088,6 +1089,8 @@ void device_reset_init(void) {
     set_f_usb_sleep_enable(false);
     set_f_deep_sleep_enable(true);
     set_nkro_mode(NKRO_AUTO);
+    user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
+    socd_set_mode(SOCD_DEFAULT_MODE);
     user_config_mark_dirty();
 }
 
