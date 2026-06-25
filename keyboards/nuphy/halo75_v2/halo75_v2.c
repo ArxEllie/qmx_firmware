@@ -903,8 +903,7 @@ void keyboard_pre_init_kb(void) {
 void keyboard_post_init_kb(void) {
     m_gpio_init();
     rf_uart_init();
-    wait_ms(RF_INIT_DELAY_MS);
-    rf_device_init();
+    rf_device_init_kick();
 
     m_break_all_key();
     m_loading_eeprom_data();

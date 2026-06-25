@@ -50,7 +50,8 @@ void     uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_
 void     uart_receive_pro(void);
 void     uart_send_report_func(void);
 void     dev_sts_sync(void);
-void     rf_device_init(void);
+void     rf_device_init_kick(void);
+bool     rf_init_task(void);
 void     rf_uart_init(void);
 
 /* Defined in sleep.c */

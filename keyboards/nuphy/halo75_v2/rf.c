@@ -39,6 +39,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* RF init retry loop (ms) */
 #define RF_INIT_RETRY_DELAY_MS  5     /* wait between init retries */
 #define RF_INIT_CMD_DELAY_MS    20    /* delayms passed to uart_send_cmd */
+#define RF_INIT_MAX_RETRIES     10    /* max retries per init phase */
+#define RF_INIT_WAIT_MS         (RF_INIT_CMD_DELAY_MS + RF_INIT_RETRY_DELAY_MS)
 
 USART_MGR_STRUCT Usart_Mgr;
 #define RX_SBYTE Usart_Mgr.RXDBuf[0]
@@ -595,6 +597,10 @@ void dev_sts_sync(void) {
     static uint32_t interval_timer  = 0;
     static uint8_t  link_state_temp = RF_DISCONNECT;
 
+    if (rf_init_task()) {
+        return;
+    }
+
     if (rf_reset_task()) {
         return;
     }
@@ -672,7 +678,7 @@ void UART_Send_BatCfg(void) {
     memcpy(&buf[4], battery_acfg_tab, BAT_CFG_LEN);
     buf[4 + BAT_CFG_LEN] = get_checksum(&buf[4], BAT_CFG_LEN);
     UART_Send_Bytes(buf, BAT_CFG_LEN + 5);
-    wait_ms(UART_BATCFG_DELAY_MS);
+    /* Post-send delay is handled by the rf_init_task state machine. */
 }
 
 /**
@@ -803,45 +809,133 @@ void rf_uart_init(void) {
     GPIOB->PUPDR |= (GPIO_PUPDR_PUPDR6_0 | GPIO_PUPDR_PUPDR7_0);
 }
 
-/**
- * @brief RF module initial.
+/* ── Non-blocking RF init state machine ──────────────────────────
+ *
+ * Replaces the former blocking rf_device_init() which used wait_ms +
+ * retry loops (~600 ms total).  The state machine is kicked off by
+ * rf_device_init_kick() from keyboard_post_init_kb and advanced each
+ * call to dev_sts_sync() (which runs every RF_SYNC_INTERVAL_MS).
+ *
+ * uart_receive_pro() is already called every scan from
+ * housekeeping_task_kb, so ack flags (rf_hand_ok, rf_read_data_ok,
+ * rf_sts_sysc_ok) are set asynchronously between state transitions.
+ *
+ * States:
+ *   0 = idle (not started)
+ *   1 = post-UART-init stabilization (RF_INIT_DELAY_MS)
+ *   2 = CMD_HAND        — retry until rf_hand_ok or max retries
+ *   3 = CMD_READ_DATA   — retry until rf_read_data_ok or max retries
+ *   4 = CMD_RF_STS_SYSC — retry until rf_sts_sysc_ok or max retries
+ *   5 = UART_Send_BatCfg + wait UART_BATCFG_DELAY_MS
+ *   6 = CMD_SET_NAME    (fire-and-forget, no ack needed)
+ *   7 = CMD_SET_24G_NAME (fire-and-forget, no ack needed)
+ *   8 = done
  */
-void rf_device_init(void) {
-    uint8_t timeout = 0;
+static uint8_t  rf_init_step    = 0;
+static uint8_t  rf_init_retries = 0;
+static uint32_t rf_init_timer   = 0;
 
-    timeout      = 10;
-    kbd_flags.rf_hand_ok = 0;
-    while (timeout--) {
-        uart_send_cmd(CMD_HAND, 0, RF_INIT_CMD_DELAY_MS);
-        wait_ms(RF_INIT_RETRY_DELAY_MS);
-        uart_receive_pro(); // receive data
-        uart_receive_pro(); // parsing data
-        if (kbd_flags.rf_hand_ok) break;
-    }
-
-    timeout           = 10;
+void rf_device_init_kick(void) {
+    rf_init_step    = 1;
+    rf_init_retries = 0;
+    rf_init_timer   = timer_read32();
+    kbd_flags.rf_hand_ok      = 0;
     kbd_flags.rf_read_data_ok = 0;
-    while (timeout--) {
-        uart_send_cmd(CMD_READ_DATA, 0, RF_INIT_CMD_DELAY_MS);
-        wait_ms(RF_INIT_RETRY_DELAY_MS);
-        uart_receive_pro();
-        uart_receive_pro();
-        if (kbd_flags.rf_read_data_ok) break;
+    kbd_flags.rf_sts_sysc_ok  = 0;
+}
+
+bool rf_init_task(void) {
+    if (rf_init_step == 0 || rf_init_step == 8) {
+        return false;
     }
 
-    timeout          = 10;
-    kbd_flags.rf_sts_sysc_ok = 0;
-    while (timeout--) {
-        uart_send_cmd(CMD_RF_STS_SYSC, 0, RF_INIT_CMD_DELAY_MS);
-        wait_ms(RF_INIT_RETRY_DELAY_MS);
-        uart_receive_pro();
-        uart_receive_pro();
-        if (kbd_flags.rf_sts_sysc_ok) break;
+    switch (rf_init_step) {
+        case 1: /* Post-UART-init stabilization */
+            if (timer_elapsed32(rf_init_timer) >= RF_INIT_DELAY_MS) {
+                rf_init_step    = 2;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+            }
+            break;
+
+        case 2: /* CMD_HAND */
+            if (rf_init_retries == 0 || timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
+                uart_send_cmd(CMD_HAND, 0, 0);
+                rf_init_timer   = timer_read32();
+                rf_init_retries++;
+            }
+            if (kbd_flags.rf_hand_ok) {
+                rf_init_step    = 3;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+                kbd_flags.rf_read_data_ok = 0;
+            } else if (rf_init_retries > RF_INIT_MAX_RETRIES) {
+                rf_init_step    = 3;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+                kbd_flags.rf_read_data_ok = 0;
+            }
+            break;
+
+        case 3: /* CMD_READ_DATA */
+            if (rf_init_retries == 0 || timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
+                uart_send_cmd(CMD_READ_DATA, 0, 0);
+                rf_init_timer   = timer_read32();
+                rf_init_retries++;
+            }
+            if (kbd_flags.rf_read_data_ok) {
+                rf_init_step    = 4;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+                kbd_flags.rf_sts_sysc_ok = 0;
+            } else if (rf_init_retries > RF_INIT_MAX_RETRIES) {
+                rf_init_step    = 4;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+                kbd_flags.rf_sts_sysc_ok = 0;
+            }
+            break;
+
+        case 4: /* CMD_RF_STS_SYSC */
+            if (rf_init_retries == 0 || timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
+                uart_send_cmd(CMD_RF_STS_SYSC, 0, 0);
+                rf_init_timer   = timer_read32();
+                rf_init_retries++;
+            }
+            if (kbd_flags.rf_sts_sysc_ok || rf_init_retries > RF_INIT_MAX_RETRIES) {
+                rf_init_step    = 5;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+            }
+            break;
+
+        case 5: /* Battery config + delay */
+            if (rf_init_retries == 0) {
+                UART_Send_BatCfg();
+                rf_init_retries = 1;
+                rf_init_timer   = timer_read32();
+            } else if (timer_elapsed32(rf_init_timer) >= UART_BATCFG_DELAY_MS) {
+                rf_init_step    = 6;
+                rf_init_retries = 0;
+                rf_init_timer   = timer_read32();
+            }
+            break;
+
+        case 6: /* CMD_SET_NAME */
+            if (timer_elapsed32(rf_init_timer) >= RF_INIT_CMD_DELAY_MS) {
+                uart_send_cmd(CMD_SET_NAME, 10, 0);
+                rf_init_step    = 7;
+                rf_init_timer   = timer_read32();
+            }
+            break;
+
+        case 7: /* CMD_SET_24G_NAME */
+            if (timer_elapsed32(rf_init_timer) >= RF_INIT_CMD_DELAY_MS) {
+                uart_send_cmd(CMD_SET_24G_NAME, 10, 0);
+                rf_init_step    = 8;
+            }
+            break;
     }
 
-    UART_Send_BatCfg();
-
-    uart_send_cmd(CMD_SET_NAME, 10, RF_INIT_CMD_DELAY_MS);
-
-    uart_send_cmd(CMD_SET_24G_NAME, 10, RF_INIT_CMD_DELAY_MS);
+    return true;
 }
