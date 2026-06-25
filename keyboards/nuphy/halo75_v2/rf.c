@@ -735,11 +735,15 @@ void uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t re
  * @brief Uart receives data and processes it after completion,.
  */
 void uart_receive_pro(void) {
-    static bool rcv_start = false;
+    static bool     rcv_start    = false;
+    static uint16_t last_rx_time = 0;
 
-    // Receiving serial data from RF module
+    /* Receiving serial data from RF module.
+     * Drain the hardware FIFO without blocking; a 200µs inter-byte gap
+     * (checked non-blockingly below) signals end-of-frame. */
     while (uart_available()) {
-        rcv_start = true;
+        rcv_start    = true;
+        last_rx_time = timer_read();
 
         if (Usart_Mgr.RXDLen >= UART_MAX_LEN) {
             uart_read();
@@ -748,14 +752,12 @@ void uart_receive_pro(void) {
         } else {
             Usart_Mgr.RXDBuf[Usart_Mgr.RXDLen++] = uart_read();
         }
-
-        if (!uart_available()) {
-            wait_us(200);
-        }
     }
 
-    // Processing received serial port protocol
-    if (rcv_start) {
+    /* Process the frame only after 200µs with no new data — confirms
+     * the frame is complete. Non-blocking: if the gap hasn't elapsed
+     * yet, we return and retry on the next housekeeping tick. */
+    if (rcv_start && timer_elapsed(last_rx_time) >= 200) {
         rcv_start          = false;
         Usart_Mgr.RXDState = RX_Done;
         RF_Protocol_Receive();
