@@ -35,6 +35,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define MATRIX_DEBOUNCE 10
 #endif
 
+/* Max settle-loop iterations per row before giving up.  Each iteration is
+ * ~2 port reads + a branch (~12 cycles on Cortex-M0 @ 48 MHz ≈ 0.25 µs).
+ * Worst case: 6 rows × 1000 iters × 0.25 µs ≈ 1.5 ms — a hard ceiling on
+ * how long a single matrix_scan_custom() call can block. */
+#define MATRIX_SETTLE_MAX_ITERS 1000
+
 /* matrix state(1:on, 0:off) */
 extern matrix_row_t raw_matrix[MATRIX_ROWS]; // raw values
 extern matrix_row_t matrix[MATRIX_ROWS];     // debounced values
@@ -91,7 +97,7 @@ uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
         uint8_t stable_threshold = MATRIX_DEBOUNCE;
         uint16_t settle_iters = 0;
         while (stable_threshold > 0) {
-            if (++settle_iters > 1000) break;
+            if (++settle_iters > MATRIX_SETTLE_MAX_ITERS) break;
             stable_threshold = ((((palReadPort(PAL_PORT(A0)) & colA_bits) ^ colA_bits) | ((palReadPort(PAL_PORT(B0)) & colB_bits) ^ colB_bits)) == 0) ? (stable_threshold - 1) : MATRIX_DEBOUNCE;
         }
 
