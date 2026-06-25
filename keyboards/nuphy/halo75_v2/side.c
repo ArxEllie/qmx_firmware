@@ -147,7 +147,7 @@ static bool     bat_show_flag   = true;
 static uint16_t side_play_cnt   = 0;
 static uint32_t side_play_timer = 0;
 
-uint8_t r_temp, g_temp, b_temp;
+static uint8_t r_temp, g_temp, b_temp;
 
 /**
  * @brief suspend_power_down_kb
