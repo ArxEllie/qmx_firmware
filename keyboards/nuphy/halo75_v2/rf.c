@@ -859,7 +859,7 @@ bool rf_init_task(void) {
             break;
 
         case 2: /* CMD_HAND */
-            if (rf_init_retries == 0 || timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
+            if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
                 uart_send_cmd(CMD_HAND, 0, 0);
                 rf_init_timer   = timer_read32();
                 rf_init_retries++;
@@ -878,7 +878,7 @@ bool rf_init_task(void) {
             break;
 
         case 3: /* CMD_READ_DATA */
-            if (rf_init_retries == 0 || timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
+            if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
                 uart_send_cmd(CMD_READ_DATA, 0, 0);
                 rf_init_timer   = timer_read32();
                 rf_init_retries++;
@@ -897,7 +897,7 @@ bool rf_init_task(void) {
             break;
 
         case 4: /* CMD_RF_STS_SYSC */
-            if (rf_init_retries == 0 || timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
+            if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
                 uart_send_cmd(CMD_RF_STS_SYSC, 0, 0);
                 rf_init_timer   = timer_read32();
                 rf_init_retries++;
