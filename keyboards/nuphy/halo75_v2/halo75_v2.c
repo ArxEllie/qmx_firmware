@@ -99,28 +99,9 @@ uint16_t       rf_sw_press_delay     = 0;
 uint8_t        rf_sw_temp            = 0;
 uint8_t        host_mode;
 
-bool f_uart_ack        = 0;
-bool f_bat_show        = 0;
-bool f_bat_hold        = 0;
-bool f_chg_show        = 1;
-bool f_sys_show        = 0;
-bool f_sleep_show      = 0;
-bool f_usb_offline     = 0;
-bool f_rf_read_data_ok = 0;
-bool f_rf_sts_sysc_ok  = 0;
-bool f_rf_new_adv_ok   = 0;
-bool f_rf_reset        = 0;
-bool f_send_channel    = 0;
-bool f_rf_hand_ok      = 0;
-bool f_rf_send_bitkb   = 0;
-bool f_rf_send_byte    = 0;
-bool f_rf_send_consume = 0;
-bool f_wakeup_prepare  = 0;
-bool f_dial_sw_init_ok = 0;
-bool f_goto_sleep      = 0;
-bool f_rf_sw_press     = 0;
-bool f_dev_reset_press = 0;
-bool f_win_lock        = 0;
+keyboard_flags_t kbd_flags = {
+    .chg_show = true,
+};
 
 /* EEPROM write batching: mark dirty on settings changes, flush after
  * 500ms of no further changes to avoid rapid repeated flash writes. */
@@ -228,7 +209,7 @@ void long_press_key(void) {
     long_press_timer = timer_read32();
 
     if (new_adv_retry) {
-        if (f_rf_new_adv_ok) {
+        if (kbd_flags.rf_new_adv_ok) {
             new_adv_retry = 0;
         } else {
             uart_send_cmd_deferred(CMD_NEW_ADV, 1);
@@ -236,24 +217,24 @@ void long_press_key(void) {
         }
     }
 
-    if (f_rf_sw_press) {
+    if (kbd_flags.rf_sw_press) {
         rf_sw_press_delay++;
         if (rf_sw_press_delay >= RF_LONG_PRESS_DELAY) {
-            f_rf_sw_press        = 0;
+            kbd_flags.rf_sw_press   = 0;
             dev_info.link_mode   = rf_sw_temp;
             dev_info.rf_channel  = rf_sw_temp;
             dev_info.ble_channel = rf_sw_temp;
-            f_rf_new_adv_ok      = 0;
+            kbd_flags.rf_new_adv_ok  = 0;
             new_adv_retry        = 5;
         }
     } else {
         rf_sw_press_delay = 0;
     }
 
-    if (f_dev_reset_press && dev_reset_state == RESET_IDLE) {
+    if (kbd_flags.dev_reset_press && dev_reset_state == RESET_IDLE) {
         dev_reset_press_delay++;
         if (dev_reset_press_delay >= DEV_RESET_PRESS_DELAY) {
-            f_dev_reset_press = 0;
+            kbd_flags.dev_reset_press = 0;
 
             /* Set link-mode defaults synchronously — just variable writes. */
             if (dev_info.link_mode != LINK_USB) {
@@ -318,7 +299,7 @@ static void switch_dev_link(uint8_t mode) {
 
     dev_info.link_mode = mode;
     dev_info.rf_state  = RF_IDLE;
-    f_send_channel     = 1;
+    kbd_flags.send_channel  = 1;
 
     if (mode == LINK_USB) {
         host_mode = HOST_USB_TYPE;
@@ -360,7 +341,7 @@ void dial_sw_scan(void) {
         no_act_time       = 0;
         rf_linking_time   = 0;
         debounce          = DIAL_DEBOUNCE_COUNT;
-        f_dial_sw_init_ok = 0;
+        kbd_flags.dial_sw_init_ok = 0;
         return;
     } else {
         dial_change_cnt = 0;
@@ -382,27 +363,27 @@ void dial_sw_scan(void) {
 
     if (dial_scan & 0x02) {
         if (dev_info.sys_sw_state != SYS_SW_WIN) {
-            f_sys_show = 1;
+            kbd_flags.sys_show = 1;
             default_layer_set(1 << 2);
             dev_info.sys_sw_state = SYS_SW_WIN;
-            keymap_config.no_gui  = f_win_lock;
+            keymap_config.no_gui  = kbd_flags.win_lock;
             m_break_all_key();
         }
         keymap_config.nkro = 1;
     } else {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
-            f_sys_show = 1;
+            kbd_flags.sys_show = 1;
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
-            f_win_lock            = keymap_config.no_gui;
+            kbd_flags.win_lock      = keymap_config.no_gui;
             m_break_all_key();
         }
         keymap_config.nkro   = 0;
         keymap_config.no_gui = 0;
     }
 
-    if (f_dial_sw_init_ok == 0) {
-        f_dial_sw_init_ok = 1;
+    if (kbd_flags.dial_sw_init_ok == 0) {
+        kbd_flags.dial_sw_init_ok = 1;
         flag_power_on     = 0;
 
         if (dev_info.link_mode != LINK_USB) {
@@ -423,7 +404,7 @@ void m_power_on_dial_sw_scan(void) {
     uint8_t dial_check_sys = 0;
     uint8_t debounce       = 0;
 
-    f_win_lock = 0;
+    kbd_flags.win_lock = 0;
 
     gpio_set_pin_input_high(DEV_MODE_PIN);
     gpio_set_pin_input_high(SYS_MODE_PIN);
@@ -468,7 +449,7 @@ void m_power_on_dial_sw_scan(void) {
             default_layer_set(1 << 0); // MAC
             dev_info.sys_sw_state = SYS_SW_MAC;
             keymap_config.nkro    = 0;
-            f_win_lock            = keymap_config.no_gui;
+            kbd_flags.win_lock      = keymap_config.no_gui;
             keymap_config.no_gui  = 0;
             m_break_all_key();
         }
@@ -521,11 +502,11 @@ static bool handle_wireless_link(uint8_t link_target, keyrecord_t *record) {
     if (record->event.pressed) {
         if (dev_info.link_mode != LINK_USB) {
             rf_sw_temp    = link_target;
-            f_rf_sw_press = 1;
+            kbd_flags.rf_sw_press = 1;
             m_break_all_key();
         }
-    } else if (f_rf_sw_press) {
-        f_rf_sw_press = 0;
+    } else if (kbd_flags.rf_sw_press) {
+        kbd_flags.rf_sw_press = 0;
         if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
             dev_info.link_mode   = rf_sw_temp;
             dev_info.rf_channel  = rf_sw_temp;
@@ -720,10 +701,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         /* ── Device reset ────────────────────────────────────────── */
         case DEV_RESET:
             if (record->event.pressed) {
-                f_dev_reset_press = 1;
+                kbd_flags.dev_reset_press = 1;
                 m_break_all_key();
             } else {
-                f_dev_reset_press = 0;
+                kbd_flags.dev_reset_press = 0;
             }
             return false;
 
@@ -734,14 +715,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     set_f_dev_sleep_enable(false);
                 else
                     set_f_dev_sleep_enable(true);
-                f_sleep_show = 1;
+                kbd_flags.sleep_show = 1;
                 user_config_mark_dirty();
             }
             return false;
 
         case BAT_SHOW:
             if (record->event.pressed) {
-                f_bat_hold = !f_bat_hold;
+                kbd_flags.bat_hold = !kbd_flags.bat_hold;
             }
             return false;
 
@@ -1050,7 +1031,7 @@ static void dev_reset_task(void) {
             device_reset_init();
 
             keymap_config.no_gui = 0;
-            f_win_lock           = 0;
+            kbd_flags.win_lock        = 0;
 
             if (dev_info.sys_sw_state == SYS_SW_MAC) {
                 default_layer_set(1 << 0); // MAC
