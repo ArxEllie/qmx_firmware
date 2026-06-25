@@ -224,29 +224,6 @@ typedef struct {
 
 extern keyboard_flags_t kbd_flags;
 
-#define DELAY_2MS 2
-#define DELAY_4MS 4
-#define DELAY_5MS 5
-#define DELAY_6MS 6
-#define DELAY_8MS 8
-#define DELAY_10MS 10
-#define DELAY_15MS 15
-#define DELAY_20MS 20
-#define DELAY_30MS 30
-#define DELAY_40MS 40
-#define DELAY_50MS 50
-#define DELAY_100MS 100
-#define DELAY_200MS 200
-#define DELAY_300MS 300
-#define DELAY_400MS 400
-#define DELAY_500MS 500
-#define DELAY_800MS 800
-#define DELAY_1SEC 1000
-#define DELAY_2SEC 2000
-#define DELAY_3SEC 3000
-#define DELAY_4SEC 4000
-#define DELAY_5SEC 5000
-
 #define SYS_SW_WIN 0xa1
 #define SYS_SW_MAC 0xa2
 
