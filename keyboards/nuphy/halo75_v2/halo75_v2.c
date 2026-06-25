@@ -83,7 +83,7 @@ static void debug_matrix_scan(void) {
 #endif /* CONSOLE_ENABLE */
 
 user_config_t   user_config;
-DEV_INFO_STRUCT dev_info = {
+dev_info_struct_t dev_info = {
     .rf_battery = 100,
     .link_mode  = LINK_USB,
     .rf_state   = RF_IDLE,
