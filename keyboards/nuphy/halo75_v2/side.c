@@ -1019,7 +1019,7 @@ void bat_led_show(void) {
         f_init        = 0;
         bat_show_time = timer_read32();
         charge_state  = dev_info.rf_charge;
-        bat_percent   = dev_info.rf_baterry;
+        bat_percent   = dev_info.rf_battery;
     }
 
     if (charge_state != dev_info.rf_charge) {
@@ -1050,9 +1050,9 @@ void bat_led_show(void) {
         }
     }
 
-    if (bat_percent != dev_info.rf_baterry) {
+    if (bat_percent != dev_info.rf_battery) {
         if (timer_elapsed32(bat_per_debounce) > BAT_DEBOUNCE_MS) {
-            bat_percent = dev_info.rf_baterry;
+            bat_percent = dev_info.rf_battery;
         }
     } else {
         bat_per_debounce = timer_read32();

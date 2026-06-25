@@ -84,7 +84,7 @@ static void debug_matrix_scan(void) {
 
 user_config_t   user_config;
 DEV_INFO_STRUCT dev_info = {
-    .rf_baterry = 100,
+    .rf_battery = 100,
     .link_mode  = LINK_USB,
     .rf_state   = RF_IDLE,
 };
@@ -1184,7 +1184,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     value_data[0] = socd_get_mode();
                     break;
                 case id_battery_level:
-                    value_data[0] = dev_info.rf_baterry;
+                    value_data[0] = dev_info.rf_battery;
                     break;
                 default:
                     *command_id = id_unhandled;
