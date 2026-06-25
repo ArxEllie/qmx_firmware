@@ -748,9 +748,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SLEEP_MODE:
             if (record->event.pressed) {
                 if (f_dev_sleep_enable)
-                    f_dev_sleep_enable = false;
+                    set_f_dev_sleep_enable(false);
                 else
-                    f_dev_sleep_enable = true;
+                    set_f_dev_sleep_enable(true);
                 f_sleep_show = 1;
                 eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
             }
@@ -802,14 +802,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case USB_SLEEP_TOGGLE:
             if (record->event.pressed) {
-                f_usb_sleep_enable = !f_usb_sleep_enable;
+                set_f_usb_sleep_enable(!f_usb_sleep_enable);
                 eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
             }
             return false;
 
         case DEEP_SLEEP_TOGGLE:
             if (record->event.pressed) {
-                f_deep_sleep_enable = !f_deep_sleep_enable;
+                set_f_deep_sleep_enable(!f_deep_sleep_enable);
                 eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
             }
             return false;
@@ -878,9 +878,9 @@ void m_londing_eeprom_data(void) {
         user_config.ee_debounce_press_ms    = 5;
         user_config.ee_debounce_release_ms  = 5;
         user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
-        f_dev_sleep_enable                  = true;
-        f_usb_sleep_enable                  = false;
-        f_deep_sleep_enable                 = true;
+        set_f_dev_sleep_enable(true);
+        set_f_usb_sleep_enable(false);
+        set_f_deep_sleep_enable(true);
         set_nkro_mode(NKRO_AUTO);
         user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
         socd_set_mode(user_config.ee_socd_mode);
@@ -1134,13 +1134,13 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     user_config.ee_sleep_timeout = value_data[0];
                     break;
                 case id_sleep_toggle:
-                    f_dev_sleep_enable = value_data[0] ? 1 : 0;
+                    set_f_dev_sleep_enable(value_data[0]);
                     break;
                 case id_usb_sleep_toggle:
-                    f_usb_sleep_enable = value_data[0] ? 1 : 0;
+                    set_f_usb_sleep_enable(value_data[0]);
                     break;
                 case id_deep_sleep_toggle:
-                    f_deep_sleep_enable = value_data[0] ? 1 : 0;
+                    set_f_deep_sleep_enable(value_data[0]);
                     break;
                 case id_nkro_mode:
                     set_nkro_mode(value_data[0] > NKRO_OFF ? NKRO_AUTO : value_data[0]);

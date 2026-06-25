@@ -188,17 +188,6 @@ typedef struct {
 /* TIMER_STEP is 50ms (Sleep_Handle runs every 50ms). */
 #define SLEEP_TIMEOUT_TO_TICKS(min) ((uint32_t)(min) * 60 * 1000 / 50)
 
-typedef struct {
-    uint8_t bit0 : 1;
-    uint8_t bit1 : 1;
-    uint8_t bit2 : 1;
-    uint8_t bit3 : 1;
-    uint8_t bit4 : 1;
-    uint8_t bit5 : 1;
-    uint8_t bit6 : 1;
-    uint8_t bit7 : 1;
-} m_8bit;
-
 /* Packed side LED settings in ee_side_led (uint16_t):
  * bits 0-2:   mode_a (0-4, 5 modes)
  * bits 3-5:   mode_b (0-6, 7 modes)
@@ -232,16 +221,24 @@ typedef struct __attribute__((packed)) {
     uint8_t  ee_debounce_press_ms;
     uint8_t  ee_debounce_release_ms;
     uint8_t  ee_sleep_timeout;      /* minutes, 1-60 */
-    m_8bit   ee_dev_config;
+    uint8_t  ee_dev_config;       /* bitfield: sleep/usb/deep sleep flags + NKRO mode */
     uint8_t  ee_socd_mode;          /* SOCD resolution mode (0=off, 1=neutral, 2=last-wins, 3=first-wins) */
 } user_config_t;
 
 extern user_config_t user_config;
-#define f_dev_sleep_enable   user_config.ee_dev_config.bit0
-#define f_usb_sleep_enable   user_config.ee_dev_config.bit1
-#define f_deep_sleep_enable  user_config.ee_dev_config.bit2
-#define ee_nkro_mode         user_config.ee_dev_config.bit4
-#define ee_nkro_mode_hi      user_config.ee_dev_config.bit5
+
+/* ee_dev_config bit layout:
+ *   bit 0: f_dev_sleep_enable
+ *   bit 1: f_usb_sleep_enable
+ *   bit 2: f_deep_sleep_enable
+ *   bits 4-5: NKRO override mode (0=Auto, 1=On, 2=Off) */
+#define f_dev_sleep_enable    (user_config.ee_dev_config & 0x01)
+#define f_usb_sleep_enable    (user_config.ee_dev_config & 0x02)
+#define f_deep_sleep_enable   (user_config.ee_dev_config & 0x04)
+
+#define set_f_dev_sleep_enable(v)  do { if (v) user_config.ee_dev_config |= 0x01; else user_config.ee_dev_config &= ~0x01; } while (0)
+#define set_f_usb_sleep_enable(v)  do { if (v) user_config.ee_dev_config |= 0x02; else user_config.ee_dev_config &= ~0x02; } while (0)
+#define set_f_deep_sleep_enable(v) do { if (v) user_config.ee_dev_config |= 0x04; else user_config.ee_dev_config &= ~0x04; } while (0)
 
 /* NKRO override modes: 0=Auto (follow OS switch), 1=On, 2=Off */
 enum nkro_mode {
@@ -249,8 +246,8 @@ enum nkro_mode {
     NKRO_ON   = 1,
     NKRO_OFF  = 2,
 };
-#define get_nkro_mode()  ((uint8_t)(ee_nkro_mode) | ((uint8_t)(ee_nkro_mode_hi) << 1))
-#define set_nkro_mode(m) do { ee_nkro_mode = ((m) & 1); ee_nkro_mode_hi = (((m) >> 1) & 1); } while(0)
+#define get_nkro_mode()  ((uint8_t)((user_config.ee_dev_config >> 4) & 0x03))
+#define set_nkro_mode(m) do { user_config.ee_dev_config = (user_config.ee_dev_config & ~0x30) | (((uint8_t)(m) & 0x03) << 4); } while (0)
 
 /* Shared side LED constants */
 #define SIDE_INDEX 83

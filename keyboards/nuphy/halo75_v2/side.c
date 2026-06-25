@@ -1089,9 +1089,9 @@ void device_reset_init(void) {
     user_config.ee_debounce_press_ms    = 5;
     user_config.ee_debounce_release_ms  = 5;
     user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
-    f_dev_sleep_enable                  = true;
-    f_usb_sleep_enable                  = false;
-    f_deep_sleep_enable                 = true;
+    set_f_dev_sleep_enable(true);
+    set_f_usb_sleep_enable(false);
+    set_f_deep_sleep_enable(true);
     set_nkro_mode(NKRO_AUTO);
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
 }
