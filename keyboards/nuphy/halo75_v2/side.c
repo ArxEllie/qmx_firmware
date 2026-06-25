@@ -338,10 +338,9 @@ void set_all_side_off(void) {
 void sys_sw_led_show(void) {
     static uint32_t sys_show_timer = 0;
     static bool     sys_show_flag  = false;
-    extern bool     f_sys_show;
 
-    if (f_sys_show) {
-        f_sys_show     = false;
+    if (kbd_flags.sys_show) {
+        kbd_flags.sys_show     = false;
         sys_show_timer = timer_read32(); // store time of last refresh
         sys_show_flag  = true;
     }
@@ -373,10 +372,9 @@ void sys_sw_led_show(void) {
 void sleep_sw_led_show(void) {
     static uint32_t sleep_show_timer = 0;
     static bool     sleep_show_flag  = false;
-    extern bool     f_sleep_show;
 
-    if (f_sleep_show) {
-        f_sleep_show     = false;
+    if (kbd_flags.sleep_show) {
+        kbd_flags.sleep_show     = false;
         sleep_show_timer = timer_read32(); // store time of last refresh
         sleep_show_flag  = true;
     }
@@ -1074,7 +1072,7 @@ void bat_led_show(void) {
         } else
             low_bat_flag = 0;
     }
-    if (f_bat_hold || bat_show_flag) {
+    if (kbd_flags.bat_hold || bat_show_flag) {
         bat_percent_led(bat_percent);
     }
 }
@@ -1091,14 +1089,14 @@ void device_reset_init(void) {
     side_play_cnt   = 0;
     side_play_timer = timer_read32();
 
-    f_bat_hold = false;
+    kbd_flags.bat_hold = false;
 
     rgb_matrix_enable();
     rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
     rgb_matrix_set_speed(255 - RGB_MATRIX_SPD_STEP * 2);
     rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
 
-    user_config.default_brightness_flag = 0xA6;
+    user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
     user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
     user_config.ee_debounce_press_ms    = 5;
     user_config.ee_debounce_release_ms  = 5;
@@ -1248,7 +1246,7 @@ void m_side_led_show(void) {
     side_play_timer = timer_read32();
 
     if (flag_power_on) {
-        if (!f_dial_sw_init_ok) return;
+        if (!kbd_flags.dial_sw_init_ok) return;
         flag_power_on = 0;
     }
 

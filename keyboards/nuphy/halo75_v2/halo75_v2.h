@@ -182,6 +182,48 @@ typedef struct {
     uint8_t sys_sw_state;
 } DEV_INFO_STRUCT;
 
+/* Consolidated global boolean flags — previously scattered as individual
+ * `bool f_xxx` globals.  Grouped here for discoverability and to keep
+ * the .bss footprint tight.  Field names drop the legacy `f_` prefix;
+ * access via `kbd_flags.xxx`. */
+typedef struct {
+    /* UART / RF protocol state */
+    bool uart_ack;
+    bool rf_hand_ok;
+    bool rf_read_data_ok;
+    bool rf_sts_sysc_ok;
+    bool rf_new_adv_ok;
+    bool rf_reset;
+    bool send_channel;
+
+    /* RF report dispatch */
+    bool rf_send_bitkb;
+    bool rf_send_byte;
+    bool rf_send_consume;
+
+    /* Power / sleep */
+    bool goto_sleep;
+    bool wakeup_prepare;
+    bool usb_offline;
+
+    /* Dial switch */
+    bool dial_sw_init_ok;
+
+    /* User interaction */
+    bool rf_sw_press;
+    bool dev_reset_press;
+    bool win_lock;
+
+    /* LED / display indicators */
+    bool bat_show;
+    bool bat_hold;
+    bool chg_show;
+    bool sys_show;
+    bool sleep_show;
+} keyboard_flags_t;
+
+extern keyboard_flags_t kbd_flags;
+
 #define DELAY_2MS 2
 #define DELAY_4MS 4
 #define DELAY_5MS 5

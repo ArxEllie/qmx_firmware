@@ -241,7 +241,7 @@ void RF_Protocol_Receive(void) {
     /* --- 3-byte bare ACK: no payload, no command handler to run. --- */
     if (Usart_Mgr.RXDLen == 3) {
         if (Usart_Mgr.RXDBuf[2] != 0xA0) goto reset_rx;
-        f_uart_ack = 1;
+        kbd_flags.uart_ack = 1;
         sync_lost  = 0;
         goto reset_rx;
     }
@@ -277,22 +277,22 @@ void RF_Protocol_Receive(void) {
     }
 
     /* --- Frame fully validated: safe to commit ACK/sync state. --- */
-    f_uart_ack = 1;
+    kbd_flags.uart_ack = 1;
     sync_lost  = 0;
 
     switch (RX_CMD) {
         case CMD_HAND: {
-            f_rf_hand_ok = 1;
+            kbd_flags.rf_hand_ok = 1;
             break;
         }
 
         case CMD_24G_SUSPEND: {
-            f_goto_sleep = 1;
+            kbd_flags.goto_sleep = 1;
             break;
         }
 
         case CMD_NEW_ADV: {
-            f_rf_new_adv_ok = 1;
+            kbd_flags.rf_new_adv_ok = 1;
             break;
         }
 
@@ -318,14 +318,14 @@ void RF_Protocol_Receive(void) {
                 if (dev_info.rf_state != RF_INVALID) {
                     if (error_cnt >= 5) {
                         error_cnt      = 0;
-                        f_send_channel = 1;
+                        kbd_flags.send_channel = 1;
                     } else {
                         error_cnt++;
                     }
                 }
             }
 
-            f_rf_sts_sysc_ok = 1;
+            kbd_flags.rf_sts_sysc_ok = 1;
             break;
         }
 
@@ -344,7 +344,7 @@ void RF_Protocol_Receive(void) {
                 dev_info.ble_channel = func_tab[6];
             }
 
-            f_rf_read_data_ok = 1;
+            kbd_flags.rf_read_data_ok = 1;
             break;
         }
     }
@@ -420,7 +420,7 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
 
             rf_linking_time  = 0;
             disconnect_delay = 0xff;
-            f_rf_new_adv_ok  = 0;
+            kbd_flags.rf_new_adv_ok  = 0;
             break;
         }
 
@@ -510,7 +510,7 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
             break;
     }
 
-    f_uart_ack = 0;
+    kbd_flags.uart_ack = 0;
     UART_Send_Bytes(Usart_Mgr.TXDBuf, Usart_Mgr.TXDBuf[3] + 5);
 
     return TX_OK;
@@ -563,8 +563,8 @@ static bool rf_reset_task(void) {
     static uint8_t  reset_step  = 0;
     static uint32_t reset_timer = 0;
 
-    if (f_rf_reset && reset_step == 0) {
-        f_rf_reset  = 0;
+    if (kbd_flags.rf_reset && reset_step == 0) {
+        kbd_flags.rf_reset  = 0;
         reset_step  = 1;
         reset_timer = timer_read32();
     }
@@ -604,8 +604,8 @@ void dev_sts_sync(void) {
     else
         interval_timer = timer_read32();
 
-    if (f_send_channel) {
-        f_send_channel = 0;
+    if (kbd_flags.send_channel) {
+        kbd_flags.send_channel = 0;
         uart_send_cmd_deferred(CMD_SET_LINK, 10);
     }
 
@@ -651,7 +651,7 @@ void dev_sts_sync(void) {
     if (dev_info.link_mode != LINK_USB) {
         if (++sync_lost >= 5) {
             sync_lost  = 0;
-            f_rf_reset = 1;
+            kbd_flags.rf_reset = 1;
         }
     }
 }
@@ -728,7 +728,7 @@ uint8_t get_checksum(const uint8_t *buf, uint8_t len) {
  * @param report_size  report_size
  */
 void uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size) {
-    if (f_dial_sw_init_ok == 0) return;
+    if (kbd_flags.dial_sw_init_ok == 0) return;
     if (dev_info.link_mode == LINK_USB) return;
     if (dev_info.rf_state != RF_CONNECT) return;
 
@@ -810,33 +810,33 @@ void rf_device_init(void) {
     uint8_t timeout = 0;
 
     timeout      = 10;
-    f_rf_hand_ok = 0;
+    kbd_flags.rf_hand_ok = 0;
     while (timeout--) {
         uart_send_cmd(CMD_HAND, 0, RF_INIT_CMD_DELAY_MS);
         wait_ms(RF_INIT_RETRY_DELAY_MS);
         uart_receive_pro(); // receive data
         uart_receive_pro(); // parsing data
-        if (f_rf_hand_ok) break;
+        if (kbd_flags.rf_hand_ok) break;
     }
 
     timeout           = 10;
-    f_rf_read_data_ok = 0;
+    kbd_flags.rf_read_data_ok = 0;
     while (timeout--) {
         uart_send_cmd(CMD_READ_DATA, 0, RF_INIT_CMD_DELAY_MS);
         wait_ms(RF_INIT_RETRY_DELAY_MS);
         uart_receive_pro();
         uart_receive_pro();
-        if (f_rf_read_data_ok) break;
+        if (kbd_flags.rf_read_data_ok) break;
     }
 
     timeout          = 10;
-    f_rf_sts_sysc_ok = 0;
+    kbd_flags.rf_sts_sysc_ok = 0;
     while (timeout--) {
         uart_send_cmd(CMD_RF_STS_SYSC, 0, RF_INIT_CMD_DELAY_MS);
         wait_ms(RF_INIT_RETRY_DELAY_MS);
         uart_receive_pro();
         uart_receive_pro();
-        if (f_rf_sts_sysc_ok) break;
+        if (kbd_flags.rf_sts_sysc_ok) break;
     }
 
     UART_Send_BatCfg();

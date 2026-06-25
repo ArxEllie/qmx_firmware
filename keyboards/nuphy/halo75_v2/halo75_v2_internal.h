@@ -13,17 +13,8 @@ extern uint16_t        rf_linking_time;
 extern uint16_t        rf_link_show_time;
 extern uint8_t         rf_blink_cnt;
 extern uint32_t        no_act_time;
-extern bool            f_uart_ack;
-extern bool            f_bat_hold;
-extern bool            f_rf_read_data_ok;
-extern bool            f_rf_sts_sysc_ok;
-extern bool            f_rf_new_adv_ok;
-extern bool            f_rf_reset;
-extern bool            f_rf_hand_ok;
-extern bool            f_send_channel;
-extern bool            f_wakeup_prepare;
-extern bool            f_dial_sw_init_ok;
-extern bool            f_goto_sleep;
+
+/* kbd_flags (keyboard_flags_t) is externed in halo75_v2.h */
 
 /* EEPROM write batching — defined in halo75_v2.c */
 void     user_config_mark_dirty(void);
