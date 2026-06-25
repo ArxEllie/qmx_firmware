@@ -207,7 +207,7 @@ void light_speed_control(uint8_t fast) {
  * @param  dir: 0 - prev, 1 - next.
  * @note  save to eeprom.
  */
-uint8_t light_colour_max = 8;
+static uint8_t light_colour_max = 8;
 void    side_colour_control(uint8_t dir) {
     if (side_mode_a == SIDE_NEW)
         light_colour_max = 3;
@@ -253,7 +253,7 @@ void    side_colour_control(uint8_t dir) {
  * @param  dir: 0 - prev, 1 - next.
  * @note  save to eeprom.
  */
-uint8_t side_old_color = 0;
+static uint8_t side_old_color = 0;
 void    side_mode_a_control(uint8_t dir) {
     if (dir) {
         side_mode_a++;
@@ -462,9 +462,9 @@ static void count_rgb_light(uint8_t light_temp) {
  * @brief  auxiliary_rgb_light.
  */
 uint8_t f_side_flag      = 0x1f;
-uint8_t key_pwm_tab[45]  = {0x00};
-uint8_t power_play_index = 0;
-uint8_t f_power_show     = 1;
+static uint8_t key_pwm_tab[45]  = {0x00};
+static uint8_t power_play_index = 0;
+static uint8_t f_power_show     = 1;
 
 static void side_power_mode_show(void) {
     if (side_play_cnt <= side_speed_table[0][side_speed])
