@@ -1180,6 +1180,17 @@
               "content": ["id_battery_level", 0, 9]
             }
           ]
+        },
+        {
+          "label": "Typing",
+          "content": [
+            {
+              "label": "Caps Word",
+              "type": "dropdown",
+              "options": [["Off", 0], ["On", 1]],
+              "content": ["id_caps_word", 0, 10]
+            }
+          ]
         }
       ]
     }

@@ -1101,6 +1101,7 @@ enum via_custom_value_id {
     id_nkro_mode           = 7,
     id_socd_mode           = 8,
     id_battery_level       = 9,
+    id_caps_word           = 10,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -1160,6 +1161,9 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     user_config_mark_dirty();
                     break;
                 /* id_battery_level is read-only — no set handler. */
+                case id_caps_word:
+                    if (value_data[0]) caps_word_on(); else caps_word_off();
+                    break;
                 default:
                     *command_id = id_unhandled;
                     break;
@@ -1194,6 +1198,9 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 case id_battery_level:
                     value_data[0] = dev_info.rf_battery;
+                    break;
+                case id_caps_word:
+                    value_data[0] = is_caps_word_on() ? 1 : 0;
                     break;
                 default:
                     *command_id = id_unhandled;
