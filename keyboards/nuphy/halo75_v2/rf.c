@@ -937,3 +937,7 @@ bool rf_init_task(void) {
 
     return true;
 }
+
+bool rf_init_is_complete(void) {
+    return rf_init_step == 8;
+}

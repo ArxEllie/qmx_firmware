@@ -52,6 +52,7 @@ void     uart_send_report_func(void);
 void     dev_sts_sync(void);
 void     rf_device_init_kick(void);
 bool     rf_init_task(void);
+bool     rf_init_is_complete(void);
 void     rf_uart_init(void);
 
 /* Defined in sleep.c */
