@@ -799,7 +799,6 @@ void rf_uart_init(void) {
  */
 void rf_device_init(void) {
     uint8_t timeout = 0;
-    void    uart_receive_pro(void);
 
     timeout      = 10;
     f_rf_hand_ok = 0;
