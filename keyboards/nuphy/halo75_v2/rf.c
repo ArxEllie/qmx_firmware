@@ -43,11 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RF_INIT_WAIT_MS         (RF_INIT_CMD_DELAY_MS + RF_INIT_RETRY_DELAY_MS)
 
 USART_MGR_STRUCT Usart_Mgr;
-#define RX_SBYTE Usart_Mgr.RXDBuf[0]
-#define RX_CMD Usart_Mgr.RXDBuf[1]
-#define RX_ACK Usart_Mgr.RXDBuf[2]
-#define RX_LEN Usart_Mgr.RXDBuf[3]
-#define RX_DAT Usart_Mgr.RXDBuf[4]
 
 uint8_t  uart_bit_report_buf[32] = {0};
 uint8_t  func_tab[32]            = {0};
@@ -255,10 +250,10 @@ void RF_Protocol_Receive(void) {
     if (Usart_Mgr.RXDLen < 5) goto reset_rx;
 
     /* Declared payload length must match what we actually received. */
-    if ((Usart_Mgr.RXDLen - 5) != RX_LEN) goto reset_rx;
+    if ((Usart_Mgr.RXDLen - 5) != Usart_Mgr.RXDBuf[3]) goto reset_rx; /* RX_LEN at index 3 */
 
     /* Checksum covers the payload bytes only. */
-    for (i = 0; i < RX_LEN; i++)
+    for (i = 0; i < Usart_Mgr.RXDBuf[3]; i++) /* RX_LEN */
         check_sum += Usart_Mgr.RXDBuf[4 + i];
     if (check_sum != Usart_Mgr.RXDBuf[4 + i]) goto reset_rx;
 
@@ -268,14 +263,14 @@ void RF_Protocol_Receive(void) {
      * but checksum-valid frame would read stale data left over in
      * RXDBuf from a previous (longer) frame.
      */
-    switch (RX_CMD) {
+    switch (Usart_Mgr.RXDBuf[1]) { /* RX_CMD */
         case CMD_RF_STS_SYSC:
             /* Handler reads bytes [4]-[8]: link, state, led, charge, battery. */
-            if (RX_LEN < 5) goto reset_rx;
+            if (Usart_Mgr.RXDBuf[3] < 5) goto reset_rx; /* RX_LEN */
             break;
         case CMD_READ_DATA:
             /* Handler copies 32 bytes from [4] into func_tab. */
-            if (RX_LEN < 32) goto reset_rx;
+            if (Usart_Mgr.RXDBuf[3] < 32) goto reset_rx; /* RX_LEN */
             break;
         default:
             break;
@@ -285,7 +280,7 @@ void RF_Protocol_Receive(void) {
     kbd_flags.uart_ack = 1;
     sync_lost  = 0;
 
-    switch (RX_CMD) {
+    switch (Usart_Mgr.RXDBuf[1]) { /* RX_CMD */
         case CMD_HAND: {
             kbd_flags.rf_hand_ok = 1;
             break;
