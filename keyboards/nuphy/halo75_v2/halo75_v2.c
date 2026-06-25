@@ -1112,7 +1112,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
     uint8_t *value_id   = &(data[2]);
     uint8_t *value_data = &(data[3]);
 
-    /* Need at least command + channel + value_id + 1 data byte. */
+    /* Need at least command + channel + value_id + 1 data byte.
+     * All current handlers read only value_data[0] (= data[3]).
+     * Any future handler that reads value_data[1+] must add a
+     * per-handler length check (length >= 4 + N) before accessing. */
     if (length < 4) {
         *command_id = id_unhandled;
         return;
