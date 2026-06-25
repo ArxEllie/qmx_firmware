@@ -742,6 +742,8 @@ void uart_receive_pro(void) {
 
         if (Usart_Mgr.RXDLen >= UART_MAX_LEN) {
             uart_read();
+            Usart_Mgr.RXDLen   = 0;
+            Usart_Mgr.RXDState = RX_Idle;
         } else {
             Usart_Mgr.RXDBuf[Usart_Mgr.RXDLen++] = uart_read();
         }
