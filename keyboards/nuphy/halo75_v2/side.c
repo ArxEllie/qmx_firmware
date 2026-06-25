@@ -41,6 +41,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SIDE_COLOUR_MAX 8
 #define LIGHT_SPEED_MAX 4
 
+/* Integer scaling for dimming in per-LED loops (no FPU on STM32F072).
+ * SCALE_X(v) = (v * N) >> 8, where N/256 ≈ the desired fraction. */
+#define SCALE_30(v) ((uint8_t)(((uint16_t)(v) * 77)  >> 8))  /* ≈ ×0.30 */
+#define SCALE_40(v) ((uint8_t)(((uint16_t)(v) * 102) >> 8))  /* ≈ ×0.40 */
+#define SCALE_70(v) ((uint8_t)(((uint16_t)(v) * 179) >> 8))  /* ≈ ×0.70 */
+
 /* Status indicator timing (ms) */
 #define STATUS_BLINK_INTERVAL   500   /* sys/sleep show blink half-period */
 #define STATUS_SHOW_DURATION    3000  /* sys/sleep show total display time */
@@ -561,13 +567,13 @@ static void side_wave_mode_show(void) {
             if (f_side_flag == 0x1f) {
                 for (; i < SIDE_LED_COUNT; i++) {
                     if (side_rgb) {
-                        r_temp = flow_rainbow_colour_tab[play_index_1][0] * 0.4;
-                        g_temp = flow_rainbow_colour_tab[play_index_1][1] * 0.4;
-                        b_temp = flow_rainbow_colour_tab[play_index_1][2] * 0.4;
+                        r_temp = SCALE_40(flow_rainbow_colour_tab[play_index_1][0]);
+                        g_temp = SCALE_40(flow_rainbow_colour_tab[play_index_1][1]);
+                        b_temp = SCALE_40(flow_rainbow_colour_tab[play_index_1][2]);
                     } else {
-                        r_temp = colour_lib[side_colour][0] * 0.4;
-                        g_temp = colour_lib[side_colour][1] * 0.4;
-                        b_temp = colour_lib[side_colour][2] * 0.4;
+                        r_temp = SCALE_40(colour_lib[side_colour][0]);
+                        g_temp = SCALE_40(colour_lib[side_colour][1]);
+                        b_temp = SCALE_40(colour_lib[side_colour][2]);
                         count_rgb_light(wave_data_tab[play_index_1]);
                     }
                     count_rgb_light(side_light_table[side_light]);
@@ -623,9 +629,9 @@ static void side_new_mode_show(void) {
 
         if (i == 40) {
             if (f_side_flag == 0x1f) {
-                r_temp = r_temp * 0.3;
-                g_temp = g_temp * 0.3;
-                b_temp = b_temp * 0.3;
+                r_temp = SCALE_30(r_temp);
+                g_temp = SCALE_30(g_temp);
+                b_temp = SCALE_30(b_temp);
 
                 for (; i < SIDE_LED_COUNT; i++) {
                     rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
@@ -665,9 +671,9 @@ static void side_spectrum_mode_show(void) {
     for (int i = SIDE_RIM_START; i <= SIDE_ANIM_LOOP_END; i++) {
         if (i == 40) {
             if (f_side_flag == 0x1f) {
-                r_temp = r_temp * 0.3;
-                g_temp = g_temp * 0.3;
-                b_temp = b_temp * 0.3;
+                r_temp = SCALE_30(r_temp);
+                g_temp = SCALE_30(g_temp);
+                b_temp = SCALE_30(b_temp);
                 for (; i < SIDE_LED_COUNT; i++)
                     rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
                 return;
@@ -709,9 +715,9 @@ static void side_pride_rainbow_show(void) {
 
         if (i == 40) {
             for (; i < SIDE_LED_COUNT; i++) {
-                r_temp = flow_rainbow_colour_tab[play_index][0] * 0.3;
-                g_temp = flow_rainbow_colour_tab[play_index][1] * 0.3;
-                b_temp = flow_rainbow_colour_tab[play_index][2] * 0.3;
+                r_temp = SCALE_30(flow_rainbow_colour_tab[play_index][0]);
+                g_temp = SCALE_30(flow_rainbow_colour_tab[play_index][1]);
+                b_temp = SCALE_30(flow_rainbow_colour_tab[play_index][2]);
                 count_rgb_light(side_light_table[side_light]);
                 rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
             }
@@ -759,9 +765,9 @@ static void side_breathe_mode_show(void) {
     for (int i = SIDE_RIM_START; i <= SIDE_ANIM_LOOP_END; i++) {
         if (i == 40) {
             if (f_side_flag == 0x1f) {
-                r_temp = r_temp * 0.3;
-                g_temp = g_temp * 0.3;
-                b_temp = b_temp * 0.3;
+                r_temp = SCALE_30(r_temp);
+                g_temp = SCALE_30(g_temp);
+                b_temp = SCALE_30(b_temp);
                 for (; i < SIDE_LED_COUNT; i++)
                     rgb_matrix_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
                 return;
@@ -798,9 +804,9 @@ static void side_static_mode_show(void) {
         b_temp = colour_lib[side_colour][2];
 
         if ((side_led_index_tab[i] <= SIDE_INDEX + 9) && (side_led_index_tab[i] >= SIDE_INDEX)) {
-            r_temp = colour_lib_1[side_colour][0] * 0.7;
-            g_temp = colour_lib_1[side_colour][1] * 0.7;
-            b_temp = colour_lib_1[side_colour][2] * 0.7;
+            r_temp = SCALE_70(colour_lib_1[side_colour][0]);
+            g_temp = SCALE_70(colour_lib_1[side_colour][1]);
+            b_temp = SCALE_70(colour_lib_1[side_colour][2]);
         }
 
         count_rgb_light(side_light_table[side_light]);
