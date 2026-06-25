@@ -907,7 +907,6 @@ void keyboard_post_init_kb(void) {
 
     m_break_all_key();
     m_loading_eeprom_data();
-    m_power_on_dial_sw_scan();
     keyboard_post_init_user();
 
     rf_link_show_time = 0;
@@ -1070,6 +1069,15 @@ void housekeeping_task_kb(void) {
     uart_send_report_func();
 
     dev_sts_sync();
+
+    /* Run power-on dial switch scan once RF init has completed.
+     * Must wait for CMD_READ_DATA to populate dev_info.rf_channel
+     * so the correct BT channel is selected. */
+    static bool power_on_dial_done = false;
+    if (!power_on_dial_done && rf_init_is_complete()) {
+        power_on_dial_done = true;
+        m_power_on_dial_sw_scan();
+    }
 
     long_press_key();
 
