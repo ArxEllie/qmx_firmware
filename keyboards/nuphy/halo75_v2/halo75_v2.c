@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "halo75_v2.h"
+#include "halo75_v2_internal.h"
 #include "socd.h"
 #include "usb_main.h"
 #include "rf_driver.h"
@@ -98,18 +99,6 @@ uint16_t       rf_sw_press_delay     = 0;
 uint8_t        rf_sw_temp            = 0;
 uint8_t        host_mode;
 
-extern uint8_t            side_mode_a;
-extern uint8_t            side_light;
-extern uint8_t            side_speed;
-extern uint8_t            side_rgb;
-extern uint8_t            side_colour;
-extern report_keyboard_t *keyboard_report;
-extern report_nkro_t     *nkro_report;
-extern uint8_t            side_mode_b;
-extern uint8_t            uart_bit_report_buf[32];
-extern uint8_t            bitkb_report_buf[32];
-extern uint8_t            bytekb_report_buf[8];
-
 bool f_uart_ack        = 0;
 bool f_bat_show        = 0;
 bool f_bat_hold        = 0;
@@ -133,8 +122,6 @@ bool f_rf_sw_press     = 0;
 bool f_dev_reset_press = 0;
 bool f_win_lock        = 0;
 
-void m_break_all_key(void);
-
 /* Apply NKRO override after OS switch logic sets keymap_config.nkro.
  * In Auto mode, the OS switch value is kept. In On/Off, it's overridden. */
 static void apply_nkro_override(void) {
@@ -151,20 +138,6 @@ static void apply_nkro_override(void) {
         }
     }
 }
-
-void    rf_device_init(void);
-void    rf_uart_init(void);
-void    m_side_led_show(void);
-void    dev_sts_sync(void);
-void    uart_receive_pro(void);
-void    Sleep_Handle(void);
-void    uart_send_report_func(void);
-uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
-uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
-void    uart_send_cmd_deferred_task(void);
-void    uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size);
-void    device_reset_init(void);
-void    m_deinit_usb_072(void);
 
 /* Non-blocking device reset state machine.
  * Replaces the blocking wait_ms/uart_send_cmd chain that previously
@@ -183,13 +156,6 @@ static reset_state_t dev_reset_state    = RESET_IDLE;
 static uint32_t      dev_reset_timer    = 0;
 static uint8_t       dev_reset_blink    = 0;
 static bool          dev_reset_blink_on = false;
-
-extern void light_speed_control(uint8_t fast);
-extern void light_level_control(uint8_t brighten);
-extern void side_colour_control(uint8_t dir);
-extern void side_mode_a_control(uint8_t dir);
-extern void side_mode_b_control(uint8_t dir);
-extern bool low_bat_flag;
 
 static void rgb_driver_gpio_init(void) {
     // RGB Matrix initializes before keyboard_post_init_kb(), so only the

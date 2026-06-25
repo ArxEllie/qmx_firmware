@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "halo75_v2.h"
+#include "halo75_v2_internal.h"
 #include "side.h"
 #include "gpio.h"
 #ifdef RGB_DEBUG
@@ -128,11 +129,6 @@ uint16_t side_play_cnt   = 0;
 uint32_t side_play_timer = 0;
 
 uint8_t r_temp, g_temp, b_temp;
-
-extern DEV_INFO_STRUCT dev_info;
-extern bool            f_bat_hold;
-extern user_config_t   user_config;
-extern uint16_t        rf_link_show_time;
 
 /**
  * @brief suspend_power_down_kb
@@ -860,7 +856,6 @@ void rf_led_show(void) {
     static uint32_t rf_blink_timer = 0;
     static bool     flag_power_on  = 1;
     uint16_t        rf_blink_priod = 0;
-    extern uint8_t  rf_blink_cnt;
 
     if (dev_info.link_mode == LINK_RF_24) {
         r_temp = colour_lib[3][0];
@@ -1227,7 +1222,6 @@ void rgb_debug_render(void) {
  */
 void m_side_led_show(void) {
     static bool flag_power_on = 1;
-    extern bool f_dial_sw_init_ok;
 
     side_play_cnt += timer_elapsed32(side_play_timer);
     side_play_timer = timer_read32();

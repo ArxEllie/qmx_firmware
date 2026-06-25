@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "halo75_v2.h"
+#include "halo75_v2_internal.h"
 #include "uart.h" // qmk uart.h
 #include "rf_driver.h"
 
@@ -24,14 +25,6 @@ USART_MGR_STRUCT Usart_Mgr;
 #define RX_ACK Usart_Mgr.RXDBuf[2]
 #define RX_LEN Usart_Mgr.RXDBuf[3]
 #define RX_DAT Usart_Mgr.RXDBuf[4]
-
-extern bool f_uart_ack;
-extern bool f_rf_read_data_ok;
-extern bool f_rf_sts_sysc_ok;
-extern bool f_rf_new_adv_ok;
-extern bool f_rf_reset;
-extern bool f_rf_hand_ok;
-extern bool f_goto_sleep;
 
 uint8_t  uart_bit_report_buf[32] = {0};
 uint8_t  func_tab[32]            = {0};
@@ -70,23 +63,10 @@ static bool deferred_uart_cmd_pending(uint8_t cmd) {
     return false;
 }
 
-extern DEV_INFO_STRUCT dev_info;
-extern host_driver_t  *m_host_driver;
-extern uint8_t         host_mode;
-extern uint8_t         rf_blink_cnt;
-extern uint16_t        rf_link_show_time;
-extern uint16_t        rf_linking_time;
-extern uint32_t        no_act_time;
-extern bool            f_send_channel;
-extern bool            f_dial_sw_init_ok;
-
 report_mouse_t mousekey_get_report(void);
 void           uart_init(uint32_t baud); // qmk uart.c
-void           uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size);
 void           UART_Send_Bytes(const uint8_t *Buffer, uint32_t Length);
 uint8_t        get_checksum(const uint8_t *buf, uint8_t len);
-void           uart_receive_pro(void);
-void           m_break_all_key(void);
 uint16_t       host_last_consumer_usage(void);
 
 /**

@@ -16,22 +16,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "halo75_v2.h"
+#include "halo75_v2_internal.h"
 #include "hal_usb.h"
 #include "usb_main.h"
 #include "mcu_pwr.h"
-
-extern user_config_t   user_config;
-extern DEV_INFO_STRUCT dev_info;
-extern uint16_t        rf_linking_time;
-extern uint32_t        no_act_time;
-
-extern bool f_wakeup_prepare;
-extern bool f_goto_sleep;
-
-uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
-
-/* Break all keys before sleeping so the host doesn't see stuck keys. */
-extern void m_break_all_key(void);
 
 /**
  * @brief  Wake up from light sleep — called by pre_process_record_kb

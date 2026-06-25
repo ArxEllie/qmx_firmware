@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "halo75_v2.h"
+#include "halo75_v2_internal.h"
 #include "mcu_pwr.h"
 #include "hal_usb.h"
 #include "usb_main.h"
@@ -28,13 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* Matrix pin tables — pulled from keyboard.json at build time. */
 static const pin_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
 static const pin_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
-
-/* Externals from rf.c and halo75_v2.c */
-extern DEV_INFO_STRUCT dev_info;
-extern uint8_t         uart_bit_report_buf[32];
-extern uint8_t         bitkb_report_buf[32];
-extern uint8_t         bytekb_report_buf[8];
-uint8_t                uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
 
 /* State tracking */
 static bool sleeping   = false;
