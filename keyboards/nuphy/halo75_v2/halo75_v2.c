@@ -531,6 +531,28 @@ bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+/* Handle wireless link switching (RF + BT1-3).
+ * Short press: switch to the target channel.
+ * Long press: enter pairing mode (handled by long_press_key in timer_pro). */
+static bool handle_wireless_link(uint8_t link_target, keyrecord_t *record) {
+    if (record->event.pressed) {
+        if (dev_info.link_mode != LINK_USB) {
+            rf_sw_temp    = link_target;
+            f_rf_sw_press = 1;
+            m_break_all_key();
+        }
+    } else if (f_rf_sw_press) {
+        f_rf_sw_press = 0;
+        if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
+            dev_info.link_mode   = rf_sw_temp;
+            dev_info.rf_channel  = rf_sw_temp;
+            dev_info.ble_channel = rf_sw_temp;
+            uart_send_cmd_deferred(CMD_SET_LINK, 20);
+        }
+    }
+    return false;
+}
+
 /**
  * @brief  qmk process record
  */
@@ -582,6 +604,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #endif
 
     switch (keycode) {
+        /* ── RF / Link switching ─────────────────────────────────── */
         case RF_DFU:
             if (record->event.pressed) {
                 if (dev_info.link_mode != LINK_USB) return false;
@@ -598,78 +621,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case LNK_RF:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_RF_24;
-                    f_rf_sw_press = 1;
-                    m_break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
-                }
-            }
-            return false;
+        case LNK_RF:    return handle_wireless_link(LINK_RF_24, record);
+        case LNK_BLE1:  return handle_wireless_link(LINK_BT_1, record);
+        case LNK_BLE2:  return handle_wireless_link(LINK_BT_2, record);
+        case LNK_BLE3:  return handle_wireless_link(LINK_BT_3, record);
 
-        case LNK_BLE1:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_BT_1;
-                    f_rf_sw_press = 1;
-                    m_break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
-                }
-            }
-            return false;
-
-        case LNK_BLE2:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_BT_2;
-                    f_rf_sw_press = 1;
-                    m_break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
-                }
-            }
-            return false;
-
-        case LNK_BLE3:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_BT_3;
-                    f_rf_sw_press = 1;
-                    m_break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
-                    uart_send_cmd_deferred(CMD_SET_LINK, 20);
-                }
-            }
-            return false;
-
+        /* ── Mac media / system keys ─────────────────────────────── */
         case MAC_TASK:
             if (record->event.pressed) {
                 host_consumer_send(0x029F);
@@ -727,6 +684,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        /* ── Side LED controls ───────────────────────────────────── */
         case SIDE_VAI:
             if (record->event.pressed) {
                 if (low_bat_flag && (side_light == 1)) return false;
@@ -776,6 +734,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        /* ── Device reset ────────────────────────────────────────── */
         case DEV_RESET:
             if (record->event.pressed) {
                 f_dev_reset_press = 1;
@@ -785,6 +744,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        /* ── Settings: sleep, debounce, NKRO ──────────────────────── */
         case SLEEP_MODE:
             if (record->event.pressed) {
                 if (f_dev_sleep_enable)
@@ -867,7 +827,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         default:
             return true;
     }
-    return true;
 }
 
 /**
