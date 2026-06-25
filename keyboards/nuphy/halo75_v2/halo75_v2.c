@@ -1083,7 +1083,9 @@ void housekeeping_task_kb(void) {
 
     dev_reset_task();
 
-    dial_sw_scan();
+    if (power_on_dial_done) {
+        dial_sw_scan();
+    }
 
     Sleep_Handle();
 }
