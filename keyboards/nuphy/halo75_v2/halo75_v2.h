@@ -336,3 +336,7 @@ uint8_t              is_side_rgb_on(uint8_t index);
 #elif defined(KEYBOARD_nuphy_halo75_v2_iso)
 #    define SIDE_ANIM_LOOP_END (SIDE_LED_COUNT - 1)
 #endif
+
+/* Physical LED index where the rim splits into the tail section.
+ * Animations dim or turn off LEDs from this point onward. */
+#define SIDE_RIM_SPLIT 40

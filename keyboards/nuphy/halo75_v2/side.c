@@ -557,7 +557,7 @@ static void side_wave_mode_show(void) {
 
         play_index_1 = play_index;
 
-        if (i == 40) {
+        if (i == SIDE_RIM_SPLIT) {
             if (f_side_flag == 0x1f) {
                 for (; i < SIDE_LED_COUNT; i++) {
                     if (side_rgb) {
@@ -621,7 +621,7 @@ static void side_new_mode_show(void) {
 
         count_rgb_light(side_light_table[side_light]);
 
-        if (i == 40) {
+        if (i == SIDE_RIM_SPLIT) {
             if (f_side_flag == 0x1f) {
                 r_temp = r_temp * 0.3;
                 g_temp = g_temp * 0.3;
@@ -663,7 +663,7 @@ static void side_spectrum_mode_show(void) {
     count_rgb_light(side_light_table[side_light]);
 
     for (int i = SIDE_RIM_START; i <= SIDE_ANIM_LOOP_END; i++) {
-        if (i == 40) {
+        if (i == SIDE_RIM_SPLIT) {
             if (f_side_flag == 0x1f) {
                 r_temp = r_temp * 0.3;
                 g_temp = g_temp * 0.3;
@@ -707,7 +707,7 @@ static void side_pride_rainbow_show(void) {
 
         count_rgb_light(side_light_table[side_light]);
 
-        if (i == 40) {
+        if (i == SIDE_RIM_SPLIT) {
             for (; i < SIDE_LED_COUNT; i++) {
                 r_temp = flow_rainbow_colour_tab[play_index][0] * 0.3;
                 g_temp = flow_rainbow_colour_tab[play_index][1] * 0.3;
@@ -757,7 +757,7 @@ static void side_breathe_mode_show(void) {
     count_rgb_light(side_light_table[side_light]);
 
     for (int i = SIDE_RIM_START; i <= SIDE_ANIM_LOOP_END; i++) {
-        if (i == 40) {
+        if (i == SIDE_RIM_SPLIT) {
             if (f_side_flag == 0x1f) {
                 r_temp = r_temp * 0.3;
                 g_temp = g_temp * 0.3;
