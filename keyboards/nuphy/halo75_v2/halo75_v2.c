@@ -171,14 +171,8 @@ static void rgb_driver_gpio_init(void) {
  * @brief  gpio initial.
  */
 void m_gpio_init(void) {
-    gpio_set_pin_output(DC_BOOST_PIN);
-    gpio_write_pin_high(DC_BOOST_PIN);
-
-    // Initializes the RGB Driver SDB pin
-    gpio_set_pin_output(RGB_DRIVER_SDB1);
-    gpio_write_pin_high(RGB_DRIVER_SDB1);
-    gpio_set_pin_output(RGB_DRIVER_SDB2);
-    gpio_write_pin_high(RGB_DRIVER_SDB2);
+    // RGB power rail and driver shutdown pins (shared with rgb_driver_gpio_init)
+    rgb_driver_gpio_init();
 
     // RF wake up pin configuration
     gpio_set_pin_output(NRF_WAKEUP_PIN);
