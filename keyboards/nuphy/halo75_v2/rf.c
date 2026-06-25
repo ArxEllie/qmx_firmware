@@ -82,9 +82,9 @@ extern bool            f_dial_sw_init_ok;
 
 report_mouse_t mousekey_get_report(void);
 void           uart_init(uint32_t baud); // qmk uart.c
-void           uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
-void           UART_Send_Bytes(uint8_t *Buffer, uint32_t Length);
-uint8_t        get_checksum(uint8_t *buf, uint8_t len);
+void           uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size);
+void           UART_Send_Bytes(const uint8_t *Buffer, uint32_t Length);
+uint8_t        get_checksum(const uint8_t *buf, uint8_t len);
 void           uart_receive_pro(void);
 void           m_break_all_key(void);
 uint16_t       host_last_consumer_usage(void);
@@ -93,7 +93,7 @@ uint16_t       host_last_consumer_usage(void);
  * @brief Uart auto nkey send
  */
 bool        f_bit_kb_act = 0;
-static void uart_auto_nkey_send(uint8_t *pre_bit_report, uint8_t *now_bit_report, uint8_t size) {
+static void uart_auto_nkey_send(const uint8_t *pre_bit_report, const uint8_t *now_bit_report, uint8_t size) {
     uint8_t i, j, byte_index;
     uint8_t change_mask, offset_mask;
     uint8_t key_code    = 0;
@@ -678,7 +678,7 @@ void UART_Send_BatCfg(void) {
  * @param Buffer data buf
  * @param Length data length
  */
-void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
+void UART_Send_Bytes(const uint8_t *Buffer, uint32_t Length) {
     if (uart_repeat_flag) {
         for (uint8_t i = 0; i < 3; i++) {
             gpio_write_pin_low(NRF_WAKEUP_PIN);
@@ -707,7 +707,7 @@ void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
  * @param buf data buf
  * @param len data length
  */
-uint8_t get_checksum(uint8_t *buf, uint8_t len) {
+uint8_t get_checksum(const uint8_t *buf, uint8_t len) {
     uint8_t i;
     uint8_t checksum = 0;
 
@@ -725,7 +725,7 @@ uint8_t get_checksum(uint8_t *buf, uint8_t len) {
  * @param report_buf  report_buf
  * @param report_size  report_size
  */
-void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size) {
+void uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size) {
     if (f_dial_sw_init_ok == 0) return;
     if (dev_info.link_mode == LINK_USB) return;
     if (dev_info.rf_state != RF_CONNECT) return;

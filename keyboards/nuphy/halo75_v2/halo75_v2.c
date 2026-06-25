@@ -162,7 +162,7 @@ void    uart_send_report_func(void);
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
 void    uart_send_cmd_deferred_task(void);
-void    uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
+void    uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size);
 void    device_reset_init(void);
 void    m_deinit_usb_072(void);
 
