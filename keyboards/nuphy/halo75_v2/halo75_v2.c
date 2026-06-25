@@ -1120,6 +1120,12 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
     uint8_t *value_id   = &(data[2]);
     uint8_t *value_data = &(data[3]);
 
+    /* Need at least command + channel + value_id + 1 data byte. */
+    if (length < 4) {
+        *command_id = id_unhandled;
+        return;
+    }
+
     if (*channel_id != id_custom_channel) {
         *command_id = id_unhandled;
         return;
@@ -1130,29 +1136,38 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             switch (*value_id) {
                 case id_debounce_press_ms:
                     user_config.ee_debounce_press_ms = (value_data[0] < 1) ? 1 : value_data[0];
+                    user_config_mark_dirty();
                     break;
                 case id_debounce_release_ms:
                     user_config.ee_debounce_release_ms = (value_data[0] < 1) ? 1 : value_data[0];
+                    user_config_mark_dirty();
                     break;
                 case id_sleep_timeout:
-                    user_config.ee_sleep_timeout = value_data[0];
+                    user_config.ee_sleep_timeout = (value_data[0] < SLEEP_TIMEOUT_MIN) ? SLEEP_TIMEOUT_MIN :
+                                                   (value_data[0] > SLEEP_TIMEOUT_MAX) ? SLEEP_TIMEOUT_MAX : value_data[0];
+                    user_config_mark_dirty();
                     break;
                 case id_sleep_toggle:
-                    set_f_dev_sleep_enable(value_data[0]);
+                    set_f_dev_sleep_enable(value_data[0] ? 1 : 0);
+                    user_config_mark_dirty();
                     break;
                 case id_usb_sleep_toggle:
-                    set_f_usb_sleep_enable(value_data[0]);
+                    set_f_usb_sleep_enable(value_data[0] ? 1 : 0);
+                    user_config_mark_dirty();
                     break;
                 case id_deep_sleep_toggle:
-                    set_f_deep_sleep_enable(value_data[0]);
+                    set_f_deep_sleep_enable(value_data[0] ? 1 : 0);
+                    user_config_mark_dirty();
                     break;
                 case id_nkro_mode:
                     set_nkro_mode(value_data[0] > NKRO_OFF ? NKRO_AUTO : value_data[0]);
                     apply_nkro_override();
+                    user_config_mark_dirty();
                     break;
                 case id_socd_mode:
                     user_config.ee_socd_mode = (value_data[0] > SOCD_MODE_MAX) ? SOCD_OFF : value_data[0];
                     socd_set_mode(user_config.ee_socd_mode);
+                    user_config_mark_dirty();
                     break;
                 /* id_battery_level is read-only — no set handler. */
                 default:
