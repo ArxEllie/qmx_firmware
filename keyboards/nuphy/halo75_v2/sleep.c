@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *         on the first keypress for instant wakeup (no 50ms poll delay).
  */
 void wakeup_handle(void) {
-    if (!kbd_flags.wakeup_prepare) return;
+    if (!f_wakeup_prepare) return;
 
-    kbd_flags.wakeup_prepare = 0;
+    f_wakeup_prepare = 0;
     no_act_time      = 0;
 
     exit_light_sleep();
@@ -66,8 +66,8 @@ void Sleep_Handle(void) {
     uint32_t sleep_ticks = SLEEP_TIMEOUT_TO_TICKS(user_config.ee_sleep_timeout);
 
     /* sleep process */
-    if (kbd_flags.goto_sleep) {
-        kbd_flags.goto_sleep     = 0;
+    if (f_goto_sleep) {
+        f_goto_sleep         = 0;
         usb_suspend_debounce = 0;
         rf_disconnect_time   = 0;
         rf_linking_time      = 0;
@@ -78,13 +78,13 @@ void Sleep_Handle(void) {
             if (f_usb_sleep_enable || USB_DRIVER.state == USB_SUSPENDED) {
                 m_break_all_key();
                 enter_light_sleep();
-                kbd_flags.wakeup_prepare = 1;
+                f_wakeup_prepare = 1;
             }
         } else if ((dev_info.rf_charge & 0x01) != 0 || dev_info.rf_charge == 0x03) {
             /* RF + charging: light sleep (MCU must supervise charging). */
             m_break_all_key();
             enter_light_sleep();
-            kbd_flags.wakeup_prepare = 1;
+            f_wakeup_prepare = 1;
         } else {
             /* RF + battery: deep sleep if enabled, else light sleep. */
             m_break_all_key();
@@ -95,39 +95,39 @@ void Sleep_Handle(void) {
                 return;
             } else {
                 enter_light_sleep();
-                kbd_flags.wakeup_prepare = 1;
+                f_wakeup_prepare = 1;
             }
         }
     }
 
     /* sleep check */
-    if (kbd_flags.goto_sleep || kbd_flags.wakeup_prepare) return;
+    if (f_goto_sleep || f_wakeup_prepare) return;
 
     if (dev_info.link_mode == LINK_USB) {
         if (USB_DRIVER.state == USB_SUSPENDED) {
             usb_suspend_debounce++;
             if (usb_suspend_debounce >= 20) {
-                kbd_flags.goto_sleep = 1;
+                f_goto_sleep = 1;
             }
         } else {
             usb_suspend_debounce = 0;
             if (f_usb_sleep_enable && no_act_time >= sleep_ticks) {
-                kbd_flags.goto_sleep = 1;
+                f_goto_sleep = 1;
             }
         }
     } else if (dev_info.rf_state == RF_CONNECT) {
         rf_disconnect_time = 0;
         if (no_act_time >= sleep_ticks) {
-            kbd_flags.goto_sleep = 1;
+            f_goto_sleep = 1;
         }
     } else if (rf_linking_time >= LINK_TIMEOUT) {
         rf_linking_time = 0;
-        kbd_flags.goto_sleep    = 1;
+        f_goto_sleep    = 1;
     } else if (dev_info.rf_state == RF_DISCONNECT) {
         rf_disconnect_time++;
         if (rf_disconnect_time > 5 * 20) {
             rf_disconnect_time = 0;
-            kbd_flags.goto_sleep      = 1;
+            f_goto_sleep       = 1;
         }
     }
 }

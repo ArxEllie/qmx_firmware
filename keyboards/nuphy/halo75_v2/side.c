@@ -41,24 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SIDE_COLOUR_MAX 8
 #define LIGHT_SPEED_MAX 4
 
-/* Status indicator timing (ms) */
-#define STATUS_BLINK_INTERVAL   500   /* sys/sleep show blink half-period */
-#define STATUS_SHOW_DURATION    3000  /* sys/sleep show total display time */
-#define STATUS_SHOW_MARGIN      50    /* early-exit margin before duration */
-
-/* Animation frame intervals (ms) */
-#define SIDE_BREATHE_INTERVAL   30    /* breathe animation frame rate */
-#define SIDE_STATUS_INTERVAL    100   /* moving-trend status display frame rate */
-
-/* Battery monitoring (ms) */
-#define BAT_DEBOUNCE_MS         1000  /* charge state / percent debounce */
-#define BAT_CHARGE_SHOW_MS      10000 /* battery display duration while charging */
-#define BAT_SHOW_MS             5000  /* battery display duration when not charging */
-#define LOW_BAT_THRESHOLD       10    /* battery percent that triggers low-bat alert */
-
-/* Power-on RGB sequence (ms per colour) */
-#define POWER_SHOW_STEP_MS      1000
-
 // Minimum interval (ms) between full side LED refreshes.
 // rgb_matrix_indicators_advanced_user() can fire several times per render
 // cycle (once per LED_PROCESS_LIMIT iteration).  The animation modes already
@@ -338,9 +320,10 @@ void set_all_side_off(void) {
 void sys_sw_led_show(void) {
     static uint32_t sys_show_timer = 0;
     static bool     sys_show_flag  = false;
+    extern bool     f_sys_show;
 
-    if (kbd_flags.sys_show) {
-        kbd_flags.sys_show     = false;
+    if (f_sys_show) {
+        f_sys_show     = false;
         sys_show_timer = timer_read32(); // store time of last refresh
         sys_show_flag  = true;
     }
@@ -355,12 +338,12 @@ void sys_sw_led_show(void) {
             g_temp = colour_lib[5][1];
             b_temp = colour_lib[5][2];
         }
-        if ((timer_elapsed32(sys_show_timer) / STATUS_BLINK_INTERVAL) % 2 == 0) {
+        if ((timer_elapsed32(sys_show_timer) / 500) % 2 == 0) {
             set_left_rgb(r_temp, g_temp, b_temp);
         } else {
             set_left_rgb(0x00, 0x00, 0x00);
         }
-        if (timer_elapsed32(sys_show_timer) >= (STATUS_SHOW_DURATION - STATUS_SHOW_MARGIN)) {
+        if (timer_elapsed32(sys_show_timer) >= (3000 - 50)) {
             sys_show_flag = false;
         }
     }
@@ -372,9 +355,10 @@ void sys_sw_led_show(void) {
 void sleep_sw_led_show(void) {
     static uint32_t sleep_show_timer = 0;
     static bool     sleep_show_flag  = false;
+    extern bool     f_sleep_show;
 
-    if (kbd_flags.sleep_show) {
-        kbd_flags.sleep_show     = false;
+    if (f_sleep_show) {
+        f_sleep_show     = false;
         sleep_show_timer = timer_read32(); // store time of last refresh
         sleep_show_flag  = true;
     }
@@ -389,12 +373,12 @@ void sleep_sw_led_show(void) {
             g_temp = 0x00;
             b_temp = 0x00;
         }
-        if ((timer_elapsed32(sleep_show_timer) / STATUS_BLINK_INTERVAL) % 2 == 0) {
+        if ((timer_elapsed32(sleep_show_timer) / 500) % 2 == 0) {
             set_left_rgb(r_temp, g_temp, b_temp);
         } else {
             set_left_rgb(0x00, 0x00, 0x00);
         }
-        if (timer_elapsed32(sleep_show_timer) >= (STATUS_SHOW_DURATION - STATUS_SHOW_MARGIN)) {
+        if (timer_elapsed32(sleep_show_timer) >= (3000 - 50)) {
             sleep_show_flag = false;
         }
     }
@@ -819,7 +803,7 @@ void bat_charging_breathe(void) {
     static uint32_t interval_timer = 0;
     static uint8_t  play_point     = 0;
 
-    if (timer_elapsed32(interval_timer) > SIDE_BREATHE_INTERVAL) {
+    if (timer_elapsed32(interval_timer) > 30) {
         interval_timer = timer_read32();
         light_point_playing(0, 2, BREATHE_TAB_LEN, &play_point);
     }
@@ -841,7 +825,7 @@ void bat_charging_design(uint8_t init, uint8_t r, uint8_t g, uint8_t b) {
     uint16_t        bit_mask       = 1;
     uint8_t         i;
 
-    if (timer_elapsed32(interval_timer) > SIDE_STATUS_INTERVAL) {
+    if (timer_elapsed32(interval_timer) > 100) {
         interval_timer = timer_read32();
 
         if (f_move_trend) {
@@ -939,6 +923,7 @@ void low_bat_show(void) {
     set_left_rgb(r_temp, g_temp, b_temp);
 }
 
+uint8_t bat_pwm_buf[6 * 3] = {0};
 uint8_t bat_end_led        = 0;
 uint8_t bat_r, bat_g, bat_b;
 
@@ -1019,11 +1004,11 @@ void bat_led_show(void) {
         f_init        = 0;
         bat_show_time = timer_read32();
         charge_state  = dev_info.rf_charge;
-        bat_percent   = dev_info.rf_battery;
+        bat_percent   = dev_info.rf_baterry;
     }
 
     if (charge_state != dev_info.rf_charge) {
-        if (timer_elapsed32(bat_sts_debounce) > BAT_DEBOUNCE_MS) {
+        if (timer_elapsed32(bat_sts_debounce) > 1000) {
             if (((charge_state & 0x01) == 0) && ((dev_info.rf_charge & 0x01) != 0)) {
                 bat_show_flag = true;
                 f_charging    = true;
@@ -1034,12 +1019,12 @@ void bat_led_show(void) {
     } else {
         bat_sts_debounce = timer_read32();
         if (f_charging) {
-            if (timer_elapsed32(bat_show_time) > BAT_CHARGE_SHOW_MS) {
+            if (timer_elapsed32(bat_show_time) > 10000) {
                 bat_show_flag = false;
                 f_charging    = false;
             }
         } else {
-            if (timer_elapsed32(bat_show_time) > BAT_SHOW_MS) {
+            if (timer_elapsed32(bat_show_time) > 5000) {
                 bat_show_flag = false;
             }
         }
@@ -1050,14 +1035,14 @@ void bat_led_show(void) {
         }
     }
 
-    if (bat_percent != dev_info.rf_battery) {
-        if (timer_elapsed32(bat_per_debounce) > BAT_DEBOUNCE_MS) {
-            bat_percent = dev_info.rf_battery;
+    if (bat_percent != dev_info.rf_baterry) {
+        if (timer_elapsed32(bat_per_debounce) > 1000) {
+            bat_percent = dev_info.rf_baterry;
         }
     } else {
         bat_per_debounce = timer_read32();
 
-        if ((bat_percent < LOW_BAT_THRESHOLD) && (!(charge_state & 0x01))) {
+        if ((bat_percent < 10) && (!(charge_state & 0x01))) {
             bat_show_flag = true;
             bat_show_time = timer_read32();
             low_bat_flag  = 1;
@@ -1071,7 +1056,7 @@ void bat_led_show(void) {
         } else
             low_bat_flag = 0;
     }
-    if (kbd_flags.bat_hold || bat_show_flag) {
+    if (f_bat_hold || bat_show_flag) {
         bat_percent_led(bat_percent);
     }
 }
@@ -1088,14 +1073,14 @@ void device_reset_init(void) {
     side_play_cnt   = 0;
     side_play_timer = timer_read32();
 
-    kbd_flags.bat_hold = false;
+    f_bat_hold = false;
 
     rgb_matrix_enable();
     rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
     rgb_matrix_set_speed(255 - RGB_MATRIX_SPD_STEP * 2);
     rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
 
-    user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
+    user_config.default_brightness_flag = 0xA6;
     user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
     user_config.ee_debounce_press_ms    = 5;
     user_config.ee_debounce_release_ms  = 5;
@@ -1118,13 +1103,13 @@ void rgb_test_show(void) {
     gpio_write_pin_high(RGB_DRIVER_SDB2);
     rgb_matrix_set_color_all(0xFF, 0x00, 0x00);
     rgb_matrix_update_pwm_buffers();
-    wait_ms(POWER_SHOW_STEP_MS);
+    wait_ms(1000);
     rgb_matrix_set_color_all(0x00, 0xFF, 0x00);
     rgb_matrix_update_pwm_buffers();
-    wait_ms(POWER_SHOW_STEP_MS);
+    wait_ms(1000);
     rgb_matrix_set_color_all(0x00, 0x00, 0xFF);
     rgb_matrix_update_pwm_buffers();
-    wait_ms(POWER_SHOW_STEP_MS);
+    wait_ms(1000);
 }
 
 #ifdef RGB_DEBUG
@@ -1241,23 +1226,22 @@ void rgb_debug_render(void) {
 void m_side_led_show(void) {
     static bool flag_power_on = 1;
 
+    side_play_cnt += timer_elapsed32(side_play_timer);
+    side_play_timer = timer_read32();
+
+    if (flag_power_on) {
+        if (!f_dial_sw_init_ok) return;
+        flag_power_on = 0;
+    }
+
     // Throttle the full side LED render (animation + status LEDs) to
-    // ~60 fps.  Must be before side_play_cnt accumulation so we don't
-    // burn cycles on timer reads every call.  side_play_cnt will
-    // capture the full elapsed interval on the next render frame.
+    // ~60 fps.  side_play_cnt is already accumulated above so animation
+    // timing stays accurate even when we skip the render this call.
     static uint32_t side_last_refresh = 0;
     if (timer_elapsed32(side_last_refresh) < SIDE_REFRESH_INTERVAL) {
         return;
     }
     side_last_refresh = timer_read32();
-
-    side_play_cnt += timer_elapsed32(side_play_timer);
-    side_play_timer = timer_read32();
-
-    if (flag_power_on) {
-        if (!kbd_flags.dial_sw_init_ok) return;
-        flag_power_on = 0;
-    }
 
     if (f_power_show) {
         side_power_mode_show();

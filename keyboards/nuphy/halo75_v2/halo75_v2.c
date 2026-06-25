@@ -83,8 +83,8 @@ static void debug_matrix_scan(void) {
 #endif /* CONSOLE_ENABLE */
 
 user_config_t   user_config;
-dev_info_struct_t dev_info = {
-    .rf_battery = 100,
+DEV_INFO_STRUCT dev_info = {
+    .rf_baterry = 100,
     .link_mode  = LINK_USB,
     .rf_state   = RF_IDLE,
 };
@@ -99,9 +99,28 @@ uint16_t       rf_sw_press_delay     = 0;
 uint8_t        rf_sw_temp            = 0;
 uint8_t        host_mode;
 
-keyboard_flags_t kbd_flags = {
-    .chg_show = true,
-};
+bool f_uart_ack        = 0;
+bool f_bat_show        = 0;
+bool f_bat_hold        = 0;
+bool f_chg_show        = 1;
+bool f_sys_show        = 0;
+bool f_sleep_show      = 0;
+bool f_usb_offline     = 0;
+bool f_rf_read_data_ok = 0;
+bool f_rf_sts_sysc_ok  = 0;
+bool f_rf_new_adv_ok   = 0;
+bool f_rf_reset        = 0;
+bool f_send_channel    = 0;
+bool f_rf_hand_ok      = 0;
+bool f_rf_send_bitkb   = 0;
+bool f_rf_send_byte    = 0;
+bool f_rf_send_consume = 0;
+bool f_wakeup_prepare  = 0;
+bool f_dial_sw_init_ok = 0;
+bool f_goto_sleep      = 0;
+bool f_rf_sw_press     = 0;
+bool f_dev_reset_press = 0;
+bool f_win_lock        = 0;
 
 /* EEPROM write batching: mark dirty on settings changes, flush after
  * 500ms of no further changes to avoid rapid repeated flash writes. */
@@ -114,7 +133,7 @@ void user_config_mark_dirty(void) {
 }
 
 void user_config_flush_if_dirty(void) {
-    if (user_config_dirty && timer_elapsed32(dirty_settle_timer) >= EEPROM_FLUSH_DELAY_MS) {
+    if (user_config_dirty && timer_elapsed32(dirty_settle_timer) >= 500) {
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
         user_config_dirty = false;
     }
@@ -190,7 +209,7 @@ void m_gpio_init(void) {
     // RF reset pin configuration
     gpio_set_pin_output(NRF_RESET_PIN);
     gpio_write_pin_low(NRF_RESET_PIN);
-    wait_ms(NRF_RESET_DELAY_MS);
+    wait_ms(50);
     gpio_write_pin_high(NRF_RESET_PIN);
 
     // Switch detection pin
@@ -205,11 +224,11 @@ void long_press_key(void) {
     static uint32_t long_press_timer = 0;
     static uint8_t  new_adv_retry    = 0;
 
-    if (timer_elapsed32(long_press_timer) < LONG_PRESS_POLL_MS) return;
+    if (timer_elapsed32(long_press_timer) < 100) return;
     long_press_timer = timer_read32();
 
     if (new_adv_retry) {
-        if (kbd_flags.rf_new_adv_ok) {
+        if (f_rf_new_adv_ok) {
             new_adv_retry = 0;
         } else {
             uart_send_cmd_deferred(CMD_NEW_ADV, 1);
@@ -217,24 +236,24 @@ void long_press_key(void) {
         }
     }
 
-    if (kbd_flags.rf_sw_press) {
+    if (f_rf_sw_press) {
         rf_sw_press_delay++;
         if (rf_sw_press_delay >= RF_LONG_PRESS_DELAY) {
-            kbd_flags.rf_sw_press   = 0;
+            f_rf_sw_press        = 0;
             dev_info.link_mode   = rf_sw_temp;
             dev_info.rf_channel  = rf_sw_temp;
             dev_info.ble_channel = rf_sw_temp;
-            kbd_flags.rf_new_adv_ok  = 0;
+            f_rf_new_adv_ok      = 0;
             new_adv_retry        = 5;
         }
     } else {
         rf_sw_press_delay = 0;
     }
 
-    if (kbd_flags.dev_reset_press && dev_reset_state == RESET_IDLE) {
+    if (f_dev_reset_press && dev_reset_state == RESET_IDLE) {
         dev_reset_press_delay++;
         if (dev_reset_press_delay >= DEV_RESET_PRESS_DELAY) {
-            kbd_flags.dev_reset_press = 0;
+            f_dev_reset_press = 0;
 
             /* Set link-mode defaults synchronously — just variable writes. */
             if (dev_info.link_mode != LINK_USB) {
@@ -299,7 +318,7 @@ static void switch_dev_link(uint8_t mode) {
 
     dev_info.link_mode = mode;
     dev_info.rf_state  = RF_IDLE;
-    kbd_flags.send_channel  = 1;
+    f_send_channel     = 1;
 
     if (mode == LINK_USB) {
         host_mode = HOST_USB_TYPE;
@@ -323,7 +342,7 @@ void dial_sw_scan(void) {
     static uint8_t  dial_change_cnt = 0;
 
     if (!flag_power_on) {
-        if (timer_elapsed32(dial_scan_timer) < DIAL_SCAN_INTERVAL_MS) return;
+        if (timer_elapsed32(dial_scan_timer) < 20) return;
     }
     dial_scan_timer = timer_read32();
 
@@ -334,14 +353,14 @@ void dial_sw_scan(void) {
     if (gpio_read_pin(SYS_MODE_PIN)) dial_scan |= 0X02;
 
     if (dial_save != dial_scan) {
-        if (++dial_change_cnt < DIAL_CHANGE_CONFIRM) return;
+        if (++dial_change_cnt < 3) return;
         dial_change_cnt = 0;
         m_break_all_key();
         dial_save         = dial_scan;
         no_act_time       = 0;
         rf_linking_time   = 0;
-        debounce          = DIAL_DEBOUNCE_COUNT;
-        kbd_flags.dial_sw_init_ok = 0;
+        debounce          = 25;
+        f_dial_sw_init_ok = 0;
         return;
     } else {
         dial_change_cnt = 0;
@@ -363,27 +382,27 @@ void dial_sw_scan(void) {
 
     if (dial_scan & 0x02) {
         if (dev_info.sys_sw_state != SYS_SW_WIN) {
-            kbd_flags.sys_show = 1;
+            f_sys_show = 1;
             default_layer_set(1 << 2);
             dev_info.sys_sw_state = SYS_SW_WIN;
-            keymap_config.no_gui  = kbd_flags.win_lock;
+            keymap_config.no_gui  = f_win_lock;
             m_break_all_key();
         }
         keymap_config.nkro = 1;
     } else {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
-            kbd_flags.sys_show = 1;
+            f_sys_show = 1;
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
-            kbd_flags.win_lock      = keymap_config.no_gui;
+            f_win_lock            = keymap_config.no_gui;
             m_break_all_key();
         }
         keymap_config.nkro   = 0;
         keymap_config.no_gui = 0;
     }
 
-    if (kbd_flags.dial_sw_init_ok == 0) {
-        kbd_flags.dial_sw_init_ok = 1;
+    if (f_dial_sw_init_ok == 0) {
+        f_dial_sw_init_ok = 1;
         flag_power_on     = 0;
 
         if (dev_info.link_mode != LINK_USB) {
@@ -404,12 +423,12 @@ void m_power_on_dial_sw_scan(void) {
     uint8_t dial_check_sys = 0;
     uint8_t debounce       = 0;
 
-    kbd_flags.win_lock = 0;
+    f_win_lock = 0;
 
     gpio_set_pin_input_high(DEV_MODE_PIN);
     gpio_set_pin_input_high(SYS_MODE_PIN);
 
-    for (debounce = 0; debounce < DIAL_POWER_ON_DEBOUNCE; debounce++) {
+    for (debounce = 0; debounce < 10; debounce++) {
         dial_scan_dev = 0;
         dial_scan_sys = 0;
         if (gpio_read_pin(DEV_MODE_PIN))
@@ -449,7 +468,7 @@ void m_power_on_dial_sw_scan(void) {
             default_layer_set(1 << 0); // MAC
             dev_info.sys_sw_state = SYS_SW_MAC;
             keymap_config.nkro    = 0;
-            kbd_flags.win_lock      = keymap_config.no_gui;
+            f_win_lock            = keymap_config.no_gui;
             keymap_config.no_gui  = 0;
             m_break_all_key();
         }
@@ -478,7 +497,7 @@ static void macro_tap_deferred(uint16_t keycode) {
 }
 
 static void macro_tap_task(void) {
-    if (macro_tap_keycode != KC_NO && timer_elapsed32(macro_tap_timer) >= MACRO_TAP_HOLD_MS) {
+    if (macro_tap_keycode != KC_NO && timer_elapsed32(macro_tap_timer) >= 20) {
         macro_tap_release();
     }
 }
@@ -502,11 +521,11 @@ static bool handle_wireless_link(uint8_t link_target, keyrecord_t *record) {
     if (record->event.pressed) {
         if (dev_info.link_mode != LINK_USB) {
             rf_sw_temp    = link_target;
-            kbd_flags.rf_sw_press = 1;
+            f_rf_sw_press = 1;
             m_break_all_key();
         }
-    } else if (kbd_flags.rf_sw_press) {
-        kbd_flags.rf_sw_press = 0;
+    } else if (f_rf_sw_press) {
+        f_rf_sw_press = 0;
         if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
             dev_info.link_mode   = rf_sw_temp;
             dev_info.rf_channel  = rf_sw_temp;
@@ -701,10 +720,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         /* ── Device reset ────────────────────────────────────────── */
         case DEV_RESET:
             if (record->event.pressed) {
-                kbd_flags.dev_reset_press = 1;
+                f_dev_reset_press = 1;
                 m_break_all_key();
             } else {
-                kbd_flags.dev_reset_press = 0;
+                f_dev_reset_press = 0;
             }
             return false;
 
@@ -715,14 +734,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     set_f_dev_sleep_enable(false);
                 else
                     set_f_dev_sleep_enable(true);
-                kbd_flags.sleep_show = 1;
+                f_sleep_show = 1;
                 user_config_mark_dirty();
             }
             return false;
 
         case BAT_SHOW:
             if (record->event.pressed) {
-                kbd_flags.bat_hold = !kbd_flags.bat_hold;
+                f_bat_hold = !f_bat_hold;
             }
             return false;
 
@@ -781,7 +800,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case NKRO_MODE:
             if (record->event.pressed) {
                 uint8_t mode = get_nkro_mode();
-                mode = (mode + 1) % NKRO_MODE_COUNT; /* Auto -> On -> Off -> Auto */
+                mode = (mode + 1) % 3; /* Auto -> On -> Off -> Auto */
                 set_nkro_mode(mode);
                 apply_nkro_override();
                 user_config_mark_dirty();
@@ -809,23 +828,23 @@ void timer_pro(void) {
     /* Count elapsed steps so slower housekeeping loops don't stretch
      * timeouts.  Each step is 10 ms (TIMER_STEP). */
     uint32_t elapsed = timer_elapsed32(interval_timer);
-    if (elapsed < TIMER_STEP_MS) return;
+    if (elapsed < 10) return;
 
-    uint32_t steps = elapsed / TIMER_STEP_MS;
-    interval_timer += steps * TIMER_STEP_MS;
+    uint32_t steps = elapsed / 10;
+    interval_timer += steps * 10;
 
     if (rf_link_show_time < RF_LINK_SHOW_TIME) {
         uint32_t remaining = RF_LINK_SHOW_TIME - rf_link_show_time;
         rf_link_show_time += (steps < remaining) ? steps : remaining;
     }
 
-    if (no_act_time < NO_ACT_TIME_MAX) {
-        uint32_t remaining = NO_ACT_TIME_MAX - no_act_time;
+    if (no_act_time < 0xffffff) {
+        uint32_t remaining = 0xffffff - no_act_time;
         no_act_time += (steps < remaining) ? steps : remaining;
     }
 
-    if (rf_linking_time < RF_LINKING_TIME_MAX) {
-        uint32_t remaining = RF_LINKING_TIME_MAX - rf_linking_time;
+    if (rf_linking_time < 0xffff) {
+        uint32_t remaining = 0xffff - rf_linking_time;
         rf_linking_time += (steps < remaining) ? steps : remaining;
     }
 }
@@ -835,9 +854,9 @@ void timer_pro(void) {
  */
 void m_loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config_t));
-    if (user_config.default_brightness_flag != DEFAULT_BRIGHTNESS_FLAG) {
+    if (user_config.default_brightness_flag != 0xA6) {
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
-        user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
+        user_config.default_brightness_flag = 0xA6;
         user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
         user_config.ee_debounce_press_ms    = 5;
         user_config.ee_debounce_release_ms  = 5;
@@ -903,7 +922,7 @@ void keyboard_pre_init_kb(void) {
 void keyboard_post_init_kb(void) {
     m_gpio_init();
     rf_uart_init();
-    wait_ms(RF_INIT_DELAY_MS);
+    wait_ms(500);
     rf_device_init();
 
     m_break_all_key();
@@ -947,7 +966,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     return true;
 #else
     if (keymap_config.no_gui) {
-        rgb_matrix_set_color(WIN_LOCK_LED_INDEX, 0x00, 0x80, 0x00);
+        rgb_matrix_set_color(72, 0x00, 0x80, 0x00);
     }
 
     // Side LEDs are driven by the dedicated side LED system in side.c,
@@ -983,7 +1002,7 @@ static void dev_reset_task(void) {
 
         case RESET_WAIT:
             /* 500 ms cool-down so the RF module processes SET_LINK first. */
-            if (timer_elapsed32(dev_reset_timer) >= RESET_WAIT_MS) {
+            if (timer_elapsed32(dev_reset_timer) >= 500) {
                 dev_reset_state = RESET_CLR_DEVICE;
             }
             break;
@@ -1007,15 +1026,15 @@ static void dev_reset_task(void) {
 
         case RESET_BLINK:
             if (dev_reset_blink_on) {
-                if (timer_elapsed32(dev_reset_timer) >= RESET_BLINK_MS) {
+                if (timer_elapsed32(dev_reset_timer) >= 200) {
                     rgb_matrix_set_color_all(0x00, 0x00, 0x00);
                     rgb_matrix_update_pwm_buffers();
                     dev_reset_timer    = timer_read32();
                     dev_reset_blink_on = false;
                 }
             } else {
-                if (timer_elapsed32(dev_reset_timer) >= RESET_BLINK_MS) {
-                    if (++dev_reset_blink >= RESET_BLINK_COUNT) {
+                if (timer_elapsed32(dev_reset_timer) >= 200) {
+                    if (++dev_reset_blink >= 3) {
                         dev_reset_state = RESET_INIT;
                         break;
                     }
@@ -1031,7 +1050,7 @@ static void dev_reset_task(void) {
             device_reset_init();
 
             keymap_config.no_gui = 0;
-            kbd_flags.win_lock        = 0;
+            f_win_lock           = 0;
 
             if (dev_info.sys_sw_state == SYS_SW_MAC) {
                 default_layer_set(1 << 0); // MAC
@@ -1184,7 +1203,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     value_data[0] = socd_get_mode();
                     break;
                 case id_battery_level:
-                    value_data[0] = dev_info.rf_battery;
+                    value_data[0] = dev_info.rf_baterry;
                     break;
                 default:
                     *command_id = id_unhandled;

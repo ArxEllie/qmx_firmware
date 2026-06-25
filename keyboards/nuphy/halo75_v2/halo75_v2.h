@@ -84,44 +84,6 @@ typedef enum {
 #define RF_LONG_PRESS_DELAY 30
 #define DEV_RESET_PRESS_DELAY 30
 
-/* ── Semantically-named timing & threshold constants ────────────── */
-
-/* Main loop / polling intervals (ms) */
-#define TIMER_STEP_MS           10    /* timer_pro() tick interval */
-#define LONG_PRESS_POLL_MS      100   /* long_press_key() poll interval */
-#define DIAL_SCAN_INTERVAL_MS   20    /* dial_sw_scan() poll interval */
-#define MACRO_TAP_HOLD_MS       20    /* macro_tap_task() hold before auto-release */
-
-/* EEPROM batching */
-#define EEPROM_FLUSH_DELAY_MS   500   /* dirty settle time before auto-flush */
-
-/* Dial switch debouncing */
-#define DIAL_DEBOUNCE_COUNT     25    /* debounce steps after a dial change */
-#define DIAL_CHANGE_CONFIRM     3     /* consecutive stable reads to accept change */
-#define DIAL_POWER_ON_DEBOUNCE  10    /* power-on dial scan debounce iterations */
-
-/* Device reset state machine */
-#define RESET_WAIT_MS           500   /* cool-down after CMD_SET_LINK */
-#define RESET_BLINK_MS          200   /* per-blink duration (white/off) */
-#define RESET_BLINK_COUNT       3     /* total white/off blinks */
-
-/* RF / NRF init delays */
-#define NRF_RESET_DELAY_MS      50    /* NRF reset pulse width */
-#define RF_INIT_DELAY_MS        500   /* post-UART-init delay before rf_device_init */
-
-/* Timer saturation limits */
-#define NO_ACT_TIME_MAX         0xFFFFFFU /* no_act_time ceiling (24-bit) */
-#define RF_LINKING_TIME_MAX     0xFFFFU   /* rf_linking_time ceiling (16-bit) */
-
-/* EEPROM sentinel */
-#define DEFAULT_BRIGHTNESS_FLAG 0xA6  /* first-boot marker for user_config */
-
-/* NKRO mode cycling */
-#define NKRO_MODE_COUNT         3     /* Auto -> On -> Off -> Auto */
-
-/* LED index for Win lock indicator */
-#define WIN_LOCK_LED_INDEX      72
-
 #define CMD_POWER_UP 0XF0
 #define CMD_SLEEP 0XF1
 #define CMD_HAND 0XF2
@@ -178,51 +140,9 @@ typedef struct {
     uint8_t rf_state;
     uint8_t rf_charge;
     uint8_t rf_led;
-    uint8_t rf_battery;
+    uint8_t rf_baterry;
     uint8_t sys_sw_state;
-} dev_info_struct_t;
-
-/* Consolidated global boolean flags — previously scattered as individual
- * `bool f_xxx` globals.  Grouped here for discoverability and to keep
- * the .bss footprint tight.  Field names drop the legacy `f_` prefix;
- * access via `kbd_flags.xxx`. */
-typedef struct {
-    /* UART / RF protocol state */
-    bool uart_ack;
-    bool rf_hand_ok;
-    bool rf_read_data_ok;
-    bool rf_sts_sysc_ok;
-    bool rf_new_adv_ok;
-    bool rf_reset;
-    bool send_channel;
-
-    /* RF report dispatch */
-    bool rf_send_bitkb;
-    bool rf_send_byte;
-    bool rf_send_consume;
-
-    /* Power / sleep */
-    bool goto_sleep;
-    bool wakeup_prepare;
-    bool usb_offline;
-
-    /* Dial switch */
-    bool dial_sw_init_ok;
-
-    /* User interaction */
-    bool rf_sw_press;
-    bool dev_reset_press;
-    bool win_lock;
-
-    /* LED / display indicators */
-    bool bat_show;
-    bool bat_hold;
-    bool chg_show;
-    bool sys_show;
-    bool sleep_show;
-} keyboard_flags_t;
-
-extern keyboard_flags_t kbd_flags;
+} DEV_INFO_STRUCT;
 
 #define DELAY_2MS 2
 #define DELAY_4MS 4
