@@ -49,7 +49,7 @@ void wakeup_handle(void) {
  *   f_usb_sleep_enable  — allow light sleep on USB suspend / inactivity
  *   f_deep_sleep_enable — allow deep sleep (STOP mode) on RF+battery
  *
- * sleep_timeout (1–60 min) replaces the fixed SLEEP_TIME_DELAY.
+ * sleep_timeout (1–60 min) is configurable via ee_sleep_timeout.
  */
 void Sleep_Handle(void) {
     static uint32_t delay_step_timer     = 0;

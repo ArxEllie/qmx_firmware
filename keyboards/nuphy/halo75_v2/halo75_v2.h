@@ -234,7 +234,6 @@ extern keyboard_flags_t kbd_flags;
 #define HOST_RF_TYPE 2
 
 #define LINK_TIMEOUT (uint32_t)(100 * 120)
-#define SLEEP_TIME_DELAY (uint32_t)(100 * 360)
 #define POWER_DOWN_DELAY (uint16_t)(24)
 
 #define SLEEP_TIMEOUT_DEFAULT 30   /* minutes */
