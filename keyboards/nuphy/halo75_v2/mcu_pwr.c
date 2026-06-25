@@ -107,10 +107,10 @@ void enter_deep_sleep(void) {
      * reports that would overflow during STOP.  Send directly — the
      * deferred UART task won't drain before STOP mode. */
     if (dev_info.rf_state == RF_CONNECT) {
-        uart_send_cmd(CMD_SET_CONFIG, 0, 0);
-        uart_send_cmd(CMD_SLEEP, 0, 0);
+        uart_send_cmd(CMD_SET_CONFIG, 0);
+        uart_send_cmd(CMD_SLEEP, 0);
     } else {
-        uart_send_cmd(CMD_SLEEP, 0, 0);
+        uart_send_cmd(CMD_SLEEP, 0);
     }
 
     /* COL2ROW diode direction: diode anode on column, cathode on row.

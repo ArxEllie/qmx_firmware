@@ -360,16 +360,9 @@ reset_rx:
 /**
  * @brief  Uart send cmd (fire-and-forget).
  * @param  cmd: cmd.
- * @param  wait_ack: unused — kept for call-site compatibility.
  * @param  delayms: delay before sending (blocking, boot-time only).
- *
- * The former ack-wait loop was a no-op: f_uart_ack is set by
- * RF_Protocol_Receive(), which is only called from uart_receive_pro(),
- * and neither is serviced inside this function.  No caller uses the
- * return value, so the wait was a pure blocking delay with no effect.
  */
-uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
-    (void)wait_ack;
+void uart_send_cmd(uint8_t cmd, uint8_t delayms) {
     if (delayms) {
         wait_ms(delayms);
     }
@@ -514,8 +507,6 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
 
     kbd_flags.uart_ack = 0;
     UART_Send_Bytes(Usart_Mgr.TXDBuf, Usart_Mgr.TXDBuf[3] + 5);
-
-    return TX_OK;
 }
 
 uint8_t uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms) {
@@ -552,7 +543,7 @@ void uart_send_cmd_deferred_task(void) {
         return;
     }
 
-    uart_send_cmd(cmd->cmd, 0, 0);
+    uart_send_cmd(cmd->cmd, 0);
     deferred_uart_head = (deferred_uart_head + 1) % UART_DEFERRED_QUEUE_LEN;
     deferred_uart_count--;
 
@@ -858,7 +849,7 @@ bool rf_init_task(void) {
 
         case 2: /* CMD_HAND */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
-                uart_send_cmd(CMD_HAND, 0, 0);
+                uart_send_cmd(CMD_HAND, 0);
                 rf_init_timer   = timer_read32();
                 rf_init_retries++;
             }
@@ -877,7 +868,7 @@ bool rf_init_task(void) {
 
         case 3: /* CMD_READ_DATA */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
-                uart_send_cmd(CMD_READ_DATA, 0, 0);
+                uart_send_cmd(CMD_READ_DATA, 0);
                 rf_init_timer   = timer_read32();
                 rf_init_retries++;
             }
@@ -896,7 +887,7 @@ bool rf_init_task(void) {
 
         case 4: /* CMD_RF_STS_SYSC */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
-                uart_send_cmd(CMD_RF_STS_SYSC, 0, 0);
+                uart_send_cmd(CMD_RF_STS_SYSC, 0);
                 rf_init_timer   = timer_read32();
                 rf_init_retries++;
             }
@@ -921,7 +912,7 @@ bool rf_init_task(void) {
 
         case 6: /* CMD_SET_NAME */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_CMD_DELAY_MS) {
-                uart_send_cmd(CMD_SET_NAME, 10, 0);
+                uart_send_cmd(CMD_SET_NAME, 0);
                 rf_init_step    = 7;
                 rf_init_timer   = timer_read32();
             }
@@ -929,7 +920,7 @@ bool rf_init_task(void) {
 
         case 7: /* CMD_SET_24G_NAME */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_CMD_DELAY_MS) {
-                uart_send_cmd(CMD_SET_24G_NAME, 10, 0);
+                uart_send_cmd(CMD_SET_24G_NAME, 0);
                 rf_init_step    = 8;
             }
             break;

@@ -44,7 +44,7 @@ void     uart_send_mouse_report(report_mouse_t *report);
 void     uart_send_consumer_report(report_extra_t *report);
 void     uart_send_system_report(report_extra_t *report);
 uint8_t  uart_send_cmd_deferred(uint8_t cmd, uint8_t delayms);
-uint8_t  uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms);
+void     uart_send_cmd(uint8_t cmd, uint8_t delayms);
 void     uart_send_cmd_deferred_task(void);
 void     uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t report_size);
 void     uart_receive_pro(void);
