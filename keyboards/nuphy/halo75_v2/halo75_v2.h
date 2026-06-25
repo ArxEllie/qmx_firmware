@@ -178,7 +178,7 @@ typedef struct {
     uint8_t rf_state;
     uint8_t rf_charge;
     uint8_t rf_led;
-    uint8_t rf_baterry;
+    uint8_t rf_battery;
     uint8_t sys_sw_state;
 } DEV_INFO_STRUCT;
 
