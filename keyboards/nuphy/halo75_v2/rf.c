@@ -642,6 +642,7 @@ const uint8_t battery_acfg_tab[BAT_CFG_LEN] = {
 
 void UART_Send_BatCfg(void) {
     uint8_t buf[128] = {0};
+    _Static_assert(BAT_CFG_LEN + 5 <= sizeof(buf), "battery config exceeds UART buffer");
 
     buf[0] = UART_HEAD;
     buf[1] = CMD_WBAT_CFG;
