@@ -85,10 +85,15 @@ uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
 
     for (uint8_t current_row = 0; current_row < MATRIX_ROWS; current_row++) {
         /* Wait for all column signals to settle HIGH before selecting
-         * a row.  This prevents ghost reads from the previous row scan. */
+         * a row.  This prevents ghost reads from the previous row scan.
+         * Cap total iterations so a stuck-low column (hardware fault,
+         * short) can't block the scan forever. */
         uint8_t stable_threshold = MATRIX_DEBOUNCE;
-        while (stable_threshold > 0)
+        uint16_t settle_iters = 0;
+        while (stable_threshold > 0) {
+            if (++settle_iters > 1000) break;
             stable_threshold = ((((palReadPort(PAL_PORT(A0)) & colA_bits) ^ colA_bits) | ((palReadPort(PAL_PORT(B0)) & colB_bits) ^ colB_bits)) == 0) ? (stable_threshold - 1) : MATRIX_DEBOUNCE;
+        }
 
         select_row(current_row);
         matrix_output_select_delay();
