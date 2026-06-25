@@ -133,19 +133,19 @@ const uint8_t colour_lib_1[9][3] = {
     {0x70, 0x00, 0x00}, {0x70, 0x20, 0x00}, {0x60, 0x30, 0x00}, {0x00, 0x70, 0x00}, {0x00, 0x70, 0x70}, {0x00, 0x00, 0x70}, {0x70, 0x00, 0x70}, {0x40, 0x70, 0x60}, {0x00, 0x00, 0x00},
 };
 
-uint8_t  side_line       = SIDE_LED_COUNT;
-bool     f_charging      = 0;
+static uint8_t  side_line       = SIDE_LED_COUNT;
+static bool     f_charging      = 0;
 uint8_t  side_mode_a     = 0;
 uint8_t  side_mode_b     = 3;
 uint8_t  side_light      = 2;
 uint8_t  side_speed      = 2;
 uint8_t  side_rgb        = 1;
 uint8_t  side_colour     = 0;
-uint8_t  side_play_point = 0;
-uint32_t bat_show_time   = 0;
-bool     bat_show_flag   = true;
-uint16_t side_play_cnt   = 0;
-uint32_t side_play_timer = 0;
+static uint8_t  side_play_point = 0;
+static uint32_t bat_show_time   = 0;
+static bool     bat_show_flag   = true;
+static uint16_t side_play_cnt   = 0;
+static uint32_t side_play_timer = 0;
 
 uint8_t r_temp, g_temp, b_temp;
 
