@@ -122,6 +122,23 @@ bool f_rf_sw_press     = 0;
 bool f_dev_reset_press = 0;
 bool f_win_lock        = 0;
 
+/* EEPROM write batching: mark dirty on settings changes, flush after
+ * 500ms of no further changes to avoid rapid repeated flash writes. */
+static bool     user_config_dirty  = false;
+static uint32_t dirty_settle_timer = 0;
+
+void user_config_mark_dirty(void) {
+    user_config_dirty  = true;
+    dirty_settle_timer = timer_read32();
+}
+
+void user_config_flush_if_dirty(void) {
+    if (user_config_dirty && timer_elapsed32(dirty_settle_timer) >= 500) {
+        eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+        user_config_dirty = false;
+    }
+}
+
 /* Apply NKRO override after OS switch logic sets keymap_config.nkro.
  * In Auto mode, the OS switch value is kept. In On/Off, it's overridden. */
 static void apply_nkro_override(void) {
@@ -718,7 +735,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 else
                     set_f_dev_sleep_enable(true);
                 f_sleep_show = 1;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
 
@@ -731,52 +748,52 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case DEBOUNCE_PRESS_INC:
             if (record->event.pressed && user_config.ee_debounce_press_ms < 99) {
                 user_config.ee_debounce_press_ms += DEBOUNCE_STEP;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
         case DEBOUNCE_PRESS_DEC:
             if (record->event.pressed && user_config.ee_debounce_press_ms > 0) {
                 user_config.ee_debounce_press_ms -= DEBOUNCE_STEP;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
         case DEBOUNCE_RELEASE_INC:
             if (record->event.pressed && user_config.ee_debounce_release_ms < 99) {
                 user_config.ee_debounce_release_ms += DEBOUNCE_STEP;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
         case DEBOUNCE_RELEASE_DEC:
             if (record->event.pressed && user_config.ee_debounce_release_ms > 0) {
                 user_config.ee_debounce_release_ms -= DEBOUNCE_STEP;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
 
         case SLEEP_TIMEOUT_INC:
             if (record->event.pressed && user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MAX) {
                 user_config.ee_sleep_timeout += SLEEP_TIMEOUT_STEP;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
         case SLEEP_TIMEOUT_DEC:
             if (record->event.pressed && user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MIN) {
                 user_config.ee_sleep_timeout -= SLEEP_TIMEOUT_STEP;
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
 
         case USB_SLEEP_TOGGLE:
             if (record->event.pressed) {
                 set_f_usb_sleep_enable(!f_usb_sleep_enable);
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
 
         case DEEP_SLEEP_TOGGLE:
             if (record->event.pressed) {
                 set_f_deep_sleep_enable(!f_deep_sleep_enable);
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
 
@@ -786,7 +803,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 mode = (mode + 1) % 3; /* Auto -> On -> Off -> Auto */
                 set_nkro_mode(mode);
                 apply_nkro_override();
-                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+                user_config_mark_dirty();
             }
             return false;
 
@@ -1035,6 +1052,7 @@ static void dev_reset_task(void) {
    housekeeping_task_kb
  */
 void housekeeping_task_kb(void) {
+    user_config_flush_if_dirty();
 #ifdef CONSOLE_ENABLE
     debug_matrix_scan();
 #endif
@@ -1156,6 +1174,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
 
         case id_custom_save:
             eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+            user_config_dirty = false;
             break;
 
         default:

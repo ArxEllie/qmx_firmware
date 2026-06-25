@@ -163,7 +163,7 @@ void light_level_control(uint8_t brighten) {
             side_light--;
     }
     side_led_set_light(side_light);
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+    user_config_mark_dirty();
 }
 
 /**
@@ -180,7 +180,7 @@ void light_speed_control(uint8_t fast) {
         if ((side_speed) < LIGHT_SPEED_MAX) side_speed++;
     }
     side_led_set_speed(side_speed);
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+    user_config_mark_dirty();
 }
 
 /**
@@ -226,7 +226,7 @@ void    side_colour_control(uint8_t dir) {
     }
     side_led_set_rgb(side_rgb);
     side_led_set_colour(side_colour);
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+    user_config_mark_dirty();
 }
 
 /**
@@ -257,7 +257,7 @@ void    side_mode_a_control(uint8_t dir) {
 
     side_play_point            = 0;
     side_led_set_mode_a(side_mode_a);
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+    user_config_mark_dirty();
 }
 
 void side_mode_b_control(uint8_t dir) {
@@ -275,7 +275,7 @@ void side_mode_b_control(uint8_t dir) {
     }
     side_play_point            = 0;
     side_led_set_mode_b(side_mode_b);
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+    user_config_mark_dirty();
 }
 
 /**
@@ -1088,7 +1088,7 @@ void device_reset_init(void) {
     set_f_usb_sleep_enable(false);
     set_f_deep_sleep_enable(true);
     set_nkro_mode(NKRO_AUTO);
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
+    user_config_mark_dirty();
 }
 
 /**

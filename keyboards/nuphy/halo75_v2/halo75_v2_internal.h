@@ -25,6 +25,10 @@ extern bool            f_wakeup_prepare;
 extern bool            f_dial_sw_init_ok;
 extern bool            f_goto_sleep;
 
+/* EEPROM write batching — defined in halo75_v2.c */
+void     user_config_mark_dirty(void);
+void     user_config_flush_if_dirty(void);
+
 /* Defined in rf.c */
 extern uint8_t         uart_bit_report_buf[32];
 extern uint8_t         bitkb_report_buf[32];
