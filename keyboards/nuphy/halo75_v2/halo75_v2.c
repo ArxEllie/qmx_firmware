@@ -752,7 +752,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         case DEBOUNCE_PRESS_DEC:
-            if (record->event.pressed && user_config.ee_debounce_press_ms > 0) {
+            if (record->event.pressed && user_config.ee_debounce_press_ms > 1) {
                 user_config.ee_debounce_press_ms -= DEBOUNCE_STEP;
                 user_config_mark_dirty();
             }
@@ -764,7 +764,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         case DEBOUNCE_RELEASE_DEC:
-            if (record->event.pressed && user_config.ee_debounce_release_ms > 0) {
+            if (record->event.pressed && user_config.ee_debounce_release_ms > 1) {
                 user_config.ee_debounce_release_ms -= DEBOUNCE_STEP;
                 user_config_mark_dirty();
             }
@@ -1110,10 +1110,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
         case id_custom_set_value:
             switch (*value_id) {
                 case id_debounce_press_ms:
-                    user_config.ee_debounce_press_ms = value_data[0];
+                    user_config.ee_debounce_press_ms = (value_data[0] < 1) ? 1 : value_data[0];
                     break;
                 case id_debounce_release_ms:
-                    user_config.ee_debounce_release_ms = value_data[0];
+                    user_config.ee_debounce_release_ms = (value_data[0] < 1) ? 1 : value_data[0];
                     break;
                 case id_sleep_timeout:
                     user_config.ee_sleep_timeout = value_data[0];
