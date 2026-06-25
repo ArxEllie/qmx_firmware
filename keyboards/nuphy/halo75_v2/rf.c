@@ -700,7 +700,16 @@ void UART_Send_Bytes(const uint8_t *Buffer, uint32_t Length) {
 }
 
 /**
- * @brief get checksum.
+ * @brief get checksum for outbound (TX) frames.
+ *
+ * TX checksum: sum(payload) ^ UART_HEAD.  The RF module expects this
+ * XOR-folded checksum on frames it receives from us.
+ *
+ * Note: inbound (RX) validation in RF_Protocol_Receive() uses a plain
+ * additive sum with no XOR — the RF module computes its own checksum
+ * differently.  This asymmetry is intentional and dictated by the
+ * RF module's proprietary protocol; do not "unify" the two.
+ *
  * @param buf data buf
  * @param len data length
  */
