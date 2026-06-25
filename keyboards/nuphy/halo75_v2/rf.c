@@ -195,8 +195,8 @@ void uart_send_report_keyboard(report_keyboard_t *report) {
  */
 void uart_send_report_nkro(report_nkro_t *report) {
     no_act_time = 0;
-    uart_auto_nkey_send(bitkb_report_buf, &nkro_report->mods, NKRO_REPORT_BITS + 1);
-    memcpy(&bitkb_report_buf[0], &nkro_report->mods, NKRO_REPORT_BITS + 1);
+    uart_auto_nkey_send(bitkb_report_buf, &report->mods, NKRO_REPORT_BITS + 1);
+    memcpy(&bitkb_report_buf[0], &report->mods, NKRO_REPORT_BITS + 1);
 }
 
 /**
