@@ -19,6 +19,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "uart.h" // qmk uart.h
 #include "rf_driver.h"
 
+/* RF report / sync timing (ms) */
+#define RF_REPORT_INTERVAL_MS   300   /* periodic RF keyboard report push */
+#define RF_IDLE_THRESHOLD       2000  /* no_act_time (steps) before suppressing reports */
+#define RF_SYNC_INTERVAL_MS     200   /* dev_sts_sync poll interval */
+
+/* NRF reset sequence (ms) */
+#define NRF_RESET_LOW_MS        100   /* hold reset low before releasing */
+#define NRF_RESET_HIGH_MS       50    /* wait after release before using */
+
+/* UART inter-frame timing (µs) */
+#define UART_WAKEUP_PULSE_US    50    /* wakeup pulse before UART transmit */
+#define UART_TX_TIME_PER_BYTE   32    /* µs per byte at current baud */
+#define UART_FRAME_GAP_US       200   /* gap between repeated frames */
+
+/* UART BAT config delay (ms) */
+#define UART_BATCFG_DELAY_MS    50
+
+/* RF init retry loop (ms) */
+#define RF_INIT_RETRY_DELAY_MS  5     /* wait between init retries */
+#define RF_INIT_CMD_DELAY_MS    20    /* delayms passed to uart_send_cmd */
+
 USART_MGR_STRUCT Usart_Mgr;
 #define RX_SBYTE Usart_Mgr.RXDBuf[0]
 #define RX_CMD Usart_Mgr.RXDBuf[1]
@@ -138,11 +159,11 @@ void uart_send_report_func(void) {
 
     if (dev_info.link_mode == LINK_USB) return;
 
-    if (timer_elapsed32(interval_timer) > 300) {
+    if (timer_elapsed32(interval_timer) > RF_REPORT_INTERVAL_MS) {
         interval_timer = timer_read32();
-        if (no_act_time <= 2000) {
+        if (no_act_time <= RF_IDLE_THRESHOLD) {
             uart_send_report(CMD_RPT_BYTE_KB, bytekb_report_buf, 8);
-            wait_us(200);
+            wait_us(UART_FRAME_GAP_US);
 
             if (f_bit_kb_act) uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
         } else {
@@ -552,15 +573,15 @@ static bool rf_reset_task(void) {
         return false;
     }
 
-    if (reset_step == 1 && timer_elapsed32(reset_timer) >= 100) {
+    if (reset_step == 1 && timer_elapsed32(reset_timer) >= NRF_RESET_LOW_MS) {
         gpio_write_pin_low(NRF_RESET_PIN);
         reset_step  = 2;
         reset_timer = timer_read32();
-    } else if (reset_step == 2 && timer_elapsed32(reset_timer) >= 50) {
+    } else if (reset_step == 2 && timer_elapsed32(reset_timer) >= NRF_RESET_HIGH_MS) {
         gpio_write_pin_high(NRF_RESET_PIN);
         reset_step  = 3;
         reset_timer = timer_read32();
-    } else if (reset_step == 3 && timer_elapsed32(reset_timer) >= 50) {
+    } else if (reset_step == 3 && timer_elapsed32(reset_timer) >= NRF_RESET_HIGH_MS) {
         reset_step = 0;
     }
 
@@ -578,7 +599,7 @@ void dev_sts_sync(void) {
         return;
     }
 
-    if (timer_elapsed32(interval_timer) < 200)
+    if (timer_elapsed32(interval_timer) < RF_SYNC_INTERVAL_MS)
         return;
     else
         interval_timer = timer_read32();
@@ -651,7 +672,7 @@ void UART_Send_BatCfg(void) {
     memcpy(&buf[4], battery_acfg_tab, BAT_CFG_LEN);
     buf[4 + BAT_CFG_LEN] = get_checksum(&buf[4], BAT_CFG_LEN);
     UART_Send_Bytes(buf, BAT_CFG_LEN + 5);
-    wait_ms(50);
+    wait_ms(UART_BATCFG_DELAY_MS);
 }
 
 /**
@@ -663,22 +684,22 @@ void UART_Send_Bytes(const uint8_t *Buffer, uint32_t Length) {
     if (uart_repeat_flag) {
         for (uint8_t i = 0; i < 3; i++) {
             gpio_write_pin_low(NRF_WAKEUP_PIN);
-            wait_us(50);
+            wait_us(UART_WAKEUP_PULSE_US);
 
             uart_transmit(Buffer, Length);
 
-            wait_us(50 + Length * 32);
+            wait_us(UART_WAKEUP_PULSE_US + Length * UART_TX_TIME_PER_BYTE);
             gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-            wait_us(200);
+            wait_us(UART_FRAME_GAP_US);
         }
     } else {
         gpio_write_pin_low(NRF_WAKEUP_PIN);
-        wait_us(50);
+        wait_us(UART_WAKEUP_PULSE_US);
 
         uart_transmit(Buffer, Length);
 
-        wait_us(50 + Length * 32);
+        wait_us(UART_WAKEUP_PULSE_US + Length * UART_TX_TIME_PER_BYTE);
         gpio_write_pin_high(NRF_WAKEUP_PIN);
     }
 }
@@ -728,7 +749,7 @@ void uart_send_report(uint8_t report_type, const uint8_t *report_buf, uint8_t re
 
     uart_repeat_flag = 0;
 
-    wait_us(200);
+    wait_us(UART_FRAME_GAP_US);
 }
 
 /**
@@ -789,8 +810,8 @@ void rf_device_init(void) {
     timeout      = 10;
     f_rf_hand_ok = 0;
     while (timeout--) {
-        uart_send_cmd(CMD_HAND, 0, 20);
-        wait_ms(5);
+        uart_send_cmd(CMD_HAND, 0, RF_INIT_CMD_DELAY_MS);
+        wait_ms(RF_INIT_RETRY_DELAY_MS);
         uart_receive_pro(); // receive data
         uart_receive_pro(); // parsing data
         if (f_rf_hand_ok) break;
@@ -799,8 +820,8 @@ void rf_device_init(void) {
     timeout           = 10;
     f_rf_read_data_ok = 0;
     while (timeout--) {
-        uart_send_cmd(CMD_READ_DATA, 0, 20);
-        wait_ms(5);
+        uart_send_cmd(CMD_READ_DATA, 0, RF_INIT_CMD_DELAY_MS);
+        wait_ms(RF_INIT_RETRY_DELAY_MS);
         uart_receive_pro();
         uart_receive_pro();
         if (f_rf_read_data_ok) break;
@@ -809,8 +830,8 @@ void rf_device_init(void) {
     timeout          = 10;
     f_rf_sts_sysc_ok = 0;
     while (timeout--) {
-        uart_send_cmd(CMD_RF_STS_SYSC, 0, 20);
-        wait_ms(5);
+        uart_send_cmd(CMD_RF_STS_SYSC, 0, RF_INIT_CMD_DELAY_MS);
+        wait_ms(RF_INIT_RETRY_DELAY_MS);
         uart_receive_pro();
         uart_receive_pro();
         if (f_rf_sts_sysc_ok) break;
@@ -818,7 +839,7 @@ void rf_device_init(void) {
 
     UART_Send_BatCfg();
 
-    uart_send_cmd(CMD_SET_NAME, 10, 20);
+    uart_send_cmd(CMD_SET_NAME, 10, RF_INIT_CMD_DELAY_MS);
 
-    uart_send_cmd(CMD_SET_24G_NAME, 10, 20);
+    uart_send_cmd(CMD_SET_24G_NAME, 10, RF_INIT_CMD_DELAY_MS);
 }

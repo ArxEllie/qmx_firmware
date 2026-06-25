@@ -41,6 +41,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SIDE_COLOUR_MAX 8
 #define LIGHT_SPEED_MAX 4
 
+/* Status indicator timing (ms) */
+#define STATUS_BLINK_INTERVAL   500   /* sys/sleep show blink half-period */
+#define STATUS_SHOW_DURATION    3000  /* sys/sleep show total display time */
+#define STATUS_SHOW_MARGIN      50    /* early-exit margin before duration */
+
+/* Animation frame intervals (ms) */
+#define SIDE_BREATHE_INTERVAL   30    /* breathe animation frame rate */
+#define SIDE_STATUS_INTERVAL    100   /* moving-trend status display frame rate */
+
+/* Battery monitoring (ms) */
+#define BAT_DEBOUNCE_MS         1000  /* charge state / percent debounce */
+#define BAT_CHARGE_SHOW_MS      10000 /* battery display duration while charging */
+#define BAT_SHOW_MS             5000  /* battery display duration when not charging */
+#define LOW_BAT_THRESHOLD       10    /* battery percent that triggers low-bat alert */
+
+/* Power-on RGB sequence (ms per colour) */
+#define POWER_SHOW_STEP_MS      1000
+
 // Minimum interval (ms) between full side LED refreshes.
 // rgb_matrix_indicators_advanced_user() can fire several times per render
 // cycle (once per LED_PROCESS_LIMIT iteration).  The animation modes already
@@ -338,12 +356,12 @@ void sys_sw_led_show(void) {
             g_temp = colour_lib[5][1];
             b_temp = colour_lib[5][2];
         }
-        if ((timer_elapsed32(sys_show_timer) / 500) % 2 == 0) {
+        if ((timer_elapsed32(sys_show_timer) / STATUS_BLINK_INTERVAL) % 2 == 0) {
             set_left_rgb(r_temp, g_temp, b_temp);
         } else {
             set_left_rgb(0x00, 0x00, 0x00);
         }
-        if (timer_elapsed32(sys_show_timer) >= (3000 - 50)) {
+        if (timer_elapsed32(sys_show_timer) >= (STATUS_SHOW_DURATION - STATUS_SHOW_MARGIN)) {
             sys_show_flag = false;
         }
     }
@@ -373,12 +391,12 @@ void sleep_sw_led_show(void) {
             g_temp = 0x00;
             b_temp = 0x00;
         }
-        if ((timer_elapsed32(sleep_show_timer) / 500) % 2 == 0) {
+        if ((timer_elapsed32(sleep_show_timer) / STATUS_BLINK_INTERVAL) % 2 == 0) {
             set_left_rgb(r_temp, g_temp, b_temp);
         } else {
             set_left_rgb(0x00, 0x00, 0x00);
         }
-        if (timer_elapsed32(sleep_show_timer) >= (3000 - 50)) {
+        if (timer_elapsed32(sleep_show_timer) >= (STATUS_SHOW_DURATION - STATUS_SHOW_MARGIN)) {
             sleep_show_flag = false;
         }
     }
@@ -803,7 +821,7 @@ void bat_charging_breathe(void) {
     static uint32_t interval_timer = 0;
     static uint8_t  play_point     = 0;
 
-    if (timer_elapsed32(interval_timer) > 30) {
+    if (timer_elapsed32(interval_timer) > SIDE_BREATHE_INTERVAL) {
         interval_timer = timer_read32();
         light_point_playing(0, 2, BREATHE_TAB_LEN, &play_point);
     }
@@ -825,7 +843,7 @@ void bat_charging_design(uint8_t init, uint8_t r, uint8_t g, uint8_t b) {
     uint16_t        bit_mask       = 1;
     uint8_t         i;
 
-    if (timer_elapsed32(interval_timer) > 100) {
+    if (timer_elapsed32(interval_timer) > SIDE_STATUS_INTERVAL) {
         interval_timer = timer_read32();
 
         if (f_move_trend) {
@@ -1008,7 +1026,7 @@ void bat_led_show(void) {
     }
 
     if (charge_state != dev_info.rf_charge) {
-        if (timer_elapsed32(bat_sts_debounce) > 1000) {
+        if (timer_elapsed32(bat_sts_debounce) > BAT_DEBOUNCE_MS) {
             if (((charge_state & 0x01) == 0) && ((dev_info.rf_charge & 0x01) != 0)) {
                 bat_show_flag = true;
                 f_charging    = true;
@@ -1019,12 +1037,12 @@ void bat_led_show(void) {
     } else {
         bat_sts_debounce = timer_read32();
         if (f_charging) {
-            if (timer_elapsed32(bat_show_time) > 10000) {
+            if (timer_elapsed32(bat_show_time) > BAT_CHARGE_SHOW_MS) {
                 bat_show_flag = false;
                 f_charging    = false;
             }
         } else {
-            if (timer_elapsed32(bat_show_time) > 5000) {
+            if (timer_elapsed32(bat_show_time) > BAT_SHOW_MS) {
                 bat_show_flag = false;
             }
         }
@@ -1036,13 +1054,13 @@ void bat_led_show(void) {
     }
 
     if (bat_percent != dev_info.rf_baterry) {
-        if (timer_elapsed32(bat_per_debounce) > 1000) {
+        if (timer_elapsed32(bat_per_debounce) > BAT_DEBOUNCE_MS) {
             bat_percent = dev_info.rf_baterry;
         }
     } else {
         bat_per_debounce = timer_read32();
 
-        if ((bat_percent < 10) && (!(charge_state & 0x01))) {
+        if ((bat_percent < LOW_BAT_THRESHOLD) && (!(charge_state & 0x01))) {
             bat_show_flag = true;
             bat_show_time = timer_read32();
             low_bat_flag  = 1;
@@ -1103,13 +1121,13 @@ void rgb_test_show(void) {
     gpio_write_pin_high(RGB_DRIVER_SDB2);
     rgb_matrix_set_color_all(0xFF, 0x00, 0x00);
     rgb_matrix_update_pwm_buffers();
-    wait_ms(1000);
+    wait_ms(POWER_SHOW_STEP_MS);
     rgb_matrix_set_color_all(0x00, 0xFF, 0x00);
     rgb_matrix_update_pwm_buffers();
-    wait_ms(1000);
+    wait_ms(POWER_SHOW_STEP_MS);
     rgb_matrix_set_color_all(0x00, 0x00, 0xFF);
     rgb_matrix_update_pwm_buffers();
-    wait_ms(1000);
+    wait_ms(POWER_SHOW_STEP_MS);
 }
 
 #ifdef RGB_DEBUG

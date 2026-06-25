@@ -133,7 +133,7 @@ void user_config_mark_dirty(void) {
 }
 
 void user_config_flush_if_dirty(void) {
-    if (user_config_dirty && timer_elapsed32(dirty_settle_timer) >= 500) {
+    if (user_config_dirty && timer_elapsed32(dirty_settle_timer) >= EEPROM_FLUSH_DELAY_MS) {
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
         user_config_dirty = false;
     }
@@ -209,7 +209,7 @@ void m_gpio_init(void) {
     // RF reset pin configuration
     gpio_set_pin_output(NRF_RESET_PIN);
     gpio_write_pin_low(NRF_RESET_PIN);
-    wait_ms(50);
+    wait_ms(NRF_RESET_DELAY_MS);
     gpio_write_pin_high(NRF_RESET_PIN);
 
     // Switch detection pin
@@ -224,7 +224,7 @@ void long_press_key(void) {
     static uint32_t long_press_timer = 0;
     static uint8_t  new_adv_retry    = 0;
 
-    if (timer_elapsed32(long_press_timer) < 100) return;
+    if (timer_elapsed32(long_press_timer) < LONG_PRESS_POLL_MS) return;
     long_press_timer = timer_read32();
 
     if (new_adv_retry) {
@@ -342,7 +342,7 @@ void dial_sw_scan(void) {
     static uint8_t  dial_change_cnt = 0;
 
     if (!flag_power_on) {
-        if (timer_elapsed32(dial_scan_timer) < 20) return;
+        if (timer_elapsed32(dial_scan_timer) < DIAL_SCAN_INTERVAL_MS) return;
     }
     dial_scan_timer = timer_read32();
 
@@ -353,13 +353,13 @@ void dial_sw_scan(void) {
     if (gpio_read_pin(SYS_MODE_PIN)) dial_scan |= 0X02;
 
     if (dial_save != dial_scan) {
-        if (++dial_change_cnt < 3) return;
+        if (++dial_change_cnt < DIAL_CHANGE_CONFIRM) return;
         dial_change_cnt = 0;
         m_break_all_key();
         dial_save         = dial_scan;
         no_act_time       = 0;
         rf_linking_time   = 0;
-        debounce          = 25;
+        debounce          = DIAL_DEBOUNCE_COUNT;
         f_dial_sw_init_ok = 0;
         return;
     } else {
@@ -428,7 +428,7 @@ void m_power_on_dial_sw_scan(void) {
     gpio_set_pin_input_high(DEV_MODE_PIN);
     gpio_set_pin_input_high(SYS_MODE_PIN);
 
-    for (debounce = 0; debounce < 10; debounce++) {
+    for (debounce = 0; debounce < DIAL_POWER_ON_DEBOUNCE; debounce++) {
         dial_scan_dev = 0;
         dial_scan_sys = 0;
         if (gpio_read_pin(DEV_MODE_PIN))
@@ -497,7 +497,7 @@ static void macro_tap_deferred(uint16_t keycode) {
 }
 
 static void macro_tap_task(void) {
-    if (macro_tap_keycode != KC_NO && timer_elapsed32(macro_tap_timer) >= 20) {
+    if (macro_tap_keycode != KC_NO && timer_elapsed32(macro_tap_timer) >= MACRO_TAP_HOLD_MS) {
         macro_tap_release();
     }
 }
@@ -800,7 +800,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case NKRO_MODE:
             if (record->event.pressed) {
                 uint8_t mode = get_nkro_mode();
-                mode = (mode + 1) % 3; /* Auto -> On -> Off -> Auto */
+                mode = (mode + 1) % NKRO_MODE_COUNT; /* Auto -> On -> Off -> Auto */
                 set_nkro_mode(mode);
                 apply_nkro_override();
                 user_config_mark_dirty();
@@ -828,23 +828,23 @@ void timer_pro(void) {
     /* Count elapsed steps so slower housekeeping loops don't stretch
      * timeouts.  Each step is 10 ms (TIMER_STEP). */
     uint32_t elapsed = timer_elapsed32(interval_timer);
-    if (elapsed < 10) return;
+    if (elapsed < TIMER_STEP_MS) return;
 
-    uint32_t steps = elapsed / 10;
-    interval_timer += steps * 10;
+    uint32_t steps = elapsed / TIMER_STEP_MS;
+    interval_timer += steps * TIMER_STEP_MS;
 
     if (rf_link_show_time < RF_LINK_SHOW_TIME) {
         uint32_t remaining = RF_LINK_SHOW_TIME - rf_link_show_time;
         rf_link_show_time += (steps < remaining) ? steps : remaining;
     }
 
-    if (no_act_time < 0xffffff) {
-        uint32_t remaining = 0xffffff - no_act_time;
+    if (no_act_time < NO_ACT_TIME_MAX) {
+        uint32_t remaining = NO_ACT_TIME_MAX - no_act_time;
         no_act_time += (steps < remaining) ? steps : remaining;
     }
 
-    if (rf_linking_time < 0xffff) {
-        uint32_t remaining = 0xffff - rf_linking_time;
+    if (rf_linking_time < RF_LINKING_TIME_MAX) {
+        uint32_t remaining = RF_LINKING_TIME_MAX - rf_linking_time;
         rf_linking_time += (steps < remaining) ? steps : remaining;
     }
 }
@@ -854,9 +854,9 @@ void timer_pro(void) {
  */
 void m_loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config_t));
-    if (user_config.default_brightness_flag != 0xA6) {
+    if (user_config.default_brightness_flag != DEFAULT_BRIGHTNESS_FLAG) {
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
-        user_config.default_brightness_flag = 0xA6;
+        user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
         user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
         user_config.ee_debounce_press_ms    = 5;
         user_config.ee_debounce_release_ms  = 5;
@@ -922,7 +922,7 @@ void keyboard_pre_init_kb(void) {
 void keyboard_post_init_kb(void) {
     m_gpio_init();
     rf_uart_init();
-    wait_ms(500);
+    wait_ms(RF_INIT_DELAY_MS);
     rf_device_init();
 
     m_break_all_key();
@@ -966,7 +966,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     return true;
 #else
     if (keymap_config.no_gui) {
-        rgb_matrix_set_color(72, 0x00, 0x80, 0x00);
+        rgb_matrix_set_color(WIN_LOCK_LED_INDEX, 0x00, 0x80, 0x00);
     }
 
     // Side LEDs are driven by the dedicated side LED system in side.c,
@@ -1002,7 +1002,7 @@ static void dev_reset_task(void) {
 
         case RESET_WAIT:
             /* 500 ms cool-down so the RF module processes SET_LINK first. */
-            if (timer_elapsed32(dev_reset_timer) >= 500) {
+            if (timer_elapsed32(dev_reset_timer) >= RESET_WAIT_MS) {
                 dev_reset_state = RESET_CLR_DEVICE;
             }
             break;
@@ -1026,15 +1026,15 @@ static void dev_reset_task(void) {
 
         case RESET_BLINK:
             if (dev_reset_blink_on) {
-                if (timer_elapsed32(dev_reset_timer) >= 200) {
+                if (timer_elapsed32(dev_reset_timer) >= RESET_BLINK_MS) {
                     rgb_matrix_set_color_all(0x00, 0x00, 0x00);
                     rgb_matrix_update_pwm_buffers();
                     dev_reset_timer    = timer_read32();
                     dev_reset_blink_on = false;
                 }
             } else {
-                if (timer_elapsed32(dev_reset_timer) >= 200) {
-                    if (++dev_reset_blink >= 3) {
+                if (timer_elapsed32(dev_reset_timer) >= RESET_BLINK_MS) {
+                    if (++dev_reset_blink >= RESET_BLINK_COUNT) {
                         dev_reset_state = RESET_INIT;
                         break;
                     }
