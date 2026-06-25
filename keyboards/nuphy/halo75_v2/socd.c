@@ -18,6 +18,11 @@ static bool reg_right = false;
 static bool reg_up = false;
 static bool reg_down = false;
 
+/* Last-pressed key per axis — tracks press order for LAST_WINS/FIRST_WINS.
+ * Updated in socd_process_record on every keypress. */
+static uint16_t last_x = KC_NO;
+static uint16_t last_y = KC_NO;
+
 /* The active SOCD mode, mirrored from user_config.ee_socd_mode. */
 static uint8_t socd_mode = SOCD_OFF;
 
@@ -43,8 +48,8 @@ static uint16_t resolve_x(void) {
     if (phys_left && phys_right) {
         switch (socd_mode) {
             case SOCD_NEUTRAL:    return KC_NO;
-            case SOCD_LAST_WINS:  return phys_right ? KC_RIGHT : KC_LEFT;
-            case SOCD_FIRST_WINS: return phys_left  ? KC_LEFT  : KC_RIGHT;
+            case SOCD_LAST_WINS:  return last_x;
+            case SOCD_FIRST_WINS: return (last_x == KC_LEFT) ? KC_RIGHT : KC_LEFT;
             default:              return KC_NO;
         }
     }
@@ -58,8 +63,8 @@ static uint16_t resolve_y(void) {
     if (phys_up && phys_down) {
         switch (socd_mode) {
             case SOCD_NEUTRAL:    return KC_NO;
-            case SOCD_LAST_WINS:  return phys_down ? KC_DOWN : KC_UP;
-            case SOCD_FIRST_WINS: return phys_up   ? KC_UP   : KC_DOWN;
+            case SOCD_LAST_WINS:  return last_y;
+            case SOCD_FIRST_WINS: return (last_y == KC_UP) ? KC_DOWN : KC_UP;
             default:              return KC_NO;
         }
     }
@@ -105,12 +110,12 @@ bool socd_process_record(uint16_t keycode, keyrecord_t *record) {
 
     bool pressed = record->event.pressed;
 
-    /* Update physical state. */
+    /* Update physical state and press-order tracking. */
     switch (keycode) {
-        case KC_LEFT:  phys_left  = pressed; break;
-        case KC_RIGHT: phys_right = pressed; break;
-        case KC_UP:    phys_up    = pressed; break;
-        case KC_DOWN:  phys_down  = pressed; break;
+        case KC_LEFT:  phys_left  = pressed; if (pressed) last_x = KC_LEFT;  break;
+        case KC_RIGHT: phys_right = pressed; if (pressed) last_x = KC_RIGHT; break;
+        case KC_UP:    phys_up    = pressed; if (pressed) last_y = KC_UP;    break;
+        case KC_DOWN:  phys_down  = pressed; if (pressed) last_y = KC_DOWN;  break;
     }
 
     /* Recompute and send only the changed deltas. */
@@ -121,8 +126,15 @@ bool socd_process_record(uint16_t keycode, keyrecord_t *record) {
 }
 
 void socd_reset(void) {
+    /* Unregister any keys SOCD has sent to the host. */
+    if (reg_left)  { unregister_code(KC_LEFT);  reg_left  = false; }
+    if (reg_right) { unregister_code(KC_RIGHT); reg_right = false; }
+    if (reg_up)    { unregister_code(KC_UP);    reg_up    = false; }
+    if (reg_down)  { unregister_code(KC_DOWN);  reg_down  = false; }
+
     phys_left = phys_right = phys_up = phys_down = false;
-    reg_left  = reg_right  = reg_up  = reg_down  = false;
+    last_x = KC_NO;
+    last_y = KC_NO;
 }
 
 uint8_t socd_get_mode(void) {
