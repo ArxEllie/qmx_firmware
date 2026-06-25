@@ -939,7 +939,6 @@ void low_bat_show(void) {
     set_left_rgb(r_temp, g_temp, b_temp);
 }
 
-uint8_t bat_pwm_buf[6 * 3] = {0};
 uint8_t bat_end_led        = 0;
 uint8_t bat_r, bat_g, bat_b;
 
