@@ -1109,6 +1109,74 @@
           ]
         },
         {
+          "label": "Debounce",
+          "content": [
+            {
+              "label": "Press Debounce (ms)",
+              "type": "dropdown",
+              "options": [
+                ["1 ms", 1], ["2 ms", 2], ["3 ms", 3], ["5 ms", 5],
+                ["8 ms", 8], ["10 ms", 10], ["15 ms", 15], ["20 ms", 20],
+                ["30 ms", 30], ["50 ms", 50]
+              ],
+              "content": ["id_debounce_press_ms", 0, 1]
+            },
+            {
+              "label": "Release Debounce (ms)",
+              "type": "dropdown",
+              "options": [
+                ["1 ms", 1], ["2 ms", 2], ["3 ms", 3], ["5 ms", 5],
+                ["8 ms", 8], ["10 ms", 10], ["15 ms", 15], ["20 ms", 20],
+                ["30 ms", 30], ["50 ms", 50]
+              ],
+              "content": ["id_debounce_release_ms", 0, 2]
+            }
+          ]
+        },
+        {
+          "label": "Sleep",
+          "content": [
+            {
+              "label": "Sleep Timeout",
+              "type": "dropdown",
+              "options": [
+                ["1 min", 1], ["5 min", 5], ["10 min", 10], ["15 min", 15],
+                ["20 min", 20], ["30 min", 30], ["45 min", 45], ["60 min", 60]
+              ],
+              "content": ["id_sleep_timeout", 0, 3]
+            },
+            {
+              "label": "Sleep Enable",
+              "type": "dropdown",
+              "options": [["Off", 0], ["On", 1]],
+              "content": ["id_sleep_toggle", 0, 4]
+            },
+            {
+              "label": "USB Sleep",
+              "type": "dropdown",
+              "options": [["Off", 0], ["On", 1]],
+              "content": ["id_usb_sleep_toggle", 0, 5]
+            },
+            {
+              "label": "Deep Sleep",
+              "type": "dropdown",
+              "options": [["Off", 0], ["On", 1]],
+              "content": ["id_deep_sleep_toggle", 0, 6]
+            }
+          ]
+        },
+        {
+          "label": "NKRO",
+          "content": [
+            {
+              "label": "NKRO Mode",
+              "type": "dropdown",
+              "options": [["Auto", 0], ["On", 1], ["Off", 2]],
+              "content": ["id_nkro_mode", 0, 7]
+            }
+          ]
+        },
+        {
           "label": "Battery",
           "content": [
             {
