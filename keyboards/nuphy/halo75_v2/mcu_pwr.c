@@ -140,13 +140,18 @@ void enter_deep_sleep(void) {
     syscfg_exti_config(EXTI_PORT_R4, EXTI_PIN_R4);
     syscfg_exti_config(EXTI_PORT_R5, EXTI_PIN_R5);
 
-    /* Enable EXTI rising-edge interrupt on all lines (0-15).
-     * Rows idle LOW (pull-down); keypress pulls row HIGH = rising edge. */
-    EXTI->IMR  = 0xFFFF;
+    /* Enable EXTI rising-edge interrupt only on the 6 row pin lines:
+     *   A0=line0, A1=line1, A2=line2, A3=line3, C14=line14, C15=line15
+     * Rows idle LOW (pull-down); keypress pulls row HIGH = rising edge.
+     * Masking unused lines prevents spurious wakeups from floating pins. */
+#define EXTI_ROW_MASK ((1U << EXTI_PIN_R0) | (1U << EXTI_PIN_R1) | \
+                        (1U << EXTI_PIN_R2) | (1U << EXTI_PIN_R3) | \
+                        (1U << EXTI_PIN_R4) | (1U << EXTI_PIN_R5))
+    EXTI->IMR  = EXTI_ROW_MASK;
     EXTI->EMR  = 0x0000;
-    EXTI->RTSR = 0xFFFF; /* rising trigger on all lines */
-    EXTI->FTSR = 0x0000; /* no falling trigger */
-    EXTI->PR   = 0xFFFF; /* clear any pending edges */
+    EXTI->RTSR = EXTI_ROW_MASK; /* rising trigger on row lines */
+    EXTI->FTSR = 0x0000;        /* no falling trigger */
+    EXTI->PR   = 0xFFFF;        /* clear any pending edges */
 
     /* Enable NVIC IRQ channels for the EXTI groups our rows fall in:
      *   C14, C15 → EXTI4_15_IRQn
