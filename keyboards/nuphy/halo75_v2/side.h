@@ -33,4 +33,3 @@ extern const uint8_t flow_rainbow_colour_tab[FLOW_COLOUR_TAB_LEN][3];
 extern const uint8_t dual_colour_lib[3][6];
 extern const uint8_t colour_lib[9][3];
 extern const uint8_t colour_lib_1[9][3];
-

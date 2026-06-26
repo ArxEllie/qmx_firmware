@@ -17,9 +17,9 @@
  *   FIRST_WINS  – the first pressed direction wins until it is released
  */
 enum socd_mode {
-    SOCD_OFF       = 0,
-    SOCD_NEUTRAL   = 1,
-    SOCD_LAST_WINS = 2,
+    SOCD_OFF        = 0,
+    SOCD_NEUTRAL    = 1,
+    SOCD_LAST_WINS  = 2,
     SOCD_FIRST_WINS = 3,
 };
 #define SOCD_MODE_MAX SOCD_FIRST_WINS

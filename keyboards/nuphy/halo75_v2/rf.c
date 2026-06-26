@@ -20,27 +20,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rf_driver.h"
 
 /* RF report / sync timing (ms) */
-#define RF_REPORT_INTERVAL_MS   300   /* periodic RF keyboard report push */
-#define RF_IDLE_THRESHOLD       2000  /* no_act_time (steps) before suppressing reports */
-#define RF_SYNC_INTERVAL_MS     200   /* dev_sts_sync poll interval */
+#define RF_REPORT_INTERVAL_MS 300 /* periodic RF keyboard report push */
+#define RF_IDLE_THRESHOLD 2000    /* no_act_time (steps) before suppressing reports */
+#define RF_SYNC_INTERVAL_MS 200   /* dev_sts_sync poll interval */
 
 /* NRF reset sequence (ms) */
-#define NRF_RESET_LOW_MS        100   /* hold reset low before releasing */
-#define NRF_RESET_HIGH_MS       50    /* wait after release before using */
+#define NRF_RESET_LOW_MS 100 /* hold reset low before releasing */
+#define NRF_RESET_HIGH_MS 50 /* wait after release before using */
 
 /* UART inter-frame timing (µs) */
-#define UART_WAKEUP_PULSE_US    50    /* wakeup pulse before UART transmit */
-#define UART_TX_TIME_PER_BYTE   32    /* µs per byte at current baud */
-#define UART_FRAME_GAP_US       200   /* gap between repeated frames */
+#define UART_WAKEUP_PULSE_US 50  /* wakeup pulse before UART transmit */
+#define UART_TX_TIME_PER_BYTE 32 /* µs per byte at current baud */
+#define UART_FRAME_GAP_US 200    /* gap between repeated frames */
 
 /* UART BAT config delay (ms) */
-#define UART_BATCFG_DELAY_MS    50
+#define UART_BATCFG_DELAY_MS 50
 
 /* RF init retry loop (ms) */
-#define RF_INIT_RETRY_DELAY_MS  5     /* wait between init retries */
-#define RF_INIT_CMD_DELAY_MS    20    /* delayms passed to uart_send_cmd */
-#define RF_INIT_MAX_RETRIES     10    /* max retries per init phase */
-#define RF_INIT_WAIT_MS         (RF_INIT_CMD_DELAY_MS + RF_INIT_RETRY_DELAY_MS)
+#define RF_INIT_RETRY_DELAY_MS 5 /* wait between init retries */
+#define RF_INIT_CMD_DELAY_MS 20  /* delayms passed to uart_send_cmd */
+#define RF_INIT_MAX_RETRIES 10   /* max retries per init phase */
+#define RF_INIT_WAIT_MS (RF_INIT_CMD_DELAY_MS + RF_INIT_RETRY_DELAY_MS)
 
 USART_MGR_STRUCT Usart_Mgr;
 
@@ -242,7 +242,7 @@ void RF_Protocol_Receive(void) {
     if (Usart_Mgr.RXDLen == 3) {
         if (Usart_Mgr.RXDBuf[2] != 0xA0) goto reset_rx;
         kbd_flags.uart_ack = 1;
-        sync_lost  = 0;
+        sync_lost          = 0;
         goto reset_rx;
     }
 
@@ -278,7 +278,7 @@ void RF_Protocol_Receive(void) {
 
     /* --- Frame fully validated: safe to commit ACK/sync state. --- */
     kbd_flags.uart_ack = 1;
-    sync_lost  = 0;
+    sync_lost          = 0;
 
     switch (Usart_Mgr.RXDBuf[1]) { /* RX_CMD */
         case CMD_HAND: {
@@ -317,7 +317,7 @@ void RF_Protocol_Receive(void) {
             } else {
                 if (dev_info.rf_state != RF_INVALID) {
                     if (error_cnt >= 5) {
-                        error_cnt      = 0;
+                        error_cnt              = 0;
                         kbd_flags.send_channel = 1;
                     } else {
                         error_cnt++;
@@ -411,9 +411,9 @@ void uart_send_cmd(uint8_t cmd, uint8_t delayms) {
             Usart_Mgr.TXDBuf[5] = 1;
             Usart_Mgr.TXDBuf[6] = dev_info.link_mode + 1;
 
-            rf_linking_time  = 0;
-            disconnect_delay = 0xff;
-            kbd_flags.rf_new_adv_ok  = 0;
+            rf_linking_time         = 0;
+            disconnect_delay        = 0xff;
+            kbd_flags.rf_new_adv_ok = 0;
             break;
         }
 
@@ -555,9 +555,9 @@ static bool rf_reset_task(void) {
     static uint32_t reset_timer = 0;
 
     if (kbd_flags.rf_reset && reset_step == 0) {
-        kbd_flags.rf_reset  = 0;
-        reset_step  = 1;
-        reset_timer = timer_read32();
+        kbd_flags.rf_reset = 0;
+        reset_step         = 1;
+        reset_timer        = timer_read32();
     }
 
     if (reset_step == 0) {
@@ -645,7 +645,7 @@ void dev_sts_sync(void) {
 
     if (dev_info.link_mode != LINK_USB) {
         if (++sync_lost >= 5) {
-            sync_lost  = 0;
+            sync_lost          = 0;
             kbd_flags.rf_reset = 1;
         }
     }
@@ -832,9 +832,9 @@ static uint8_t  rf_init_retries = 0;
 static uint32_t rf_init_timer   = 0;
 
 void rf_device_init_kick(void) {
-    rf_init_step    = 1;
-    rf_init_retries = 0;
-    rf_init_timer   = timer_read32();
+    rf_init_step              = 1;
+    rf_init_retries           = 0;
+    rf_init_timer             = timer_read32();
     kbd_flags.rf_hand_ok      = 0;
     kbd_flags.rf_read_data_ok = 0;
     kbd_flags.rf_sts_sysc_ok  = 0;
@@ -857,18 +857,18 @@ bool rf_init_task(void) {
         case 2: /* CMD_HAND */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
                 uart_send_cmd(CMD_HAND, 0);
-                rf_init_timer   = timer_read32();
+                rf_init_timer = timer_read32();
                 rf_init_retries++;
             }
             if (kbd_flags.rf_hand_ok) {
-                rf_init_step    = 3;
-                rf_init_retries = 0;
-                rf_init_timer   = timer_read32();
+                rf_init_step              = 3;
+                rf_init_retries           = 0;
+                rf_init_timer             = timer_read32();
                 kbd_flags.rf_read_data_ok = 0;
             } else if (rf_init_retries > RF_INIT_MAX_RETRIES) {
-                rf_init_step    = 3;
-                rf_init_retries = 0;
-                rf_init_timer   = timer_read32();
+                rf_init_step              = 3;
+                rf_init_retries           = 0;
+                rf_init_timer             = timer_read32();
                 kbd_flags.rf_read_data_ok = 0;
             }
             break;
@@ -876,18 +876,18 @@ bool rf_init_task(void) {
         case 3: /* CMD_READ_DATA */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
                 uart_send_cmd(CMD_READ_DATA, 0);
-                rf_init_timer   = timer_read32();
+                rf_init_timer = timer_read32();
                 rf_init_retries++;
             }
             if (kbd_flags.rf_read_data_ok) {
-                rf_init_step    = 4;
-                rf_init_retries = 0;
-                rf_init_timer   = timer_read32();
+                rf_init_step             = 4;
+                rf_init_retries          = 0;
+                rf_init_timer            = timer_read32();
                 kbd_flags.rf_sts_sysc_ok = 0;
             } else if (rf_init_retries > RF_INIT_MAX_RETRIES) {
-                rf_init_step    = 4;
-                rf_init_retries = 0;
-                rf_init_timer   = timer_read32();
+                rf_init_step             = 4;
+                rf_init_retries          = 0;
+                rf_init_timer            = timer_read32();
                 kbd_flags.rf_sts_sysc_ok = 0;
             }
             break;
@@ -895,7 +895,7 @@ bool rf_init_task(void) {
         case 4: /* CMD_RF_STS_SYSC */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_WAIT_MS) {
                 uart_send_cmd(CMD_RF_STS_SYSC, 0);
-                rf_init_timer   = timer_read32();
+                rf_init_timer = timer_read32();
                 rf_init_retries++;
             }
             if (kbd_flags.rf_sts_sysc_ok || rf_init_retries > RF_INIT_MAX_RETRIES) {
@@ -920,15 +920,15 @@ bool rf_init_task(void) {
         case 6: /* CMD_SET_NAME */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_CMD_DELAY_MS) {
                 uart_send_cmd(CMD_SET_NAME, 0);
-                rf_init_step    = 7;
-                rf_init_timer   = timer_read32();
+                rf_init_step  = 7;
+                rf_init_timer = timer_read32();
             }
             break;
 
         case 7: /* CMD_SET_24G_NAME */
             if (timer_elapsed32(rf_init_timer) >= RF_INIT_CMD_DELAY_MS) {
                 uart_send_cmd(CMD_SET_24G_NAME, 0);
-                rf_init_step    = 8;
+                rf_init_step = 8;
             }
             break;
     }

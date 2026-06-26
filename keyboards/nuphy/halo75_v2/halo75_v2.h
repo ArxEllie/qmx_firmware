@@ -87,40 +87,40 @@ typedef enum {
 /* ── Semantically-named timing & threshold constants ────────────── */
 
 /* Main loop / polling intervals (ms) */
-#define TIMER_STEP_MS           10    /* timer_pro() tick interval */
-#define LONG_PRESS_POLL_MS      100   /* long_press_key() poll interval */
-#define DIAL_SCAN_INTERVAL_MS   20    /* dial_sw_scan() poll interval */
-#define MACRO_TAP_HOLD_MS       20    /* macro_tap_task() hold before auto-release */
+#define TIMER_STEP_MS 10         /* timer_pro() tick interval */
+#define LONG_PRESS_POLL_MS 100   /* long_press_key() poll interval */
+#define DIAL_SCAN_INTERVAL_MS 20 /* dial_sw_scan() poll interval */
+#define MACRO_TAP_HOLD_MS 20     /* macro_tap_task() hold before auto-release */
 
 /* EEPROM batching */
-#define EEPROM_FLUSH_DELAY_MS   500   /* dirty settle time before auto-flush */
+#define EEPROM_FLUSH_DELAY_MS 500 /* dirty settle time before auto-flush */
 
 /* Dial switch debouncing */
-#define DIAL_DEBOUNCE_COUNT     25    /* debounce steps after a dial change */
-#define DIAL_CHANGE_CONFIRM     3     /* consecutive stable reads to accept change */
-#define DIAL_POWER_ON_DEBOUNCE  10    /* power-on dial scan debounce iterations */
+#define DIAL_DEBOUNCE_COUNT 25    /* debounce steps after a dial change */
+#define DIAL_CHANGE_CONFIRM 3     /* consecutive stable reads to accept change */
+#define DIAL_POWER_ON_DEBOUNCE 10 /* power-on dial scan debounce iterations */
 
 /* Device reset state machine */
-#define RESET_WAIT_MS           500   /* cool-down after CMD_SET_LINK */
-#define RESET_BLINK_MS          200   /* per-blink duration (white/off) */
-#define RESET_BLINK_COUNT       3     /* total white/off blinks */
+#define RESET_WAIT_MS 500   /* cool-down after CMD_SET_LINK */
+#define RESET_BLINK_MS 200  /* per-blink duration (white/off) */
+#define RESET_BLINK_COUNT 3 /* total white/off blinks */
 
 /* RF / NRF init delays */
-#define NRF_RESET_DELAY_MS      50    /* NRF reset pulse width */
-#define RF_INIT_DELAY_MS        500   /* post-UART-init delay before rf_device_init */
+#define NRF_RESET_DELAY_MS 50 /* NRF reset pulse width */
+#define RF_INIT_DELAY_MS 500  /* post-UART-init delay before rf_device_init */
 
 /* Timer saturation limits */
-#define NO_ACT_TIME_MAX         0xFFFFFFU /* no_act_time ceiling (24-bit) */
-#define RF_LINKING_TIME_MAX     0xFFFFU   /* rf_linking_time ceiling (16-bit) */
+#define NO_ACT_TIME_MAX 0xFFFFFFU   /* no_act_time ceiling (24-bit) */
+#define RF_LINKING_TIME_MAX 0xFFFFU /* rf_linking_time ceiling (16-bit) */
 
 /* EEPROM sentinel */
-#define DEFAULT_BRIGHTNESS_FLAG 0xA6  /* first-boot marker for user_config */
+#define DEFAULT_BRIGHTNESS_FLAG 0xA6 /* first-boot marker for user_config */
 
 /* NKRO mode cycling */
-#define NKRO_MODE_COUNT         3     /* Auto -> On -> Off -> Auto */
+#define NKRO_MODE_COUNT 3 /* Auto -> On -> Off -> Auto */
 
 /* LED index for Win lock indicator */
-#define WIN_LOCK_LED_INDEX      72
+#define WIN_LOCK_LED_INDEX 72
 
 #define CMD_POWER_UP 0XF0
 #define CMD_SLEEP 0XF1
@@ -236,7 +236,7 @@ extern keyboard_flags_t kbd_flags;
 #define LINK_TIMEOUT (uint32_t)(100 * 120)
 #define POWER_DOWN_DELAY (uint16_t)(24)
 
-#define SLEEP_TIMEOUT_DEFAULT 30   /* minutes */
+#define SLEEP_TIMEOUT_DEFAULT 30 /* minutes */
 #define SLEEP_TIMEOUT_MIN 1
 #define SLEEP_TIMEOUT_MAX 60
 #define SLEEP_TIMEOUT_STEP 1
@@ -252,33 +252,30 @@ extern keyboard_flags_t kbd_flags;
  * bits 10-12: light (0-4, 5 brightness levels)
  * bits 13-15: speed (0-4, 5 speed levels)
  */
-#define side_led_get_mode_a()  (user_config.ee_side_led & 0x0007)
-#define side_led_get_mode_b()  ((user_config.ee_side_led >> 3) & 0x0007)
-#define side_led_get_rgb()     ((user_config.ee_side_led >> 6) & 0x0001)
-#define side_led_get_colour()  ((user_config.ee_side_led >> 7) & 0x0007)
-#define side_led_get_light()   ((user_config.ee_side_led >> 10) & 0x0007)
-#define side_led_get_speed()   ((user_config.ee_side_led >> 13) & 0x0007)
+#define side_led_get_mode_a() (user_config.ee_side_led & 0x0007)
+#define side_led_get_mode_b() ((user_config.ee_side_led >> 3) & 0x0007)
+#define side_led_get_rgb() ((user_config.ee_side_led >> 6) & 0x0001)
+#define side_led_get_colour() ((user_config.ee_side_led >> 7) & 0x0007)
+#define side_led_get_light() ((user_config.ee_side_led >> 10) & 0x0007)
+#define side_led_get_speed() ((user_config.ee_side_led >> 13) & 0x0007)
 
-#define side_led_set_mode_a(v)  (user_config.ee_side_led = (user_config.ee_side_led & ~0x0007) | ((uint16_t)(v) << 0))
-#define side_led_set_mode_b(v)  (user_config.ee_side_led = (user_config.ee_side_led & ~0x0038) | ((uint16_t)(v) << 3))
-#define side_led_set_rgb(v)     (user_config.ee_side_led = (user_config.ee_side_led & ~0x0040) | ((uint16_t)(v) << 6))
-#define side_led_set_colour(v)  (user_config.ee_side_led = (user_config.ee_side_led & ~0x0380) | ((uint16_t)(v) << 7))
-#define side_led_set_light(v)   (user_config.ee_side_led = (user_config.ee_side_led & ~0x1C00) | ((uint16_t)(v) << 10))
-#define side_led_set_speed(v)   (user_config.ee_side_led = (user_config.ee_side_led & ~0xE000) | ((uint16_t)(v) << 13))
+#define side_led_set_mode_a(v) (user_config.ee_side_led = (user_config.ee_side_led & ~0x0007) | ((uint16_t)(v) << 0))
+#define side_led_set_mode_b(v) (user_config.ee_side_led = (user_config.ee_side_led & ~0x0038) | ((uint16_t)(v) << 3))
+#define side_led_set_rgb(v) (user_config.ee_side_led = (user_config.ee_side_led & ~0x0040) | ((uint16_t)(v) << 6))
+#define side_led_set_colour(v) (user_config.ee_side_led = (user_config.ee_side_led & ~0x0380) | ((uint16_t)(v) << 7))
+#define side_led_set_light(v) (user_config.ee_side_led = (user_config.ee_side_led & ~0x1C00) | ((uint16_t)(v) << 10))
+#define side_led_set_speed(v) (user_config.ee_side_led = (user_config.ee_side_led & ~0xE000) | ((uint16_t)(v) << 13))
 
-#define side_led_pack(ma, mb, rgb, col, light, spd) \
-    ((uint16_t)((ma) & 0x7) | ((uint16_t)((mb) & 0x7) << 3) | \
-     ((uint16_t)((rgb) & 0x1) << 6) | ((uint16_t)((col) & 0x7) << 7) | \
-     ((uint16_t)((light) & 0x7) << 10) | ((uint16_t)((spd) & 0x7) << 13))
+#define side_led_pack(ma, mb, rgb, col, light, spd) ((uint16_t)((ma) & 0x7) | ((uint16_t)((mb) & 0x7) << 3) | ((uint16_t)((rgb) & 0x1) << 6) | ((uint16_t)((col) & 0x7) << 7) | ((uint16_t)((light) & 0x7) << 10) | ((uint16_t)((spd) & 0x7) << 13))
 
 typedef struct __attribute__((packed)) {
     uint8_t  default_brightness_flag;
-    uint16_t ee_side_led;           /* packed side LED settings */
+    uint16_t ee_side_led; /* packed side LED settings */
     uint8_t  ee_debounce_press_ms;
     uint8_t  ee_debounce_release_ms;
-    uint8_t  ee_sleep_timeout;      /* minutes, 1-60 */
-    uint8_t  ee_dev_config;       /* bitfield: sleep/usb/deep sleep flags + NKRO mode */
-    uint8_t  ee_socd_mode;          /* SOCD resolution mode (0=off, 1=neutral, 2=last-wins, 3=first-wins) */
+    uint8_t  ee_sleep_timeout; /* minutes, 1-60 */
+    uint8_t  ee_dev_config;    /* bitfield: sleep/usb/deep sleep flags + NKRO mode */
+    uint8_t  ee_socd_mode;     /* SOCD resolution mode (0=off, 1=neutral, 2=last-wins, 3=first-wins) */
 } user_config_t;
 
 extern user_config_t user_config;
@@ -288,13 +285,31 @@ extern user_config_t user_config;
  *   bit 1: f_usb_sleep_enable
  *   bit 2: f_deep_sleep_enable
  *   bits 4-5: NKRO override mode (0=Auto, 1=On, 2=Off) */
-#define f_dev_sleep_enable    (user_config.ee_dev_config & 0x01)
-#define f_usb_sleep_enable    (user_config.ee_dev_config & 0x02)
-#define f_deep_sleep_enable   (user_config.ee_dev_config & 0x04)
+#define f_dev_sleep_enable (user_config.ee_dev_config & 0x01)
+#define f_usb_sleep_enable (user_config.ee_dev_config & 0x02)
+#define f_deep_sleep_enable (user_config.ee_dev_config & 0x04)
 
-#define set_f_dev_sleep_enable(v)  do { if (v) user_config.ee_dev_config |= 0x01; else user_config.ee_dev_config &= ~0x01; } while (0)
-#define set_f_usb_sleep_enable(v)  do { if (v) user_config.ee_dev_config |= 0x02; else user_config.ee_dev_config &= ~0x02; } while (0)
-#define set_f_deep_sleep_enable(v) do { if (v) user_config.ee_dev_config |= 0x04; else user_config.ee_dev_config &= ~0x04; } while (0)
+#define set_f_dev_sleep_enable(v)               \
+    do {                                        \
+        if (v)                                  \
+            user_config.ee_dev_config |= 0x01;  \
+        else                                    \
+            user_config.ee_dev_config &= ~0x01; \
+    } while (0)
+#define set_f_usb_sleep_enable(v)               \
+    do {                                        \
+        if (v)                                  \
+            user_config.ee_dev_config |= 0x02;  \
+        else                                    \
+            user_config.ee_dev_config &= ~0x02; \
+    } while (0)
+#define set_f_deep_sleep_enable(v)              \
+    do {                                        \
+        if (v)                                  \
+            user_config.ee_dev_config |= 0x04;  \
+        else                                    \
+            user_config.ee_dev_config &= ~0x04; \
+    } while (0)
 
 /* NKRO override modes: 0=Auto (follow OS switch), 1=On, 2=Off */
 enum nkro_mode {
@@ -302,8 +317,11 @@ enum nkro_mode {
     NKRO_ON   = 1,
     NKRO_OFF  = 2,
 };
-#define get_nkro_mode()  ((uint8_t)((user_config.ee_dev_config >> 4) & 0x03))
-#define set_nkro_mode(m) do { user_config.ee_dev_config = (user_config.ee_dev_config & ~0x30) | (((uint8_t)(m) & 0x03) << 4); } while (0)
+#define get_nkro_mode() ((uint8_t)((user_config.ee_dev_config >> 4) & 0x03))
+#define set_nkro_mode(m)                                                                                \
+    do {                                                                                                \
+        user_config.ee_dev_config = (user_config.ee_dev_config & ~0x30) | (((uint8_t)(m) & 0x03) << 4); \
+    } while (0)
 
 /* Shared side LED constants */
 #define SIDE_INDEX 83

@@ -54,12 +54,12 @@ extern matrix_row_t matrix[MATRIX_ROWS];     // debounced values
 static inline matrix_row_t read_cols(void) {
     uint16_t portA_pin_state = palReadPort(PAL_PORT(A0));
     uint16_t portB_pin_state = palReadPort(PAL_PORT(B0));
-    return ((((portA_pin_state & 0b11110000) ^ 0b11110000) >> 4) |       /* A4-A7  → bits 0-3  */
-            (((portB_pin_state & 0b11) ^ 0b11) << 4) |                   /* B0,B1  → bits 4-5  */
+    return ((((portA_pin_state & 0b11110000) ^ 0b11110000) >> 4) |                 /* A4-A7  → bits 0-3  */
+            (((portB_pin_state & 0b11) ^ 0b11) << 4) |                             /* B0,B1  → bits 4-5  */
             (((portB_pin_state & 0b1111110000000000) ^ 0b1111110000000000) >> 4) | /* B10-B15 → bits 6-11 */
-            (((portA_pin_state & 0b11100000000) ^ 0b11100000000) << 4) | /* A8-A10 → bits 12-14 */
-            ((portA_pin_state & 0b1000000000000000) ^ 0b1000000000000000) | /* A15 → bit 15 */
-            (((portB_pin_state & 0b1000) ^ 0b1000) << 13));             /* B3     → bit 16 */
+            (((portA_pin_state & 0b11100000000) ^ 0b11100000000) << 4) |           /* A8-A10 → bits 12-14 */
+            ((portA_pin_state & 0b1000000000000000) ^ 0b1000000000000000) |        /* A15 → bit 15 */
+            (((portB_pin_state & 0b1000) ^ 0b1000) << 13));                        /* B3     → bit 16 */
 }
 
 static inline void unselect_rows(void) {
@@ -94,8 +94,8 @@ uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
          * a row.  This prevents ghost reads from the previous row scan.
          * Cap total iterations so a stuck-low column (hardware fault,
          * short) can't block the scan forever. */
-        uint8_t stable_threshold = MATRIX_DEBOUNCE;
-        uint16_t settle_iters = 0;
+        uint8_t  stable_threshold = MATRIX_DEBOUNCE;
+        uint16_t settle_iters     = 0;
         while (stable_threshold > 0) {
             if (++settle_iters > MATRIX_SETTLE_MAX_ITERS) break;
             stable_threshold = ((((palReadPort(PAL_PORT(A0)) & colA_bits) ^ colA_bits) | ((palReadPort(PAL_PORT(B0)) & colB_bits) ^ colB_bits)) == 0) ? (stable_threshold - 1) : MATRIX_DEBOUNCE;

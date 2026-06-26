@@ -6,17 +6,17 @@
 
 /* Physical key state for the four cardinal directions.
  * true = physically held by the user. */
-static bool phys_left = false;
+static bool phys_left  = false;
 static bool phys_right = false;
-static bool phys_up = false;
-static bool phys_down = false;
+static bool phys_up    = false;
+static bool phys_down  = false;
 
 /* Which key is currently registered to the host.
  * true = sent to host and still held. */
-static bool reg_left = false;
+static bool reg_left  = false;
 static bool reg_right = false;
-static bool reg_up = false;
-static bool reg_down = false;
+static bool reg_up    = false;
+static bool reg_down  = false;
 
 /* Last-pressed key per axis — tracks press order for LAST_WINS/FIRST_WINS.
  * Updated in socd_process_record on every keypress. */
@@ -47,13 +47,17 @@ static void reg_set(uint16_t kc, bool on) {
 static uint16_t resolve_x(void) {
     if (phys_left && phys_right) {
         switch (socd_mode) {
-            case SOCD_NEUTRAL:    return KC_NO;
-            case SOCD_LAST_WINS:  return last_x;
-            case SOCD_FIRST_WINS: return (last_x == KC_LEFT) ? KC_RIGHT : KC_LEFT;
-            default:              return KC_NO;
+            case SOCD_NEUTRAL:
+                return KC_NO;
+            case SOCD_LAST_WINS:
+                return last_x;
+            case SOCD_FIRST_WINS:
+                return (last_x == KC_LEFT) ? KC_RIGHT : KC_LEFT;
+            default:
+                return KC_NO;
         }
     }
-    if (phys_left)  return KC_LEFT;
+    if (phys_left) return KC_LEFT;
     if (phys_right) return KC_RIGHT;
     return KC_NO;
 }
@@ -62,21 +66,24 @@ static uint16_t resolve_x(void) {
 static uint16_t resolve_y(void) {
     if (phys_up && phys_down) {
         switch (socd_mode) {
-            case SOCD_NEUTRAL:    return KC_NO;
-            case SOCD_LAST_WINS:  return last_y;
-            case SOCD_FIRST_WINS: return (last_y == KC_UP) ? KC_DOWN : KC_UP;
-            default:              return KC_NO;
+            case SOCD_NEUTRAL:
+                return KC_NO;
+            case SOCD_LAST_WINS:
+                return last_y;
+            case SOCD_FIRST_WINS:
+                return (last_y == KC_UP) ? KC_DOWN : KC_UP;
+            default:
+                return KC_NO;
         }
     }
-    if (phys_up)   return KC_UP;
+    if (phys_up) return KC_UP;
     if (phys_down) return KC_DOWN;
     return KC_NO;
 }
 
 /* Apply the resolved state for one axis to the host.
  * prev_reg tracks what we previously sent so we only send deltas. */
-static void apply_axis(uint16_t neg_kc, uint16_t pos_kc, uint16_t resolved,
-                       bool *prev_neg, bool *prev_pos) {
+static void apply_axis(uint16_t neg_kc, uint16_t pos_kc, uint16_t resolved, bool *prev_neg, bool *prev_pos) {
     bool want_neg = (resolved == neg_kc);
     bool want_pos = (resolved == pos_kc);
 
@@ -98,7 +105,7 @@ static void socd_flush(void) {
     uint16_t y = resolve_y();
 
     apply_axis(KC_LEFT, KC_RIGHT, x, &reg_left, &reg_right);
-    apply_axis(KC_UP,   KC_DOWN,  y, &reg_up,   &reg_down);
+    apply_axis(KC_UP, KC_DOWN, y, &reg_up, &reg_down);
 }
 
 /* ── public API ──────────────────────────────────────────────────── */
@@ -112,10 +119,22 @@ bool socd_process_record(uint16_t keycode, keyrecord_t *record) {
 
     /* Update physical state and press-order tracking. */
     switch (keycode) {
-        case KC_LEFT:  phys_left  = pressed; if (pressed) last_x = KC_LEFT;  break;
-        case KC_RIGHT: phys_right = pressed; if (pressed) last_x = KC_RIGHT; break;
-        case KC_UP:    phys_up    = pressed; if (pressed) last_y = KC_UP;    break;
-        case KC_DOWN:  phys_down  = pressed; if (pressed) last_y = KC_DOWN;  break;
+        case KC_LEFT:
+            phys_left = pressed;
+            if (pressed) last_x = KC_LEFT;
+            break;
+        case KC_RIGHT:
+            phys_right = pressed;
+            if (pressed) last_x = KC_RIGHT;
+            break;
+        case KC_UP:
+            phys_up = pressed;
+            if (pressed) last_y = KC_UP;
+            break;
+        case KC_DOWN:
+            phys_down = pressed;
+            if (pressed) last_y = KC_DOWN;
+            break;
     }
 
     /* Recompute and send only the changed deltas. */
@@ -127,14 +146,26 @@ bool socd_process_record(uint16_t keycode, keyrecord_t *record) {
 
 void socd_reset(void) {
     /* Unregister any keys SOCD has sent to the host. */
-    if (reg_left)  { unregister_code(KC_LEFT);  reg_left  = false; }
-    if (reg_right) { unregister_code(KC_RIGHT); reg_right = false; }
-    if (reg_up)    { unregister_code(KC_UP);    reg_up    = false; }
-    if (reg_down)  { unregister_code(KC_DOWN);  reg_down  = false; }
+    if (reg_left) {
+        unregister_code(KC_LEFT);
+        reg_left = false;
+    }
+    if (reg_right) {
+        unregister_code(KC_RIGHT);
+        reg_right = false;
+    }
+    if (reg_up) {
+        unregister_code(KC_UP);
+        reg_up = false;
+    }
+    if (reg_down) {
+        unregister_code(KC_DOWN);
+        reg_down = false;
+    }
 
     phys_left = phys_right = phys_up = phys_down = false;
-    last_x = KC_NO;
-    last_y = KC_NO;
+    last_x                                       = KC_NO;
+    last_y                                       = KC_NO;
 }
 
 uint8_t socd_get_mode(void) {
@@ -146,10 +177,22 @@ void socd_set_mode(uint8_t mode) {
 
     /* When switching modes, release any SOCD-managed keys first
      * to avoid stuck keys, then re-evaluate with the new mode. */
-    if (reg_left)  { unregister_code(KC_LEFT);  reg_left  = false; }
-    if (reg_right) { unregister_code(KC_RIGHT); reg_right = false; }
-    if (reg_up)    { unregister_code(KC_UP);    reg_up    = false; }
-    if (reg_down)  { unregister_code(KC_DOWN);  reg_down  = false; }
+    if (reg_left) {
+        unregister_code(KC_LEFT);
+        reg_left = false;
+    }
+    if (reg_right) {
+        unregister_code(KC_RIGHT);
+        reg_right = false;
+    }
+    if (reg_up) {
+        unregister_code(KC_UP);
+        reg_up = false;
+    }
+    if (reg_down) {
+        unregister_code(KC_DOWN);
+        reg_down = false;
+    }
 
     socd_mode = mode;
 

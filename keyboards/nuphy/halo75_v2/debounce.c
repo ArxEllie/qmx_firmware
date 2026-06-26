@@ -115,8 +115,8 @@ static inline void transfer_matrix_values(matrix_row_t raw[], matrix_row_t cooke
                     if (debounce_counters[index].pressed) {
                         // key-down: eager — commit immediately
                         cooked[row] ^= col_mask;
-                        cooked_changed                  = true;
-                        debounce_counters[index].time   = MAX(1, user_config.ee_debounce_press_ms);
+                        cooked_changed                = true;
+                        debounce_counters[index].time = MAX(1, user_config.ee_debounce_press_ms);
                     } else {
                         // key-up: defer — wait release_ms before committing
                         debounce_counters[index].time = MAX(1, user_config.ee_debounce_release_ms);

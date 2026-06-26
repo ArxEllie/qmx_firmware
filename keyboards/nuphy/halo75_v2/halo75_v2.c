@@ -82,7 +82,7 @@ static void debug_matrix_scan(void) {
 }
 #endif /* CONSOLE_ENABLE */
 
-user_config_t   user_config;
+user_config_t     user_config;
 dev_info_struct_t dev_info = {
     .rf_battery = 100,
     .link_mode  = LINK_USB,
@@ -142,12 +142,12 @@ static void apply_nkro_override(void) {
  * froze the main loop for ~1.7 s during a factory reset. */
 typedef enum {
     RESET_IDLE = 0,
-    RESET_SET_LINK,    /* queue CMD_SET_LINK via deferred UART */
-    RESET_WAIT,        /* 500 ms cool-down before clear */
-    RESET_CLR_DEVICE,  /* queue CMD_CLR_DEVICE via deferred UART */
-    RESET_EECONFIG,    /* eeconfig_init + start blink */
-    RESET_BLINK,       /* 3× white/off, 200 ms each, timer-driven */
-    RESET_INIT,        /* restore defaults, re-enable RGB, done */
+    RESET_SET_LINK,   /* queue CMD_SET_LINK via deferred UART */
+    RESET_WAIT,       /* 500 ms cool-down before clear */
+    RESET_CLR_DEVICE, /* queue CMD_CLR_DEVICE via deferred UART */
+    RESET_EECONFIG,   /* eeconfig_init + start blink */
+    RESET_BLINK,      /* 3× white/off, 200 ms each, timer-driven */
+    RESET_INIT,       /* restore defaults, re-enable RGB, done */
 } reset_state_t;
 
 static reset_state_t dev_reset_state    = RESET_IDLE;
@@ -215,11 +215,11 @@ void long_press_key(void) {
         rf_sw_press_delay++;
         if (rf_sw_press_delay >= RF_LONG_PRESS_DELAY) {
             kbd_flags.rf_sw_press   = 0;
-            dev_info.link_mode   = rf_sw_temp;
-            dev_info.rf_channel  = rf_sw_temp;
-            dev_info.ble_channel = rf_sw_temp;
-            kbd_flags.rf_new_adv_ok  = 0;
-            new_adv_retry        = 5;
+            dev_info.link_mode      = rf_sw_temp;
+            dev_info.rf_channel     = rf_sw_temp;
+            dev_info.ble_channel    = rf_sw_temp;
+            kbd_flags.rf_new_adv_ok = 0;
+            new_adv_retry           = 5;
         }
     } else {
         rf_sw_press_delay = 0;
@@ -291,9 +291,9 @@ static void switch_dev_link(uint8_t mode) {
     if (mode > LINK_USB) return;
     m_break_all_key();
 
-    dev_info.link_mode = mode;
-    dev_info.rf_state  = RF_IDLE;
-    kbd_flags.send_channel  = 1;
+    dev_info.link_mode     = mode;
+    dev_info.rf_state      = RF_IDLE;
+    kbd_flags.send_channel = 1;
 
     if (mode == LINK_USB) {
         host_mode = HOST_USB_TYPE;
@@ -331,10 +331,10 @@ void dial_sw_scan(void) {
         if (++dial_change_cnt < DIAL_CHANGE_CONFIRM) return;
         dial_change_cnt = 0;
         m_break_all_key();
-        dial_save         = dial_scan;
-        no_act_time       = 0;
-        rf_linking_time   = 0;
-        debounce          = DIAL_DEBOUNCE_COUNT;
+        dial_save                 = dial_scan;
+        no_act_time               = 0;
+        rf_linking_time           = 0;
+        debounce                  = DIAL_DEBOUNCE_COUNT;
         kbd_flags.dial_sw_init_ok = 0;
         return;
     } else {
@@ -369,7 +369,7 @@ void dial_sw_scan(void) {
             kbd_flags.sys_show = 1;
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
-            kbd_flags.win_lock      = keymap_config.no_gui;
+            kbd_flags.win_lock    = keymap_config.no_gui;
             m_break_all_key();
         }
         keymap_config.nkro   = 0;
@@ -378,7 +378,7 @@ void dial_sw_scan(void) {
 
     if (kbd_flags.dial_sw_init_ok == 0) {
         kbd_flags.dial_sw_init_ok = 1;
-        flag_power_on     = 0;
+        flag_power_on             = 0;
 
         if (dev_info.link_mode != LINK_USB) {
             host_set_driver(&rf_host_driver);
@@ -443,7 +443,7 @@ void m_power_on_dial_sw_scan(void) {
             default_layer_set(1 << 0); // MAC
             dev_info.sys_sw_state = SYS_SW_MAC;
             keymap_config.nkro    = 0;
-            kbd_flags.win_lock      = keymap_config.no_gui;
+            kbd_flags.win_lock    = keymap_config.no_gui;
             keymap_config.no_gui  = 0;
             m_break_all_key();
         }
@@ -495,7 +495,7 @@ bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
 static bool handle_wireless_link(uint8_t link_target, keyrecord_t *record) {
     if (record->event.pressed) {
         if (dev_info.link_mode != LINK_USB) {
-            rf_sw_temp    = link_target;
+            rf_sw_temp            = link_target;
             kbd_flags.rf_sw_press = 1;
             m_break_all_key();
         }
@@ -521,13 +521,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 #ifdef CONSOLE_ENABLE
     if (debug_config.matrix) {
-        dprintf("EV k=%04X r=%d c=%d %s layer=%d mods=%02X weak=%02X oneshot=%02X row=%08lX\n",
-                keycode,
-                record->event.key.row, record->event.key.col,
-                record->event.pressed ? "down" : "up",
-                get_highest_layer(layer_state),
-                get_mods(), get_weak_mods(), get_oneshot_mods(),
-                (uint32_t)matrix_get_row(record->event.key.row));
+        dprintf("EV k=%04X r=%d c=%d %s layer=%d mods=%02X weak=%02X oneshot=%02X row=%08lX\n", keycode, record->event.key.row, record->event.key.col, record->event.pressed ? "down" : "up", get_highest_layer(layer_state), get_mods(), get_weak_mods(), get_oneshot_mods(), (uint32_t)matrix_get_row(record->event.key.row));
     }
 #endif
 
@@ -579,10 +573,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case LNK_RF:    return handle_wireless_link(LINK_RF_24, record);
-        case LNK_BLE1:  return handle_wireless_link(LINK_BT_1, record);
-        case LNK_BLE2:  return handle_wireless_link(LINK_BT_2, record);
-        case LNK_BLE3:  return handle_wireless_link(LINK_BT_3, record);
+        case LNK_RF:
+            return handle_wireless_link(LINK_RF_24, record);
+        case LNK_BLE1:
+            return handle_wireless_link(LINK_BT_1, record);
+        case LNK_BLE2:
+            return handle_wireless_link(LINK_BT_2, record);
+        case LNK_BLE3:
+            return handle_wireless_link(LINK_BT_3, record);
 
         /* ── Mac media / system keys ─────────────────────────────── */
         case MAC_TASK:
@@ -775,7 +773,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case NKRO_MODE:
             if (record->event.pressed) {
                 uint8_t mode = get_nkro_mode();
-                mode = (mode + 1) % NKRO_MODE_COUNT; /* Auto -> On -> Off -> Auto */
+                mode         = (mode + 1) % NKRO_MODE_COUNT; /* Auto -> On -> Off -> Auto */
                 set_nkro_mode(mode);
                 apply_nkro_override();
                 user_config_mark_dirty();
@@ -832,7 +830,7 @@ void m_loading_eeprom_data(void) {
     if (user_config.default_brightness_flag != DEFAULT_BRIGHTNESS_FLAG) {
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
         user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
-        user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
+        user_config.ee_side_led             = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
         user_config.ee_debounce_press_ms    = 5;
         user_config.ee_debounce_release_ms  = 5;
         user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
@@ -860,8 +858,8 @@ void m_loading_eeprom_data(void) {
          *   colour: 0-7 (colour_lib[9]) */
         if (side_mode_a > 4) side_mode_a = 0;
         if (side_mode_b > 6) side_mode_b = 0;
-        if (side_light > 4)  side_light = 2;
-        if (side_speed > 4)  side_speed = 2;
+        if (side_light > 4) side_light = 2;
+        if (side_speed > 4) side_speed = 2;
         if (side_colour > 7) side_colour = 0;
         side_led_set_mode_a(side_mode_a);
         side_led_set_mode_b(side_mode_b);
@@ -869,16 +867,11 @@ void m_loading_eeprom_data(void) {
         side_led_set_speed(side_speed);
         side_led_set_colour(side_colour);
 
-        if (user_config.ee_debounce_press_ms == 0 || user_config.ee_debounce_press_ms > 99)
-            user_config.ee_debounce_press_ms = 5;
-        if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99)
-            user_config.ee_debounce_release_ms = 5;
-        if (user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MIN || user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MAX)
-            user_config.ee_sleep_timeout = SLEEP_TIMEOUT_DEFAULT;
-        if (get_nkro_mode() > NKRO_OFF)
-            set_nkro_mode(NKRO_AUTO);
-        if (user_config.ee_socd_mode > SOCD_MODE_MAX)
-            user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
+        if (user_config.ee_debounce_press_ms == 0 || user_config.ee_debounce_press_ms > 99) user_config.ee_debounce_press_ms = 5;
+        if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99) user_config.ee_debounce_release_ms = 5;
+        if (user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MIN || user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MAX) user_config.ee_sleep_timeout = SLEEP_TIMEOUT_DEFAULT;
+        if (get_nkro_mode() > NKRO_OFF) set_nkro_mode(NKRO_AUTO);
+        if (user_config.ee_socd_mode > SOCD_MODE_MAX) user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
         socd_set_mode(user_config.ee_socd_mode);
     }
 }
@@ -920,9 +913,7 @@ void keyboard_post_init_kb(void) {
     debug_mouse = true;
 #        endif
     dprintf("DBG %s console enabled\n", PRODUCT);
-    dprintf("rows=%d cols=%d diode=%s default_layer=%ld layer_state=%08lX\n",
-            MATRIX_ROWS, MATRIX_COLS, DIODE_DIRECTION_STR,
-            (uint32_t)default_layer_state, (uint32_t)layer_state);
+    dprintf("rows=%d cols=%d diode=%s default_layer=%ld layer_state=%08lX\n", MATRIX_ROWS, MATRIX_COLS, DIODE_DIRECTION_STR, (uint32_t)default_layer_state, (uint32_t)layer_state);
 #    endif
 #endif
 }
@@ -1023,7 +1014,7 @@ static void dev_reset_task(void) {
             device_reset_init();
 
             keymap_config.no_gui = 0;
-            kbd_flags.win_lock        = 0;
+            kbd_flags.win_lock   = 0;
 
             if (dev_info.sys_sw_state == SYS_SW_MAC) {
                 default_layer_set(1 << 0); // MAC
@@ -1132,8 +1123,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     user_config_mark_dirty();
                     break;
                 case id_sleep_timeout:
-                    user_config.ee_sleep_timeout = (value_data[0] < SLEEP_TIMEOUT_MIN) ? SLEEP_TIMEOUT_MIN :
-                                                   (value_data[0] > SLEEP_TIMEOUT_MAX) ? SLEEP_TIMEOUT_MAX : value_data[0];
+                    user_config.ee_sleep_timeout = (value_data[0] < SLEEP_TIMEOUT_MIN) ? SLEEP_TIMEOUT_MIN : (value_data[0] > SLEEP_TIMEOUT_MAX) ? SLEEP_TIMEOUT_MAX : value_data[0];
                     user_config_mark_dirty();
                     break;
                 case id_sleep_toggle:
@@ -1160,7 +1150,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     break;
                 /* id_battery_level is read-only — no set handler. */
                 case id_caps_word:
-                    if (value_data[0]) caps_word_on(); else caps_word_off();
+                    if (value_data[0])
+                        caps_word_on();
+                    else
+                        caps_word_off();
                     break;
                 case id_win_lock:
                     keymap_config.no_gui = value_data[0] ? 1 : 0;

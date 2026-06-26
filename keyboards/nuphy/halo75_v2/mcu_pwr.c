@@ -144,9 +144,7 @@ void enter_deep_sleep(void) {
      *   A0=line0, A1=line1, A2=line2, A3=line3, C14=line14, C15=line15
      * Rows idle LOW (pull-down); keypress pulls row HIGH = rising edge.
      * Masking unused lines prevents spurious wakeups from floating pins. */
-#define EXTI_ROW_MASK ((1U << EXTI_PIN_R0) | (1U << EXTI_PIN_R1) | \
-                        (1U << EXTI_PIN_R2) | (1U << EXTI_PIN_R3) | \
-                        (1U << EXTI_PIN_R4) | (1U << EXTI_PIN_R5))
+#define EXTI_ROW_MASK ((1U << EXTI_PIN_R0) | (1U << EXTI_PIN_R1) | (1U << EXTI_PIN_R2) | (1U << EXTI_PIN_R3) | (1U << EXTI_PIN_R4) | (1U << EXTI_PIN_R5))
     EXTI->IMR  = EXTI_ROW_MASK;
     EXTI->EMR  = 0x0000;
     EXTI->RTSR = EXTI_ROW_MASK; /* rising trigger on row lines */
@@ -278,9 +276,9 @@ void exit_light_sleep(void) {
  *   Vector54 = IRQ 5  (EXTI0_1)
  *   Vector58 = IRQ 6  (EXTI2_3)
  *   Vector5C = IRQ 7  (EXTI4_15) */
-#define STM32_EXTI0_1_HANDLER   Vector54
-#define STM32_EXTI2_3_HANDLER   Vector58
-#define STM32_EXTI4_15_HANDLER  Vector5C
+#define STM32_EXTI0_1_HANDLER Vector54
+#define STM32_EXTI2_3_HANDLER Vector58
+#define STM32_EXTI4_15_HANDLER Vector5C
 
 OSAL_IRQ_HANDLER(STM32_EXTI0_1_HANDLER) {
     EXTI->PR = 0xFFFF;

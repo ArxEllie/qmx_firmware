@@ -29,12 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * EXTI_PortSourceGPIOx values match the STM32F0 SYSCFG_EXTICR encoding:
  *   GPIOA = 0, GPIOB = 1, GPIOC = 2, ...
  */
-#define EXTI_PORT_R0 2 /* GPIOC */  // C14
-#define EXTI_PORT_R1 2 /* GPIOC */  // C15
-#define EXTI_PORT_R2 0 /* GPIOA */  // A0
-#define EXTI_PORT_R3 0 /* GPIOA */  // A1
-#define EXTI_PORT_R4 0 /* GPIOA */  // A2
-#define EXTI_PORT_R5 0 /* GPIOA */  // A3
+#define EXTI_PORT_R0 2 /* GPIOC */ // C14
+#define EXTI_PORT_R1 2 /* GPIOC */ // C15
+#define EXTI_PORT_R2 0 /* GPIOA */ // A0
+#define EXTI_PORT_R3 0 /* GPIOA */ // A1
+#define EXTI_PORT_R4 0 /* GPIOA */ // A2
+#define EXTI_PORT_R5 0 /* GPIOA */ // A3
 
 #define EXTI_PIN_R0 14 /* C14 */
 #define EXTI_PIN_R1 15 /* C15 */

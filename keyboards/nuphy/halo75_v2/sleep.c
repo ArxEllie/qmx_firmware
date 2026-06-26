@@ -29,7 +29,7 @@ void wakeup_handle(void) {
     if (!kbd_flags.wakeup_prepare) return;
 
     kbd_flags.wakeup_prepare = 0;
-    no_act_time      = 0;
+    no_act_time              = 0;
 
     exit_light_sleep();
 
@@ -67,7 +67,7 @@ void Sleep_Handle(void) {
 
     /* sleep process */
     if (kbd_flags.goto_sleep) {
-        kbd_flags.goto_sleep     = 0;
+        kbd_flags.goto_sleep = 0;
         usb_suspend_debounce = 0;
         rf_disconnect_time   = 0;
         rf_linking_time      = 0;
@@ -121,13 +121,13 @@ void Sleep_Handle(void) {
             kbd_flags.goto_sleep = 1;
         }
     } else if (rf_linking_time >= LINK_TIMEOUT) {
-        rf_linking_time = 0;
-        kbd_flags.goto_sleep    = 1;
+        rf_linking_time      = 0;
+        kbd_flags.goto_sleep = 1;
     } else if (dev_info.rf_state == RF_DISCONNECT) {
         rf_disconnect_time++;
         if (rf_disconnect_time > 5 * 20) {
-            rf_disconnect_time = 0;
-            kbd_flags.goto_sleep      = 1;
+            rf_disconnect_time   = 0;
+            kbd_flags.goto_sleep = 1;
         }
     }
 }

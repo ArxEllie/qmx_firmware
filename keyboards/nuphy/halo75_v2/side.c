@@ -43,27 +43,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Integer scaling for dimming in per-LED loops (no FPU on STM32F072).
  * SCALE_X(v) = (v * N) >> 8, where N/256 ≈ the desired fraction. */
-#define SCALE_30(v) ((uint8_t)(((uint16_t)(v) * 77)  >> 8))  /* ≈ ×0.30 */
-#define SCALE_40(v) ((uint8_t)(((uint16_t)(v) * 102) >> 8))  /* ≈ ×0.40 */
-#define SCALE_70(v) ((uint8_t)(((uint16_t)(v) * 179) >> 8))  /* ≈ ×0.70 */
+#define SCALE_30(v) ((uint8_t)(((uint16_t)(v) * 77) >> 8))  /* ≈ ×0.30 */
+#define SCALE_40(v) ((uint8_t)(((uint16_t)(v) * 102) >> 8)) /* ≈ ×0.40 */
+#define SCALE_70(v) ((uint8_t)(((uint16_t)(v) * 179) >> 8)) /* ≈ ×0.70 */
 
 /* Status indicator timing (ms) */
-#define STATUS_BLINK_INTERVAL   500   /* sys/sleep show blink half-period */
-#define STATUS_SHOW_DURATION    3000  /* sys/sleep show total display time */
-#define STATUS_SHOW_MARGIN      50    /* early-exit margin before duration */
+#define STATUS_BLINK_INTERVAL 500 /* sys/sleep show blink half-period */
+#define STATUS_SHOW_DURATION 3000 /* sys/sleep show total display time */
+#define STATUS_SHOW_MARGIN 50     /* early-exit margin before duration */
 
 /* Animation frame intervals (ms) */
-#define SIDE_BREATHE_INTERVAL   30    /* breathe animation frame rate */
-#define SIDE_STATUS_INTERVAL    100   /* moving-trend status display frame rate */
+#define SIDE_BREATHE_INTERVAL 30 /* breathe animation frame rate */
+#define SIDE_STATUS_INTERVAL 100 /* moving-trend status display frame rate */
 
 /* Battery monitoring (ms) */
-#define BAT_DEBOUNCE_MS         1000  /* charge state / percent debounce */
-#define BAT_CHARGE_SHOW_MS      10000 /* battery display duration while charging */
-#define BAT_SHOW_MS             5000  /* battery display duration when not charging */
-#define LOW_BAT_THRESHOLD       10    /* battery percent that triggers low-bat alert */
+#define BAT_DEBOUNCE_MS 1000     /* charge state / percent debounce */
+#define BAT_CHARGE_SHOW_MS 10000 /* battery display duration while charging */
+#define BAT_SHOW_MS 5000         /* battery display duration when not charging */
+#define LOW_BAT_THRESHOLD 10     /* battery percent that triggers low-bat alert */
 
 /* Power-on RGB sequence (ms per colour) */
-#define POWER_SHOW_STEP_MS      1000
+#define POWER_SHOW_STEP_MS 1000
 
 // Minimum interval (ms) between full side LED refreshes.
 // rgb_matrix_indicators_advanced_user() can fire several times per render
@@ -100,30 +100,9 @@ const uint8_t wave_data_tab[WAVE_TAB_LEN] = {
 };
 
 const uint8_t flow_rainbow_colour_tab[FLOW_COLOUR_TAB_LEN][3] = {
-    {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 10, 8}, {255, 14, 8}, {255, 18, 8}, {255, 22, 8},
-    {255, 26, 8}, {255, 32, 8}, {255, 38, 8}, {255, 44, 8}, {255, 50, 8}, {255, 57, 8}, {255, 65, 8}, {255, 73, 8},
-    {255, 81, 8}, {255, 89, 8}, {255, 99, 8}, {255, 109, 8}, {255, 119, 8}, {255, 129, 8}, {255, 140, 8}, {255, 152, 8},
-    {255, 164, 8}, {255, 176, 8}, {255, 188, 8}, {255, 200, 8}, {255, 213, 8}, {255, 227, 8}, {255, 241, 8}, {255, 255, 8},
-    {248, 255, 8}, {234, 255, 8}, {220, 255, 8}, {206, 255, 8}, {194, 255, 8}, {182, 255, 8}, {170, 255, 8}, {158, 255, 8},
-    {146, 255, 8}, {134, 255, 8}, {124, 255, 8}, {114, 255, 8}, {104, 255, 8}, {94, 255, 8}, {85, 255, 8}, {77, 255, 8},
-    {69, 255, 8}, {61, 255, 8}, {53, 255, 8}, {47, 255, 8}, {41, 255, 8}, {35, 255, 8}, {29, 255, 8}, {24, 255, 8},
-    {20, 255, 8}, {16, 255, 8}, {12, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8},
-    {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 10}, {8, 255, 14}, {8, 255, 18}, {8, 255, 22},
-    {8, 255, 26}, {8, 255, 32}, {8, 255, 38}, {8, 255, 44}, {8, 255, 50}, {8, 255, 57}, {8, 255, 65}, {8, 255, 73},
-    {8, 255, 81}, {8, 255, 89}, {8, 255, 99}, {8, 255, 109}, {8, 255, 119}, {8, 255, 129}, {8, 255, 140}, {8, 255, 152},
-    {8, 255, 164}, {8, 255, 176}, {8, 255, 188}, {8, 255, 200}, {8, 255, 213}, {8, 255, 227}, {8, 255, 241}, {8, 255, 255},
-    {8, 248, 255}, {8, 234, 255}, {8, 220, 255}, {8, 206, 255}, {8, 194, 255}, {8, 182, 255}, {8, 170, 255}, {8, 158, 255},
-    {8, 146, 255}, {8, 134, 255}, {8, 124, 255}, {8, 114, 255}, {8, 104, 255}, {8, 94, 255}, {8, 85, 255}, {8, 77, 255},
-    {8, 69, 255}, {8, 61, 255}, {8, 53, 255}, {8, 47, 255}, {8, 41, 255}, {8, 35, 255}, {8, 29, 255}, {8, 24, 255},
-    {8, 20, 255}, {8, 16, 255}, {8, 12, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255},
-    {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {10, 8, 255}, {14, 8, 255}, {18, 8, 255}, {22, 8, 255},
-    {26, 8, 255}, {32, 8, 255}, {38, 8, 255}, {44, 8, 255}, {50, 8, 255}, {57, 8, 255}, {65, 8, 255}, {73, 8, 255},
-    {81, 8, 255}, {89, 8, 255}, {99, 8, 255}, {109, 8, 255}, {119, 8, 255}, {129, 8, 255}, {140, 8, 255}, {152, 8, 255},
-    {164, 8, 255}, {176, 8, 255}, {188, 8, 255}, {200, 8, 255}, {213, 8, 255}, {227, 8, 255}, {241, 8, 255}, {255, 8, 255},
-    {255, 8, 248}, {255, 8, 234}, {255, 8, 220}, {255, 8, 206}, {255, 8, 194}, {255, 8, 182}, {255, 8, 170}, {255, 8, 158},
-    {255, 8, 146}, {255, 8, 134}, {255, 8, 124}, {255, 8, 114}, {255, 8, 104}, {255, 8, 94}, {255, 8, 85}, {255, 8, 77},
-    {255, 8, 69}, {255, 8, 61}, {255, 8, 53}, {255, 8, 47}, {255, 8, 41}, {255, 8, 35}, {255, 8, 29}, {255, 8, 24},
-    {255, 8, 20}, {255, 8, 16}, {255, 8, 12}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8},
+    {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 10, 8}, {255, 14, 8}, {255, 18, 8}, {255, 22, 8}, {255, 26, 8}, {255, 32, 8}, {255, 38, 8}, {255, 44, 8}, {255, 50, 8}, {255, 57, 8}, {255, 65, 8}, {255, 73, 8}, {255, 81, 8}, {255, 89, 8}, {255, 99, 8}, {255, 109, 8}, {255, 119, 8}, {255, 129, 8}, {255, 140, 8}, {255, 152, 8}, {255, 164, 8}, {255, 176, 8}, {255, 188, 8}, {255, 200, 8}, {255, 213, 8}, {255, 227, 8}, {255, 241, 8}, {255, 255, 8}, {248, 255, 8}, {234, 255, 8}, {220, 255, 8}, {206, 255, 8}, {194, 255, 8}, {182, 255, 8}, {170, 255, 8}, {158, 255, 8}, {146, 255, 8}, {134, 255, 8}, {124, 255, 8}, {114, 255, 8}, {104, 255, 8}, {94, 255, 8}, {85, 255, 8}, {77, 255, 8}, {69, 255, 8}, {61, 255, 8}, {53, 255, 8}, {47, 255, 8}, {41, 255, 8}, {35, 255, 8}, {29, 255, 8}, {24, 255, 8}, {20, 255, 8}, {16, 255, 8}, {12, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8},
+    {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 8}, {8, 255, 10}, {8, 255, 14}, {8, 255, 18}, {8, 255, 22}, {8, 255, 26}, {8, 255, 32}, {8, 255, 38}, {8, 255, 44}, {8, 255, 50}, {8, 255, 57}, {8, 255, 65}, {8, 255, 73}, {8, 255, 81}, {8, 255, 89}, {8, 255, 99}, {8, 255, 109}, {8, 255, 119}, {8, 255, 129}, {8, 255, 140}, {8, 255, 152}, {8, 255, 164}, {8, 255, 176}, {8, 255, 188}, {8, 255, 200}, {8, 255, 213}, {8, 255, 227}, {8, 255, 241}, {8, 255, 255}, {8, 248, 255}, {8, 234, 255}, {8, 220, 255}, {8, 206, 255}, {8, 194, 255}, {8, 182, 255}, {8, 170, 255}, {8, 158, 255}, {8, 146, 255}, {8, 134, 255}, {8, 124, 255}, {8, 114, 255}, {8, 104, 255}, {8, 94, 255}, {8, 85, 255}, {8, 77, 255}, {8, 69, 255}, {8, 61, 255}, {8, 53, 255}, {8, 47, 255}, {8, 41, 255}, {8, 35, 255}, {8, 29, 255}, {8, 24, 255}, {8, 20, 255}, {8, 16, 255}, {8, 12, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255},
+    {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {8, 8, 255}, {10, 8, 255}, {14, 8, 255}, {18, 8, 255}, {22, 8, 255}, {26, 8, 255}, {32, 8, 255}, {38, 8, 255}, {44, 8, 255}, {50, 8, 255}, {57, 8, 255}, {65, 8, 255}, {73, 8, 255}, {81, 8, 255}, {89, 8, 255}, {99, 8, 255}, {109, 8, 255}, {119, 8, 255}, {129, 8, 255}, {140, 8, 255}, {152, 8, 255}, {164, 8, 255}, {176, 8, 255}, {188, 8, 255}, {200, 8, 255}, {213, 8, 255}, {227, 8, 255}, {241, 8, 255}, {255, 8, 255}, {255, 8, 248}, {255, 8, 234}, {255, 8, 220}, {255, 8, 206}, {255, 8, 194}, {255, 8, 182}, {255, 8, 170}, {255, 8, 158}, {255, 8, 146}, {255, 8, 134}, {255, 8, 124}, {255, 8, 114}, {255, 8, 104}, {255, 8, 94}, {255, 8, 85}, {255, 8, 77}, {255, 8, 69}, {255, 8, 61}, {255, 8, 53}, {255, 8, 47}, {255, 8, 41}, {255, 8, 35}, {255, 8, 29}, {255, 8, 24}, {255, 8, 20}, {255, 8, 16}, {255, 8, 12}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8}, {255, 8, 8},
 };
 
 const uint8_t dual_colour_lib[3][6] = {
@@ -141,12 +120,12 @@ const uint8_t colour_lib_1[9][3] = {
 
 static uint8_t  side_line       = SIDE_LED_COUNT;
 static bool     f_charging      = 0;
-uint8_t  side_mode_a     = 0;
-uint8_t  side_mode_b     = 3;
-uint8_t  side_light      = 2;
-uint8_t  side_speed      = 2;
-uint8_t  side_rgb        = 1;
-uint8_t  side_colour     = 0;
+uint8_t         side_mode_a     = 0;
+uint8_t         side_mode_b     = 3;
+uint8_t         side_light      = 2;
+uint8_t         side_speed      = 2;
+uint8_t         side_rgb        = 1;
+uint8_t         side_colour     = 0;
 static uint8_t  side_play_point = 0;
 static uint32_t bat_show_time   = 0;
 static bool     bat_show_flag   = true;
@@ -214,7 +193,7 @@ void light_speed_control(uint8_t fast) {
  * @note  save to eeprom.
  */
 static uint8_t light_colour_max = 8;
-void    side_colour_control(uint8_t dir) {
+void           side_colour_control(uint8_t dir) {
     if (side_mode_a == SIDE_NEW)
         light_colour_max = 3;
     else
@@ -260,7 +239,7 @@ void    side_colour_control(uint8_t dir) {
  * @note  save to eeprom.
  */
 static uint8_t side_old_color = 0;
-void    side_mode_a_control(uint8_t dir) {
+void           side_mode_a_control(uint8_t dir) {
     if (dir) {
         side_mode_a++;
         if (side_mode_a > SIDE_STATIC) {
@@ -280,7 +259,7 @@ void    side_mode_a_control(uint8_t dir) {
         side_colour = side_old_color;
     }
 
-    side_play_point            = 0;
+    side_play_point = 0;
     side_led_set_mode_a(side_mode_a);
     user_config_mark_dirty();
 }
@@ -298,7 +277,7 @@ void side_mode_b_control(uint8_t dir) {
             side_mode_b = SIDE_MODE_1;
         }
     }
-    side_play_point            = 0;
+    side_play_point = 0;
     side_led_set_mode_b(side_mode_b);
     user_config_mark_dirty();
 }
@@ -346,9 +325,9 @@ void sys_sw_led_show(void) {
     static bool     sys_show_flag  = false;
 
     if (kbd_flags.sys_show) {
-        kbd_flags.sys_show     = false;
-        sys_show_timer = timer_read32(); // store time of last refresh
-        sys_show_flag  = true;
+        kbd_flags.sys_show = false;
+        sys_show_timer     = timer_read32(); // store time of last refresh
+        sys_show_flag      = true;
     }
 
     if (sys_show_flag) {
@@ -380,9 +359,9 @@ void sleep_sw_led_show(void) {
     static bool     sleep_show_flag  = false;
 
     if (kbd_flags.sleep_show) {
-        kbd_flags.sleep_show     = false;
-        sleep_show_timer = timer_read32(); // store time of last refresh
-        sleep_show_flag  = true;
+        kbd_flags.sleep_show = false;
+        sleep_show_timer     = timer_read32(); // store time of last refresh
+        sleep_show_flag      = true;
     }
 
     if (sleep_show_flag) {
@@ -467,7 +446,7 @@ static void count_rgb_light(uint8_t light_temp) {
 /**
  * @brief  auxiliary_rgb_light.
  */
-uint8_t f_side_flag      = 0x1f;
+uint8_t        f_side_flag      = 0x1f;
 static uint8_t key_pwm_tab[45]  = {0x00};
 static uint8_t power_play_index = 0;
 static uint8_t f_power_show     = 1;
@@ -928,7 +907,7 @@ void low_bat_show(void) {
     set_left_rgb(r_temp, g_temp, b_temp);
 }
 
-uint8_t bat_end_led        = 0;
+uint8_t bat_end_led = 0;
 uint8_t bat_r, bat_g, bat_b;
 
 /**
@@ -945,16 +924,24 @@ void bat_percent_led(uint8_t bat_percent) {
 
     if (bat_percent <= 20) {
         bat_end_led = 1;
-        bat_r = colour_lib[0][0]; bat_g = colour_lib[0][1]; bat_b = colour_lib[0][2];
+        bat_r       = colour_lib[0][0];
+        bat_g       = colour_lib[0][1];
+        bat_b       = colour_lib[0][2];
     } else if (bat_percent <= 50) {
         bat_end_led = 2;
-        bat_r = colour_lib[1][0]; bat_g = colour_lib[1][1]; bat_b = colour_lib[1][2];
+        bat_r       = colour_lib[1][0];
+        bat_g       = colour_lib[1][1];
+        bat_b       = colour_lib[1][2];
     } else if (bat_percent <= 80) {
         bat_end_led = 4;
-        bat_r = colour_lib[2][0]; bat_g = colour_lib[2][1]; bat_b = colour_lib[2][2];
+        bat_r       = colour_lib[2][0];
+        bat_g       = colour_lib[2][1];
+        bat_b       = colour_lib[2][2];
     } else {
         bat_end_led = 5;
-        bat_r = colour_lib[3][0]; bat_g = colour_lib[3][1]; bat_b = colour_lib[3][2];
+        bat_r       = colour_lib[3][0];
+        bat_g       = colour_lib[3][1];
+        bat_b       = colour_lib[3][2];
     }
     if (f_charging) {
         low_bat_blink_cnt = 6;
@@ -967,7 +954,7 @@ void bat_percent_led(uint8_t bat_percent) {
         low_bat_show();
     } else {
         /* Steady state: all 5 LEDs same colour — matches NuPhy manual. */
-        bat_end_led = 4;
+        bat_end_led       = 4;
         low_bat_blink_cnt = 6;
         for (i = 0; i <= bat_end_led; i++)
             side_status_led_set(i, bat_r, bat_g, bat_b);
@@ -1085,7 +1072,7 @@ void device_reset_init(void) {
     rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
 
     user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
-    user_config.ee_side_led            = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
+    user_config.ee_side_led             = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
     user_config.ee_debounce_press_ms    = 5;
     user_config.ee_debounce_release_ms  = 5;
     user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
@@ -1126,19 +1113,19 @@ void rgb_test_show(void) {
  * main loop.
  */
 /* Debug harness state — declared early so rgb_debug_task can read it. */
-#define RGB_DBG_BATTERY 0
-#define RGB_DBG_LEDSTEP 1
-#define RGB_DBG_PROG_COUNT 2
+#    define RGB_DBG_BATTERY 0
+#    define RGB_DBG_LEDSTEP 1
+#    define RGB_DBG_PROG_COUNT 2
 
 static uint8_t  rgb_dbg_program = RGB_DBG_BATTERY;
 static uint8_t  rgb_dbg_bat     = 100;
 static uint16_t rgb_dbg_led     = 0;
 
 void rgb_debug_task(void) {
-    static rgb_t   last_rgb[5]   = {0};
-    static uint8_t last_dbg_bat  = 0xff;
+    static rgb_t    last_rgb[5]  = {0};
+    static uint8_t  last_dbg_bat = 0xff;
     static uint16_t last_dbg_led = 0xffff;
-    static uint8_t last_prog     = 0xff;
+    static uint8_t  last_prog    = 0xff;
 
     bool changed = false;
     for (int i = 0; i < 5; i++) {
@@ -1153,9 +1140,9 @@ void rgb_debug_task(void) {
 
     for (int i = 0; i < 5; i++)
         last_rgb[i] = side_status_rgb[i];
-    last_prog     = rgb_dbg_program;
-    last_dbg_bat  = rgb_dbg_bat;
-    last_dbg_led  = rgb_dbg_led;
+    last_prog    = rgb_dbg_program;
+    last_dbg_bat = rgb_dbg_bat;
+    last_dbg_led = rgb_dbg_led;
 
     if (rgb_dbg_program == RGB_DBG_BATTERY) {
         uprintf("DBG prog=BATTERY sim_bat=%d%% status=[", rgb_dbg_bat);
