@@ -364,6 +364,37 @@
               ]
             }
           ]
+        },
+        {
+          "label": "Toggles",
+          "content": [
+            {
+              "label": "Caps Word",
+              "type": "dropdown",
+              "options": [
+                "Off",
+                "On"
+              ],
+              "content": [
+                "id_caps_word",
+                0,
+                10
+              ]
+            },
+            {
+              "label": "Win Lock",
+              "type": "dropdown",
+              "options": [
+                "Off",
+                "On"
+              ],
+              "content": [
+                "id_win_lock",
+                0,
+                11
+              ]
+            }
+          ]
         }
       ]
     }
