@@ -1075,6 +1075,9 @@ void housekeeping_task_kb(void) {
     Sleep_Handle();
 }
 
+#ifdef VIA_ENABLE
+#    include "via.h"
+
 /* VIA custom value IDs for the Hardware settings tab. */
 enum via_custom_value_id {
     id_debounce_press_ms   = 1,
@@ -1216,3 +1219,4 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             break;
     }
 }
+#endif /* VIA_ENABLE */
