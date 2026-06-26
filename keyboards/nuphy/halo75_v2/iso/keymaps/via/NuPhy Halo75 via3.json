@@ -395,6 +395,20 @@
               ]
             }
           ]
+        },
+        {
+          "label": "Battery",
+          "content": [
+            {
+              "label": "Battery Level (%)",
+              "type": "keyvalue",
+              "content": [
+                "id_battery_level",
+                0,
+                9
+              ]
+            }
+          ]
         }
       ]
     }
