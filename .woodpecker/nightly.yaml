@@ -10,9 +10,40 @@ when:
   - event: manual
 
 steps:
+  # Skip the nightly if nothing changed since the last one.
+  # Woodpecker can't abort a pipeline from a step, so we drop a flag
+  # file that the later steps check and exit-0 on.
+  - name: check-changes
+    image: alpine:3.20
+    when:
+      - event: cron
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+      CI_REPO: "${CI_REPO}"
+      CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
+      CI_FORGE_URL: "${CI_FORGE_URL}"
+    commands:
+      - apk add --no-cache curl jq
+      - |
+        set -eu
+        FORGE_URL="${CI_FORGE_URL%/}"
+        case "$FORGE_URL" in http://*|https://*) ;; *) FORGE_URL="https://$FORGE_URL" ;; esac
+        # ponytail: latest nightly is assumed to be within the first 20 releases
+        last=$(curl -fsSL -H "Authorization: token $FORGEJO_TOKEN" \
+          "$FORGE_URL/api/v1/repos/$CI_REPO/releases?limit=20" \
+          | jq -r '[.[] | select(.tag_name | startswith("nightly-"))][0].target_commitish // empty')
+        echo "Last nightly commit: $${last:-<none>}"
+        echo "Current commit:      $CI_COMMIT_SHA"
+        if [ "$last" = "$CI_COMMIT_SHA" ]; then
+          echo "No changes since last nightly - skipping build"
+          touch .skip-nightly
+        fi
+
   - name: build
     image: qmkfm/qmk_cli
     commands:
+      - '[ -f .skip-nightly ] && { echo "Skipping: no changes since last nightly"; exit 0; } || true'
       - export QMK_HOME="$CI_WORKSPACE"
       - pip install -q -r requirements.txt
       - make git-submodule
@@ -47,6 +78,7 @@ steps:
       CI_COMMIT_SHA: "${CI_COMMIT_SHA}"
       CI_FORGE_URL: "${CI_FORGE_URL}"
     commands:
+      - '[ -f .skip-nightly ] && { echo "Skipping: no changes since last nightly"; exit 0; } || true'
       - apk add --no-cache curl jq
       - |
         set -eu
