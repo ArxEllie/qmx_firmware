@@ -21,24 +21,107 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "mcu_pwr.h"
 
+#define USB_WAKE_EVENT_QUEUE_LEN 32
+
+typedef struct {
+    keypos_t key;
+    bool     pressed;
+} usb_wake_event_t;
+
+static usb_wake_event_t usb_wake_events[USB_WAKE_EVENT_QUEUE_LEN];
+static uint8_t          usb_wake_event_head;
+static uint8_t          usb_wake_event_count;
+static bool             usb_wake_requested;
+
+_Static_assert(USB_WAKE_EVENT_QUEUE_LEN <= UINT8_MAX, "USB wake queue indices must fit in uint8_t");
+
 /**
  * @brief  Wake up from light sleep — called by pre_process_record_kb
  *         on the first keypress for instant wakeup (no 50ms poll delay).
  */
 void wakeup_handle(void) {
-    if (!kbd_flags.wakeup_prepare) return;
+    if (kbd_flags.wakeup_prepare) {
+        kbd_flags.wakeup_prepare = 0;
+        no_act_time              = 0;
 
-    kbd_flags.wakeup_prepare = 0;
-    no_act_time              = 0;
+        /* exit_light_sleep() performs the USB resume pulse. Remember it
+         * so additional events from this matrix scan do not pulse again. */
+        usb_wake_requested = dev_info.link_mode == LINK_USB && USB_DRIVER.state == USB_SUSPENDED;
+        exit_light_sleep();
+        return;
+    }
 
-    exit_light_sleep();
-
-    if (dev_info.link_mode == LINK_USB) {
+    /* USB can suspend before Sleep_Handle's 1 s debounce has entered
+     * light sleep. A key must still request remote wake in that window. */
+    if (dev_info.link_mode == LINK_USB && USB_DRIVER.state == USB_SUSPENDED && !usb_wake_requested) {
 #define USB_GETSTATUS_REMOTE_WAKEUP_ENABLED (2U)
         if ((USB_DRIVER.status & USB_GETSTATUS_REMOTE_WAKEUP_ENABLED)) {
+            usb_wake_requested = true;
             usb_lld_wakeup_host(&USB_DRIVER);
         }
     }
+}
+
+/**
+ * @brief Hold physical key events while the selected USB host is suspended.
+ *
+ * NO_USB_STARTUP_CHECK is required for wireless mode, so QMK's normal
+ * suspend loop cannot guard keyboard_task(). Without this local guard, a
+ * wake key is processed immediately and then erased by ChibiOS'
+ * suspend_wakeup_init() when the USB wake event arrives. Replaying the
+ * physical events after USB_ACTIVE preserves their original ordering and,
+ * critically, keeps a leading modifier ahead of the shortcut key.
+ *
+ * @return true when the caller must swallow the event until replay.
+ */
+bool usb_wakeup_defer_record(keyrecord_t *record) {
+    if (dev_info.link_mode != LINK_USB) {
+        return false;
+    }
+
+    if (USB_DRIVER.state == USB_ACTIVE) {
+        return false;
+    }
+
+    if (usb_wake_event_count < USB_WAKE_EVENT_QUEUE_LEN) {
+        uint8_t tail                  = (usb_wake_event_head + usb_wake_event_count) % USB_WAKE_EVENT_QUEUE_LEN;
+        usb_wake_events[tail].key     = record->event.key;
+        usb_wake_events[tail].pressed = record->event.pressed;
+        usb_wake_event_count++;
+    }
+
+    /* A human cannot fill 32 transitions during a normal USB resume.
+     * If hardware chatter does fill it, keep swallowing events rather
+     * than leaking a partial shortcut into a suspended endpoint. */
+    wakeup_handle();
+    return true;
+}
+
+/**
+ * @brief Replay wake-time key events once ChibiOS has resumed USB endpoints.
+ */
+void usb_wakeup_replay_task(void) {
+    if (usb_wake_event_count == 0) return;
+
+    if (dev_info.link_mode != LINK_USB) {
+        usb_wake_event_head  = 0;
+        usb_wake_event_count = 0;
+        usb_wake_requested   = false;
+        return;
+    }
+
+    if (USB_DRIVER.state != USB_ACTIVE) return;
+
+    while (usb_wake_event_count > 0) {
+        usb_wake_event_t event = usb_wake_events[usb_wake_event_head];
+        usb_wake_event_head    = (usb_wake_event_head + 1) % USB_WAKE_EVENT_QUEUE_LEN;
+        usb_wake_event_count--;
+
+        action_exec(MAKE_KEYEVENT(event.key.row, event.key.col, event.pressed));
+    }
+
+    usb_wake_event_head = 0;
+    usb_wake_requested  = false;
 }
 
 /**

@@ -483,10 +483,23 @@ static void macro_tap_task(void) {
  *         avoiding the 50ms Sleep_Handle poll delay.
  */
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (usb_wakeup_defer_record(record)) {
+        return false;
+    }
+
     if (record->event.pressed) {
         wakeup_handle();
     }
     return true;
+}
+
+/**
+ * @brief Replay USB wake events after the fresh matrix scan but before
+ *        matrix_task() dispatches new changes from that scan.
+ */
+void matrix_scan_kb(void) {
+    usb_wakeup_replay_task();
+    matrix_scan_user();
 }
 
 /* Handle wireless link switching (RF + BT1-3).

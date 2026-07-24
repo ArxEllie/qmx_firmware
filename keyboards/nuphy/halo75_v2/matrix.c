@@ -31,9 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define colA_bits (PAL_PORT_BIT(PAL_PAD(A4)) | PAL_PORT_BIT(PAL_PAD(A5)) | PAL_PORT_BIT(PAL_PAD(A6)) | PAL_PORT_BIT(PAL_PAD(A7)) | PAL_PORT_BIT(PAL_PAD(A8)) | PAL_PORT_BIT(PAL_PAD(A9)) | PAL_PORT_BIT(PAL_PAD(A10)) | PAL_PORT_BIT(PAL_PAD(A15)))
 #define colB_bits (PAL_PORT_BIT(PAL_PAD(B0)) | PAL_PORT_BIT(PAL_PAD(B1)) | PAL_PORT_BIT(PAL_PAD(B3)) | PAL_PORT_BIT(PAL_PAD(B10)) | PAL_PORT_BIT(PAL_PAD(B11)) | PAL_PORT_BIT(PAL_PAD(B12)) | PAL_PORT_BIT(PAL_PAD(B13)) | PAL_PORT_BIT(PAL_PAD(B14)) | PAL_PORT_BIT(PAL_PAD(B15)))
 
-#ifndef MATRIX_DEBOUNCE
-#    define MATRIX_DEBOUNCE 10
-#endif
+/* Consecutive stable reads required before trusting a row scan.
+ * This is purely GPIO propagation settling (~µs per iteration), NOT
+ * mechanical switch debounce — that is handled per-key by debounce.c.
+ * 2 reads ≈ 0.5 µs of stable-high requirement, enough for the pull-up
+ * to drive a floating column after the previous row is deselected. */
+#define MATRIX_SETTLE_STABLE_READS 2
 
 /* Max settle-loop iterations per row before giving up.  Each iteration is
  * ~2 port reads + a branch (~12 cycles on Cortex-M0 @ 48 MHz ≈ 0.25 µs).
@@ -94,11 +97,11 @@ uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
          * a row.  This prevents ghost reads from the previous row scan.
          * Cap total iterations so a stuck-low column (hardware fault,
          * short) can't block the scan forever. */
-        uint8_t  stable_threshold = MATRIX_DEBOUNCE;
+        uint8_t  stable_threshold = MATRIX_SETTLE_STABLE_READS;
         uint16_t settle_iters     = 0;
         while (stable_threshold > 0) {
             if (++settle_iters > MATRIX_SETTLE_MAX_ITERS) break;
-            stable_threshold = ((((palReadPort(PAL_PORT(A0)) & colA_bits) ^ colA_bits) | ((palReadPort(PAL_PORT(B0)) & colB_bits) ^ colB_bits)) == 0) ? (stable_threshold - 1) : MATRIX_DEBOUNCE;
+            stable_threshold = ((((palReadPort(PAL_PORT(A0)) & colA_bits) ^ colA_bits) | ((palReadPort(PAL_PORT(B0)) & colB_bits) ^ colB_bits)) == 0) ? (stable_threshold - 1) : MATRIX_SETTLE_STABLE_READS;
         }
 
         select_row(current_row);

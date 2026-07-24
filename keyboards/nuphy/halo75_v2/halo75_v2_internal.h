@@ -58,6 +58,8 @@ void    rf_uart_init(void);
 /* Defined in sleep.c */
 void Sleep_Handle(void);
 void wakeup_handle(void);
+bool usb_wakeup_defer_record(keyrecord_t *record);
+void usb_wakeup_replay_task(void);
 
 /* Defined in side.c */
 void m_side_led_show(void);
