@@ -1073,8 +1073,8 @@ void device_reset_init(void) {
 
     user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
     user_config.ee_side_led             = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
-    user_config.ee_debounce_press_ms    = 5;
-    user_config.ee_debounce_release_ms  = 5;
+    user_config.ee_debounce_press_ms    = DEBOUNCE_DEFAULT_MS;
+    user_config.ee_debounce_release_ms  = DEBOUNCE_DEFAULT_MS;
     user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
     set_f_dev_sleep_enable(true);
     set_f_usb_sleep_enable(false);

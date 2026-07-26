@@ -116,10 +116,10 @@ static inline void transfer_matrix_values(matrix_row_t raw[], matrix_row_t cooke
                         // key-down: eager — commit immediately
                         cooked[row] ^= col_mask;
                         cooked_changed                = true;
-                        debounce_counters[index].time = MAX(1, user_config.ee_debounce_press_ms);
+                        debounce_counters[index].time = MAX(DEBOUNCE_MIN_MS, user_config.ee_debounce_press_ms);
                     } else {
                         // key-up: defer — wait release_ms before committing
-                        debounce_counters[index].time = MAX(1, user_config.ee_debounce_release_ms);
+                        debounce_counters[index].time = MAX(DEBOUNCE_MIN_MS, user_config.ee_debounce_release_ms);
                     }
                 }
             } else if (debounce_counters[index].time != DEBOUNCE_ELAPSED) {

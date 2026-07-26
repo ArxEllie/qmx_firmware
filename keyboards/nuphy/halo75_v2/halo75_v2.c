@@ -740,25 +740,25 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case DEBOUNCE_PRESS_INC:
-            if (record->event.pressed && user_config.ee_debounce_press_ms < 99) {
+            if (record->event.pressed && user_config.ee_debounce_press_ms < DEBOUNCE_MAX_MS) {
                 user_config.ee_debounce_press_ms += DEBOUNCE_STEP;
                 user_config_mark_dirty();
             }
             return false;
         case DEBOUNCE_PRESS_DEC:
-            if (record->event.pressed && user_config.ee_debounce_press_ms > 1) {
+            if (record->event.pressed && user_config.ee_debounce_press_ms > DEBOUNCE_MIN_MS) {
                 user_config.ee_debounce_press_ms -= DEBOUNCE_STEP;
                 user_config_mark_dirty();
             }
             return false;
         case DEBOUNCE_RELEASE_INC:
-            if (record->event.pressed && user_config.ee_debounce_release_ms < 99) {
+            if (record->event.pressed && user_config.ee_debounce_release_ms < DEBOUNCE_MAX_MS) {
                 user_config.ee_debounce_release_ms += DEBOUNCE_STEP;
                 user_config_mark_dirty();
             }
             return false;
         case DEBOUNCE_RELEASE_DEC:
-            if (record->event.pressed && user_config.ee_debounce_release_ms > 1) {
+            if (record->event.pressed && user_config.ee_debounce_release_ms > DEBOUNCE_MIN_MS) {
                 user_config.ee_debounce_release_ms -= DEBOUNCE_STEP;
                 user_config_mark_dirty();
             }
@@ -856,8 +856,8 @@ void m_loading_eeprom_data(void) {
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
         user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
         user_config.ee_side_led             = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
-        user_config.ee_debounce_press_ms    = 5;
-        user_config.ee_debounce_release_ms  = 5;
+        user_config.ee_debounce_press_ms    = DEBOUNCE_DEFAULT_MS;
+        user_config.ee_debounce_release_ms  = DEBOUNCE_DEFAULT_MS;
         user_config.ee_sleep_timeout        = SLEEP_TIMEOUT_DEFAULT;
         set_f_dev_sleep_enable(true);
         set_f_usb_sleep_enable(false);
@@ -893,8 +893,8 @@ void m_loading_eeprom_data(void) {
         side_led_set_speed(side_speed);
         side_led_set_colour(side_colour);
 
-        if (user_config.ee_debounce_press_ms == 0 || user_config.ee_debounce_press_ms > 99) user_config.ee_debounce_press_ms = 5;
-        if (user_config.ee_debounce_release_ms == 0 || user_config.ee_debounce_release_ms > 99) user_config.ee_debounce_release_ms = 5;
+        if (user_config.ee_debounce_press_ms < DEBOUNCE_MIN_MS || user_config.ee_debounce_press_ms > DEBOUNCE_MAX_MS) user_config.ee_debounce_press_ms = DEBOUNCE_DEFAULT_MS;
+        if (user_config.ee_debounce_release_ms < DEBOUNCE_MIN_MS || user_config.ee_debounce_release_ms > DEBOUNCE_MAX_MS) user_config.ee_debounce_release_ms = DEBOUNCE_DEFAULT_MS;
         if (user_config.ee_sleep_timeout < SLEEP_TIMEOUT_MIN || user_config.ee_sleep_timeout > SLEEP_TIMEOUT_MAX) user_config.ee_sleep_timeout = SLEEP_TIMEOUT_DEFAULT;
         if (get_nkro_mode() > NKRO_OFF) set_nkro_mode(NKRO_AUTO);
         if (user_config.ee_socd_mode > SOCD_MODE_MAX) user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
@@ -1149,11 +1149,11 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
         case id_custom_set_value:
             switch (*value_id) {
                 case id_debounce_press_ms:
-                    user_config.ee_debounce_press_ms = (value_data[0] < 1) ? 1 : value_data[0];
+                    user_config.ee_debounce_press_ms = (value_data[0] < DEBOUNCE_MIN_MS) ? DEBOUNCE_MIN_MS : (value_data[0] > DEBOUNCE_MAX_MS) ? DEBOUNCE_MAX_MS : value_data[0];
                     user_config_mark_dirty();
                     break;
                 case id_debounce_release_ms:
-                    user_config.ee_debounce_release_ms = (value_data[0] < 1) ? 1 : value_data[0];
+                    user_config.ee_debounce_release_ms = (value_data[0] < DEBOUNCE_MIN_MS) ? DEBOUNCE_MIN_MS : (value_data[0] > DEBOUNCE_MAX_MS) ? DEBOUNCE_MAX_MS : value_data[0];
                     user_config_mark_dirty();
                     break;
                 case id_sleep_timeout:

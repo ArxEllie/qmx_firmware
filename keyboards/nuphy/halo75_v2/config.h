@@ -96,6 +96,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define IS31FL3733_SW_PULLUP PUR_05KR
 #define IS31FL3733_CS_PULLDOWN PUR_05KR
 
+#define DEBOUNCE_DEFAULT_MS 5
+#define DEBOUNCE_MIN_MS 1
+#define DEBOUNCE_MAX_MS 99
 #define DEBOUNCE_STEP 1
 
 /* Default SOCD mode on first boot / factory reset.
