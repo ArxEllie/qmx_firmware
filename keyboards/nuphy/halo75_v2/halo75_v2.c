@@ -309,12 +309,13 @@ static void switch_dev_link(uint8_t mode) {
  * @brief  scan dial switch.
  */
 void dial_sw_scan(void) {
-    uint8_t         dial_scan       = 0;
-    static uint8_t  dial_save       = 0xf0;
-    static uint8_t  debounce        = 0;
-    static uint32_t dial_scan_timer = 0;
-    static bool     flag_power_on   = 1;
-    static uint8_t  dial_change_cnt = 0;
+    uint8_t         dial_scan        = 0;
+    static uint8_t  dial_save        = 0xf0;
+    static uint8_t  debounce         = 0;
+    static uint32_t dial_scan_timer  = 0;
+    static bool     flag_power_on    = 1;
+    static uint8_t  dial_change_cnt  = 0;
+    bool            sys_mode_changed = false;
 
     if (!flag_power_on) {
         if (timer_elapsed32(dial_scan_timer) < DIAL_SCAN_INTERVAL_MS) return;
@@ -361,19 +362,21 @@ void dial_sw_scan(void) {
             default_layer_set(1 << 2);
             dev_info.sys_sw_state = SYS_SW_WIN;
             keymap_config.no_gui  = kbd_flags.win_lock;
+            keymap_config.nkro    = 1;
             m_break_all_key();
+            sys_mode_changed = true;
         }
-        keymap_config.nkro = 1;
     } else {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
             kbd_flags.sys_show = 1;
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
             kbd_flags.win_lock    = keymap_config.no_gui;
+            keymap_config.nkro    = 0;
+            keymap_config.no_gui  = 0;
             m_break_all_key();
+            sys_mode_changed = true;
         }
-        keymap_config.nkro   = 0;
-        keymap_config.no_gui = 0;
     }
 
     if (kbd_flags.dial_sw_init_ok == 0) {
@@ -385,7 +388,12 @@ void dial_sw_scan(void) {
         }
     }
 
-    apply_nkro_override();
+    /* The system switch supplies the Auto-mode default only when it changes.
+     * Reapplying it every 20 ms fights a forced NKRO override and repeatedly
+     * clears held keys via apply_nkro_override(). */
+    if (sys_mode_changed) {
+        apply_nkro_override();
+    }
 }
 
 /**
