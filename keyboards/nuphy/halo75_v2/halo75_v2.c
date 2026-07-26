@@ -848,7 +848,11 @@ void timer_pro(void) {
  */
 void m_loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config_t));
-    if (user_config.default_brightness_flag != DEFAULT_BRIGHTNESS_FLAG) {
+    if (user_config.default_brightness_flag != DEFAULT_BRIGHTNESS_FLAG || user_config.ee_config_version != USER_CONFIG_VERSION) {
+        /* user_config_t changed layout historically without a version byte.
+         * The old and new fields overlap, so an unversioned block cannot be
+         * migrated reliably. Reset once instead of accepting values that can
+         * silently disable RF sleep or corrupt debounce timing. */
         rgb_matrix_sethsv(RGB_DEFAULT_COLOUR, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
         user_config.default_brightness_flag = DEFAULT_BRIGHTNESS_FLAG;
         user_config.ee_side_led             = side_led_pack(side_mode_a, side_mode_b, side_rgb, side_colour, side_light, side_speed);
@@ -859,7 +863,8 @@ void m_loading_eeprom_data(void) {
         set_f_usb_sleep_enable(false);
         set_f_deep_sleep_enable(true);
         set_nkro_mode(NKRO_AUTO);
-        user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
+        user_config.ee_socd_mode      = SOCD_DEFAULT_MODE;
+        user_config.ee_config_version = USER_CONFIG_VERSION;
         socd_set_mode(user_config.ee_socd_mode);
         eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config_t));
     } else {

@@ -1080,7 +1080,8 @@ void device_reset_init(void) {
     set_f_usb_sleep_enable(false);
     set_f_deep_sleep_enable(true);
     set_nkro_mode(NKRO_AUTO);
-    user_config.ee_socd_mode = SOCD_DEFAULT_MODE;
+    user_config.ee_socd_mode      = SOCD_DEFAULT_MODE;
+    user_config.ee_config_version = USER_CONFIG_VERSION;
     socd_set_mode(SOCD_DEFAULT_MODE);
     user_config_mark_dirty();
 }

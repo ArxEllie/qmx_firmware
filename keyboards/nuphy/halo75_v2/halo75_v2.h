@@ -115,6 +115,7 @@ typedef enum {
 
 /* EEPROM sentinel */
 #define DEFAULT_BRIGHTNESS_FLAG 0xA6 /* first-boot marker for user_config */
+#define USER_CONFIG_VERSION 0xC1     /* persisted user_config_t schema */
 
 /* NKRO mode cycling */
 #define NKRO_MODE_COUNT 3 /* Auto -> On -> Off -> Auto */
@@ -276,7 +277,10 @@ typedef struct __attribute__((packed)) {
     uint8_t  ee_sleep_timeout; /* minutes, 1-60 */
     uint8_t  ee_dev_config;    /* bitfield: sleep/usb/deep sleep flags + NKRO mode */
     uint8_t  ee_socd_mode;     /* SOCD resolution mode (0=off, 1=neutral, 2=last-wins, 3=first-wins) */
+    uint8_t  ee_config_version;
 } user_config_t;
+
+_Static_assert(sizeof(user_config_t) <= EECONFIG_USER_DATA_SIZE, "user config exceeds reserved EEPROM block");
 
 extern user_config_t user_config;
 
