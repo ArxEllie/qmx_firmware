@@ -237,13 +237,14 @@ extern keyboard_flags_t kbd_flags;
 #define LINK_TIMEOUT (uint32_t)(100 * 120)
 #define POWER_DOWN_DELAY (uint16_t)(24)
 
-#define SLEEP_TIMEOUT_DEFAULT 30 /* minutes */
+#define SLEEP_TIMEOUT_DEFAULT 5 /* minutes */
 #define SLEEP_TIMEOUT_MIN 1
 #define SLEEP_TIMEOUT_MAX 60
 #define SLEEP_TIMEOUT_STEP 1
 
-/* TIMER_STEP is 50ms (Sleep_Handle runs every 50ms). */
-#define SLEEP_TIMEOUT_TO_TICKS(min) ((uint32_t)(min) * 60 * 1000 / 50)
+/* no_act_time is advanced by timer_pro() in TIMER_STEP_MS increments.
+ * Sleep_Handle's 50 ms polling interval does not define this counter's unit. */
+#define SLEEP_TIMEOUT_TO_TICKS(min) ((uint32_t)(min) * 60 * 1000 / TIMER_STEP_MS)
 
 /* Packed side LED settings in ee_side_led (uint16_t):
  * bits 0-2:   mode_a (0-4, 5 modes)
