@@ -238,6 +238,9 @@ void RF_Protocol_Receive(void) {
 
     if (Usart_Mgr.RXDState != RX_Done) return;
 
+    /* Reject line noise before it can satisfy an ACK or dispatch a command. */
+    if (Usart_Mgr.RXDLen == 0 || Usart_Mgr.RXDBuf[0] != UART_HEAD) goto reset_rx;
+
     /* --- 3-byte bare ACK: no payload, no command handler to run. --- */
     if (Usart_Mgr.RXDLen == 3) {
         if (Usart_Mgr.RXDBuf[2] != 0xA0) goto reset_rx;
