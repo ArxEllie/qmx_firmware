@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mcu_pwr.h"
 
 #define USB_WAKE_EVENT_QUEUE_LEN 32
+#define RF_SLEEP_COMMAND_SETTLE_MS 5
 
 typedef struct {
     keypos_t key;
@@ -34,6 +35,16 @@ static uint8_t          usb_wake_event_count;
 static bool             usb_wake_requested;
 
 _Static_assert(USB_WAKE_EVENT_QUEUE_LEN <= UINT8_MAX, "USB wake queue indices must fit in uint8_t");
+
+static bool matrix_has_pressed_key(void) {
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        if (matrix_get_row(row) != 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 /**
  * @brief  Wake up from light sleep — called by pre_process_record_kb
@@ -134,17 +145,44 @@ void usb_wakeup_replay_task(void) {
  *
  * sleep_timeout (1–60 min) is configurable via ee_sleep_timeout.
  */
-void Sleep_Handle(void) {
+bool Sleep_Handle(void) {
     static uint32_t delay_step_timer     = 0;
     static uint8_t  usb_suspend_debounce = 0;
     static uint32_t rf_disconnect_time   = 0;
+    static bool     deep_sleep_preparing = false;
+    static uint32_t deep_sleep_timer     = 0;
+    static uint32_t deep_sleep_no_act    = 0;
+
+    /* RF sleep commands receive acknowledgements asynchronously. Keep the
+     * main loop alive long enough to drain them, but suppress new RF traffic.
+     * A falling activity counter means a key event occurred and cancels the
+     * transition before the MCU or radio can go to sleep. */
+    if (deep_sleep_preparing) {
+        bool sleep_cancelled = matrix_has_pressed_key() || dev_info.link_mode == LINK_USB || (dev_info.rf_charge & 0x01) != 0 || !f_dev_sleep_enable || !f_deep_sleep_enable || no_act_time < deep_sleep_no_act;
+
+        if (sleep_cancelled) {
+            deep_sleep_preparing = false;
+            uart_send_cmd_deferred(CMD_HAND, 1);
+            return false;
+        }
+
+        if (timer_elapsed32(deep_sleep_timer) < RF_SLEEP_COMMAND_SETTLE_MS) {
+            return true;
+        }
+
+        deep_sleep_preparing = false;
+        enter_deep_sleep();
+        exit_deep_sleep();
+        no_act_time = 0;
+        return false;
+    }
 
     /* 50ms interval */
-    if (timer_elapsed32(delay_step_timer) < 50) return;
+    if (timer_elapsed32(delay_step_timer) < 50) return false;
     delay_step_timer = timer_read32();
 
     /* Master sleep toggle off — nothing to do. */
-    if (!f_dev_sleep_enable) return;
+    if (!f_dev_sleep_enable) return false;
 
     uint32_t sleep_ticks = SLEEP_TIMEOUT_TO_TICKS(user_config.ee_sleep_timeout);
 
@@ -172,10 +210,13 @@ void Sleep_Handle(void) {
             /* RF + battery: deep sleep if enabled, else light sleep. */
             m_break_all_key();
             if (f_deep_sleep_enable) {
-                enter_deep_sleep();
-                exit_deep_sleep();
-                no_act_time = 0;
-                return;
+                /* Phase one: put the nRF module to sleep while the MCU keeps
+                 * scanning and drains the command acknowledgement. */
+                prepare_deep_sleep();
+                deep_sleep_preparing = true;
+                deep_sleep_timer     = timer_read32();
+                deep_sleep_no_act    = no_act_time;
+                return true;
             } else {
                 enter_light_sleep();
                 kbd_flags.wakeup_prepare = 1;
@@ -184,7 +225,7 @@ void Sleep_Handle(void) {
     }
 
     /* sleep check */
-    if (kbd_flags.goto_sleep || kbd_flags.wakeup_prepare) return;
+    if (kbd_flags.goto_sleep || kbd_flags.wakeup_prepare) return false;
 
     if (dev_info.link_mode == LINK_USB) {
         if (USB_DRIVER.state == USB_SUSPENDED) {
@@ -213,4 +254,6 @@ void Sleep_Handle(void) {
             kbd_flags.goto_sleep = 1;
         }
     }
+
+    return false;
 }

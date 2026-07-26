@@ -1068,13 +1068,20 @@ void housekeeping_task_kb(void) {
 
     uart_receive_pro();
 
-    uart_send_cmd_deferred_task();
+    /* Sleep_Handle returns true while an RF deep-sleep command is settling.
+     * Keep scanning and receiving so a key can cancel the transition, but do
+     * not originate traffic that could become a non-key STOP wake source. */
+    bool rf_sleep_preparing = Sleep_Handle();
+
+    if (!rf_sleep_preparing) {
+        uart_send_cmd_deferred_task();
+
+        uart_send_report_func();
+
+        dev_sts_sync();
+    }
 
     macro_tap_task();
-
-    uart_send_report_func();
-
-    dev_sts_sync();
 
     /* Run power-on dial switch scan once RF init has completed.
      * Must wait for CMD_READ_DATA to populate dev_info.rf_channel
@@ -1092,8 +1099,6 @@ void housekeeping_task_kb(void) {
     if (power_on_dial_done) {
         dial_sw_scan();
     }
-
-    Sleep_Handle();
 }
 
 #ifdef VIA_ENABLE

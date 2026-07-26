@@ -31,8 +31,10 @@ static const pin_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
 static const pin_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
 
 /* State tracking */
-static bool sleeping   = false;
-static bool rgb_led_on = true;
+static bool     sleeping   = false;
+static bool     rgb_led_on = true;
+static uint32_t deep_sleep_enabled_irqs;
+static uint32_t deep_sleep_systick_ctrl;
 
 /* ------------------------------------------------------------------ */
 /*  LED power control                                                  */
@@ -102,17 +104,19 @@ static void syscfg_exti_config(uint8_t port_source, uint8_t pin_source) {
 /*  Deep sleep — STOP mode with EXTI wakeup                            */
 /* ------------------------------------------------------------------ */
 
-void enter_deep_sleep(void) {
-    /* Tell the RF module we're going to sleep so it doesn't queue
-     * reports that would overflow during STOP.  Send directly — the
-     * deferred UART task won't drain before STOP mode. */
+void prepare_deep_sleep(void) {
+    /* These commands receive UART replies. Send them before STOP so the
+     * normal housekeeping receive path can drain those replies instead of
+     * letting USART wake the MCU immediately after WFI. */
     if (dev_info.rf_state == RF_CONNECT) {
         uart_send_cmd(CMD_SET_CONFIG, 0);
         uart_send_cmd(CMD_SLEEP, 0);
     } else {
         uart_send_cmd(CMD_SLEEP, 0);
     }
+}
 
+void enter_deep_sleep(void) {
     /* COL2ROW diode direction: diode anode on column, cathode on row.
      * Strategy: drive all columns HIGH, set rows as input pull-DOWN.
      * Idle: rows held LOW by pull-down.  Keypress: diode forward-biased
@@ -180,6 +184,23 @@ void enter_deep_sleep(void) {
     memset(bitkb_report_buf, 0, sizeof(bitkb_report_buf));
     memset(bytekb_report_buf, 0, sizeof(bytekb_report_buf));
 
+    /* STOP must wake only for a matrix-row edge. USART replies, USB traffic,
+     * I2C completion, and the ChibiOS system tick are not user activity and
+     * otherwise make deep sleep return immediately.
+     *
+     * STM32F072 has fewer than 32 external IRQs, so one NVIC enable word
+     * captures the complete pre-sleep interrupt state. The EXTI handlers are
+     * re-enabled after masking, then the original mask is restored on wake. */
+    _Static_assert(EXTI0_1_IRQn < 32 && EXTI2_3_IRQn < 32 && EXTI4_15_IRQn < 32, "deep-sleep EXTI IRQs must fit in NVIC word 0");
+    deep_sleep_enabled_irqs = NVIC->ISER[0];
+    deep_sleep_systick_ctrl = SysTick->CTRL;
+    SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
+    SCB->ICSR     = SCB_ICSR_PENDSTCLR_Msk;
+    NVIC->ICER[0] = UINT32_MAX;
+    NVIC_EnableIRQ(EXTI0_1_IRQn);
+    NVIC_EnableIRQ(EXTI2_3_IRQn);
+    NVIC_EnableIRQ(EXTI4_15_IRQn);
+
     /* Enter STOP mode: regulator in low-power, WFI for wakeup. */
     /* PDDS = 0 (STOP mode, not STANDBY), LPDS = 1 (low-power regulator). */
     PWR->CR |= PWR_CR_LPDS;
@@ -209,6 +230,12 @@ void exit_deep_sleep(void) {
     /* After STOP mode, the MCU is running on HSI (8 MHz).  Reconfigure
      * the PLL and clock tree back to full speed. */
     stm32_clock_init();
+
+    /* Restore the ChibiOS tick and every external interrupt that was enabled
+     * before STOP. Do this only after the clock tree is stable so peripheral
+     * handlers never run against the temporary HSI clock. */
+    SysTick->CTRL = deep_sleep_systick_ctrl;
+    NVIC->ISER[0] = deep_sleep_enabled_irqs;
 
     /* Restore dial switch pins to input for scanning. */
     gpio_set_pin_input_high(DEV_MODE_PIN);

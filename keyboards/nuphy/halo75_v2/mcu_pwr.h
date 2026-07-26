@@ -45,6 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void enter_light_sleep(void);
 void exit_light_sleep(void);
+void prepare_deep_sleep(void);
 void enter_deep_sleep(void);
 void exit_deep_sleep(void);
 

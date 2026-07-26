@@ -56,7 +56,7 @@ bool    rf_init_is_complete(void);
 void    rf_uart_init(void);
 
 /* Defined in sleep.c */
-void Sleep_Handle(void);
+bool Sleep_Handle(void);
 void wakeup_handle(void);
 bool usb_wakeup_defer_record(keyrecord_t *record);
 void usb_wakeup_replay_task(void);
