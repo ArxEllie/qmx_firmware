@@ -4,10 +4,12 @@ CAPS_WORD_ENABLE      = yes
 UART_DRIVER_REQUIRED   = yes
 RGB_MATRIX_CUSTOM_KB   = yes
 
-# RGB_DEBUG=yes: enable the USB console but, instead of dumping HID/matrix
-# events, stream side/status LED buffer changes (battery, RF, sys, sleep).
-# Usage: qmk flash -kb nuphy/halo75_v2/iso -km via -e RGB_DEBUG=yes
+# RGB_DEBUG=yes: instead of dumping HID/matrix events, stream side/status
+# LED buffer changes (battery, RF, sys, sleep). QMK's rules parser does not
+# evaluate conditionals when generating feature metadata, so CONSOLE_ENABLE
+# must remain an explicit build override rather than being assigned here.
+# Usage: qmk flash -kb nuphy/halo75_v2/iso -km via \
+#          -e CONSOLE_ENABLE=yes -e RGB_DEBUG=yes
 ifeq ($(strip $(RGB_DEBUG)), yes)
-    CONSOLE_ENABLE = yes
     OPT_DEFS += -DRGB_DEBUG
 endif

@@ -105,10 +105,10 @@ EV k=7004 r=0 c=1 down layer=1 mods=00 weak=00 oneshot=00 row=00000002
 A special build that mutes all normal LED effects and provides two interactive test programs for isolating and verifying the status LED display and individual LED mapping. All side animations, battery/RF/sleep LED shows, and RGB matrix effects are dead-stripped from the binary.
 
 ```bash
-qmk flash -kb nuphy/halo75_v2/iso -km via -e RGB_DEBUG=yes
+qmk flash -kb nuphy/halo75_v2/iso -km via -e CONSOLE_ENABLE=yes -e RGB_DEBUG=yes
 ```
 
-This enables the console (same as `CONSOLE_ENABLE=yes`) but silences HID/matrix event logging so the LED update stream is readable.
+`CONSOLE_ENABLE=yes` enables the USB console; `RGB_DEBUG=yes` silences HID/matrix event logging so the LED update stream is readable.
 
 #### Debug Programs
 
@@ -163,7 +163,7 @@ The BATTERY program uses the same colour mapping as the real battery display, po
 
 | File | Role |
 |------|------|
-| `rules.mk` | `RGB_DEBUG` build flag, enables console + `-DRGB_DEBUG` |
+| `rules.mk` | `RGB_DEBUG` build flag adds `-DRGB_DEBUG`; console remains an explicit QMK build override |
 | `halo75_v2.c` | Console init, keycode interception in `process_record_kb`, debug render in `rgb_matrix_indicators_advanced_user`, `rgb_debug_task` call in `housekeeping_task_kb` |
 | `side.c` | `rgb_debug_task` (console logger), `rgb_debug_render` (program renderer), `rgb_debug_cycle_program` / `rgb_debug_step_value` (step controls) |
 
