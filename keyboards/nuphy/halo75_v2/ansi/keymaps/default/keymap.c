@@ -1,3 +1,6 @@
+// Copyright 2023 NuPhy
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include QMK_KEYBOARD_H
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -42,5 +45,4 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	_______,				_______,   	_______,   	_______,  	_______,   	_______,   	_______,	_______, 	SIDE_SPD,	SIDE_SPI,	SIDE_MOD_B,	_______,	            SIDE_VAI,   _______,
 	_______,	_______,	_______,										_______, 							_______,	MO(4),   	        	            SIDE_MOD_A, SIDE_VAD,	SIDE_HUI),
 };
-
 
