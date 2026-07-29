@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "halo75_v2.h"
 #include "halo75_v2_internal.h"
 #include "mcu_pwr.h"
-#include "hal_usb.h"
-#include "usb_main.h"
 #include <string.h>
 
 /* ------------------------------------------------------------------ */
@@ -47,8 +45,14 @@ static uint32_t deep_sleep_systick_ctrl;
 static void rgb_power_off(void) {
     gpio_set_pin_output(DC_BOOST_PIN);
     gpio_write_pin_low(DC_BOOST_PIN);
-    gpio_set_pin_input(RGB_DRIVER_SDB1);
-    gpio_set_pin_input(RGB_DRIVER_SDB2);
+    /* NuPhy's original power sequence actively drove both IS31FL3733
+     * shutdown inputs low. Leaving them floating makes shutdown depend on
+     * undocumented board-level pulls and can leave the I2C devices in an
+     * indeterminate state across idle/wake cycles. */
+    gpio_set_pin_output(RGB_DRIVER_SDB1);
+    gpio_write_pin_low(RGB_DRIVER_SDB1);
+    gpio_set_pin_output(RGB_DRIVER_SDB2);
+    gpio_write_pin_low(RGB_DRIVER_SDB2);
 }
 
 static void rgb_power_on(void) {
@@ -77,14 +81,21 @@ bool is_rgb_led_on(void) {
 }
 
 void led_pwr_sleep_handle(void) {
+    /* Stop QMK from rendering and flushing new frames after the LED hardware
+     * is shut down. RGB_MATRIX_SLEEP preserves the configured enable/mode and
+     * performs one final off-frame flush while the drivers still acknowledge
+     * I2C. Repeated calls (for example native USB suspend followed by the
+     * Halo's light-sleep transition) are intentionally idempotent. */
+    rgb_matrix_set_suspend_state(true);
     pwr_rgb_led_off();
 }
 
 void led_pwr_wake_handle(void) {
     pwr_rgb_led_on();
-    /* Push a fresh PWM buffer so the LEDs don't show garbage after
-     * the driver was held in shutdown. */
-    rgb_matrix_update_pwm_buffers();
+    /* Resume the existing RGB configuration without writing EEPROM. QMK
+     * schedules a fresh render/flush; doing that in its normal task avoids a
+     * synchronous full-frame transfer in the wake-key event path. */
+    rgb_matrix_set_suspend_state(false);
 }
 
 /* ------------------------------------------------------------------ */
@@ -256,13 +267,6 @@ void exit_deep_sleep(void) {
 
     /* Tell the RF module to wake up. */
     uart_send_cmd_deferred(CMD_HAND, 1);
-
-    /* Wake the USB host if we were suspended. */
-    if (dev_info.link_mode == LINK_USB) {
-        if (USB_DRIVER.state == USB_SUSPENDED) {
-            usb_lld_wakeup_host(&USB_DRIVER);
-        }
-    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -270,22 +274,20 @@ void exit_deep_sleep(void) {
 /* ------------------------------------------------------------------ */
 
 void enter_light_sleep(void) {
+    if (sleeping) return;
+
     led_pwr_sleep_handle();
     sleeping = true;
 }
 
 void exit_light_sleep(void) {
+    if (!sleeping) return;
+
     sleeping = false;
     led_pwr_wake_handle();
 
     /* Tell the RF module to wake up. */
     uart_send_cmd_deferred(CMD_HAND, 1);
-
-    if (dev_info.link_mode == LINK_USB) {
-        if (USB_DRIVER.state == USB_SUSPENDED) {
-            usb_lld_wakeup_host(&USB_DRIVER);
-        }
-    }
 }
 
 /* ------------------------------------------------------------------ */

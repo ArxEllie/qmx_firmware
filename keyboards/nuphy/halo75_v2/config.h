@@ -69,22 +69,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define I2C_DRIVER I2CD1
 #define I2C1_SCL_PIN B8
 #define I2C1_SDA_PIN B9
-#define I2C1_CLOCK_SPEED 1000000
 
 #define I2C1_SCL_PAL_MODE 1
 #define I2C1_SDA_PAL_MODE 1
 
+/*
+ * 1 MHz Fast-mode Plus for a 48 MHz I2C kernel clock, analog filter enabled,
+ * and digital filter disabled.  These fields encode TIMINGR=0x00500A13 and
+ * come from ST's STM32F0 timing equations (60 ns rise, 100 ns fall).  Keeping
+ * the individual fields makes QMK's I2Cv2 configuration explicit.
+ */
 #define I2C1_TIMINGR_PRESC 0U
-#define I2C1_TIMINGR_SCLDEL 0U
+#define I2C1_TIMINGR_SCLDEL 5U
 #define I2C1_TIMINGR_SDADEL 0U
-#define I2C1_TIMINGR_SCLH 0U
-#define I2C1_TIMINGR_SCLL 0U
-#define I2C1_DUTY_CYCLE FAST_DUTY_CYCLE_16_9
+#define I2C1_TIMINGR_SCLH 10U
+#define I2C1_TIMINGR_SCLL 19U
 
 #define DRIVER_COUNT 2
 #define DRIVER_1_LED_TOTAL 64
 #define DRIVER_2_LED_TOTAL 64
 #define RGB_MATRIX_LED_COUNT (DRIVER_1_LED_TOTAL + DRIVER_2_LED_TOTAL)
+
+/* RGB_MATRIX_DRIVER=custom deliberately bypasses the stock driver's feature
+ * define, so provide the one size declaration its unchanged chip code needs. */
+#define IS31FL3733_LED_COUNT RGB_MATRIX_LED_COUNT
 
 #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CUSTOM_position_mode
 #define RGB_DEFAULT_COLOUR 168
@@ -92,6 +100,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
 #define RGB_MATRIX_KEYPRESSES
 #define RGB_MATRIX_KEYRELEASES
+/* QMK's suspend hooks are no-ops without this feature. Render off once and
+ * stop the RGB task while the Halo's LED rail/drivers are powered down, so an
+ * idle keyboard cannot continuously issue I2C transfers to sleeping devices. */
+#define RGB_MATRIX_SLEEP
 
 #define IS31FL3733_SW_PULLUP PUR_05KR
 #define IS31FL3733_CS_PULLDOWN PUR_05KR

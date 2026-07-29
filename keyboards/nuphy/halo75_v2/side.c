@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "halo75_v2.h"
 #include "halo75_v2_internal.h"
+#include "mcu_pwr.h"
 #include "side.h"
 #include "socd.h"
 #include "gpio.h"
@@ -147,6 +148,22 @@ void suspend_power_down_kb(void) {
  *
  */
 void suspend_wakeup_init_kb(void) {
+    /* A host-initiated USB resume can arrive without a matrix event. Restore
+     * the Halo's custom light-sleep power state here as well as QMK's RGB
+     * state; otherwise rendering resumes while both LED drivers remain held
+     * in hardware shutdown until the user presses a key. Cancel both pending
+     * sleep flags so a request scheduled just before the host wake cannot put
+     * an active keyboard straight back to sleep in housekeeping. */
+    if (dev_info.link_mode == LINK_USB) {
+        /* platform/chibios/suspend.c has just cleared QMK's mods and keys.
+         * Schedule restoration of only positions held unchanged across that
+         * cleanup; queued wake transitions retain their original ordering. */
+        usb_wakeup_note_resume_cleanup();
+        kbd_flags.goto_sleep     = 0;
+        kbd_flags.wakeup_prepare = 0;
+        no_act_time              = 0;
+        exit_light_sleep();
+    }
     rgb_matrix_set_suspend_state(false);
 }
 /**

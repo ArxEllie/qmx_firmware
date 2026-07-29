@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ansi.h"
+#include "is31fl3733.h"
 
 // Hardware LED driver routing belongs to the ANSI variant, not keymaps.
 

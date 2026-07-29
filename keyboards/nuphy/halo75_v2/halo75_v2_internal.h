@@ -58,8 +58,14 @@ void    rf_uart_init(void);
 /* Defined in sleep.c */
 bool Sleep_Handle(void);
 void wakeup_handle(void);
-bool usb_wakeup_defer_record(keyrecord_t *record);
+bool usb_wakeup_defer_record(uint16_t keycode, keyrecord_t *record);
+void usb_wakeup_note_resume_cleanup(void);
 void usb_wakeup_replay_task(void);
+void halo75_v2_matrix_capture(void);
+#ifdef CONSOLE_ENABLE
+void usb_wakeup_debug_take(uint16_t *cycles, uint16_t *queued, uint16_t *replayed, uint16_t *restored, uint16_t *overflows);
+void matrix_scan_timing_debug_record(void);
+#endif
 
 /* Defined in side.c */
 void m_side_led_show(void);

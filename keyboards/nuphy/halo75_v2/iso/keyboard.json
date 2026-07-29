@@ -55,7 +55,7 @@
   },
   "diode_direction": "COL2ROW",
   "rgb_matrix": {
-    "driver": "is31fl3733",
+    "driver": "custom",
     "led_count": 128,
     "center_point": [
       70,

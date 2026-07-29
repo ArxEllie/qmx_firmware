@@ -80,6 +80,58 @@ static void debug_matrix_scan(void) {
 
     memcpy(prev, curr, sizeof(prev));
 }
+
+/* Record loop stalls without printing from the matrix hook itself. A long gap
+ * means some task after the previous scan blocked key acquisition; reporting
+ * only every five seconds keeps the console from becoming that blocker. */
+static uint32_t debug_scan_last;
+static uint16_t debug_scan_max_gap;
+static uint16_t debug_scan_slow_count;
+static uint16_t debug_report_clear_count;
+static uint16_t debug_report_restore_count;
+static uint16_t debug_mac_gui_repair_count;
+static uint16_t debug_modifier_prepass_count;
+
+void matrix_scan_timing_debug_record(void) {
+    uint32_t now = timer_read32();
+    if (debug_scan_last != 0) {
+        uint32_t gap = TIMER_DIFF_32(now, debug_scan_last);
+        if (gap > debug_scan_max_gap) {
+            debug_scan_max_gap = MIN(gap, UINT16_MAX);
+        }
+        if (gap >= 4) {
+            debug_scan_slow_count++;
+        }
+    }
+    debug_scan_last = now;
+}
+
+static void debug_scan_timing_report(void) {
+    static uint32_t report_timer;
+
+    if (!debug_config.matrix || timer_elapsed32(report_timer) < 5000) return;
+    report_timer = timer_read32();
+
+    uint16_t    settle_max_iters;
+    uint32_t    settle_cap_count;
+    extern void matrix_settle_debug_take(uint16_t *max_iters, uint32_t *cap_count);
+    matrix_settle_debug_take(&settle_max_iters, &settle_cap_count);
+
+    uint16_t wake_cycles;
+    uint16_t wake_queued;
+    uint16_t wake_replayed;
+    uint16_t wake_restored;
+    uint16_t wake_overflows;
+    usb_wakeup_debug_take(&wake_cycles, &wake_queued, &wake_replayed, &wake_restored, &wake_overflows);
+
+    dprintf("SCAN max_gap=%u ms gaps_ge_4ms=%u/5s settle_max=%u settle_caps=%lu report_clears=%u clear_restores=%u gui_repairs=%u modifier_prepasses=%u wake=%u queued=%u replayed=%u restored=%u overflows=%u\n", debug_scan_max_gap, debug_scan_slow_count, settle_max_iters, settle_cap_count, debug_report_clear_count, debug_report_restore_count, debug_mac_gui_repair_count, debug_modifier_prepass_count, wake_cycles, wake_queued, wake_replayed, wake_restored, wake_overflows);
+    debug_scan_max_gap           = 0;
+    debug_scan_slow_count        = 0;
+    debug_report_clear_count     = 0;
+    debug_report_restore_count   = 0;
+    debug_mac_gui_repair_count   = 0;
+    debug_modifier_prepass_count = 0;
+}
 #endif /* CONSOLE_ENABLE */
 
 user_config_t     user_config;
@@ -135,6 +187,164 @@ static void apply_nkro_override(void) {
             m_break_all_key();
         }
     }
+}
+
+static bool system_switch_is_mac(void) {
+    if (dev_info.sys_sw_state == SYS_SW_MAC) return true;
+    if (dev_info.sys_sw_state == SYS_SW_WIN) return false;
+
+    /* RF initialization delays the debounced dial state. The physical pin is
+     * already configured before key processing starts, so use it as the source
+     * of truth during that short boot window (LOW=Mac, HIGH=Windows). */
+    return !gpio_read_pin(SYS_MODE_PIN);
+}
+
+/* Win Lock is a Windows-mode policy, not a generic GUI/Command lock. QMK's
+ * keymap_config is global, so a VIA write or Magic keycode can otherwise leave
+ * no_gui set after the physical OS switch is in Mac mode. Enforce this before
+ * wake-event classification, where KC_LGUI must still be recognized as a
+ * modifier, and again after QMK modules have handled the event. */
+static void enforce_system_modifier_policy(void) {
+    if (system_switch_is_mac()) {
+#ifdef CONSOLE_ENABLE
+        if (keymap_config.no_gui && debug_mac_gui_repair_count < UINT16_MAX) {
+            debug_mac_gui_repair_count++;
+        }
+#endif
+        keymap_config.no_gui = 0;
+    } else if (dev_info.sys_sw_state == SYS_SW_WIN) {
+        kbd_flags.win_lock = keymap_config.no_gui;
+    }
+}
+
+/* QMK dispatches simultaneous matrix changes in row/column order. The Halo's
+ * letter rows precede its bottom modifier row, so Cmd+C sampled in one scan
+ * would otherwise become C-down followed by Cmd-down. Longer main-loop gaps
+ * (notably an RGB PWM flush) make two physically sequential presses more
+ * likely to collapse into that one scan.
+ *
+ * Dispatch only newly pressed basic modifiers before matrix_task() performs
+ * its normal row walk. pre_process_record_kb() suppresses the duplicate event
+ * encountered later in that walk. Releases remain in normal order, keeping
+ * the modifier held through the accompanying key release. This does not defer,
+ * busy-wait, or alter RF transport timing. */
+static matrix_row_t modifier_prepass_previous[MATRIX_ROWS];
+static matrix_row_t modifier_prepass_dispatched[MATRIX_ROWS];
+static matrix_row_t report_clear_restore_pending[MATRIX_ROWS];
+static bool         modifier_prepass_active;
+static bool         modifier_prepass_ready;
+
+static uint16_t basic_keycode_at_position(uint8_t row, uint8_t col) {
+    keypos_t key = {.row = row, .col = col};
+    return keycode_config(keymap_key_to_keycode(layer_switch_get_layer(key), key));
+}
+
+static bool is_report_restorable_keycode(uint16_t keycode) {
+    /* QMK intentionally keeps basic usages (KC_A..KC_EXSEL) and modifiers
+     * (KC_LCTL..KC_RGUI) in disjoint classifier ranges. */
+    return IS_BASIC_KEYCODE(keycode) || IS_MODIFIER_KEYCODE(keycode);
+}
+
+/* A full report clear and the physical matrix are separate state machines.
+ * Remember only ordinary HID positions that are physically held at the clear;
+ * custom, layer, tap-hold, and macro keys cannot be reconstructed generically
+ * without duplicating their internal side effects. */
+static void report_clear_capture_basic_holds(void) {
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        matrix_row_t held = matrix_get_row(row);
+
+        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+            matrix_row_t mask = MATRIX_ROW_SHIFTER << col;
+            if ((held & mask) && is_report_restorable_keycode(basic_keycode_at_position(row, col))) {
+                report_clear_restore_pending[row] |= mask;
+            }
+        }
+    }
+}
+
+/* Restore the exact basic positions captured above if they are still held.
+ * Modifiers go first so the host can never observe a restored letter without
+ * its chord modifier. An actual matrix edge after the clear removes its bit in
+ * pre_process_record_kb(), leaving that transition under QMK's normal path. */
+static void report_clear_restore_basic_holds(void) {
+    if (!modifier_prepass_ready) return;
+
+    for (uint8_t pass = 1; pass <= 2; pass++) {
+        bool restore_modifiers = pass == 1;
+
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            matrix_row_t still_held = report_clear_restore_pending[row] & matrix_get_row(row);
+            report_clear_restore_pending[row] &= matrix_get_row(row);
+
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                matrix_row_t mask = MATRIX_ROW_SHIFTER << col;
+                if (!(still_held & mask)) continue;
+
+                uint16_t keycode = basic_keycode_at_position(row, col);
+                if (!is_report_restorable_keycode(keycode) || IS_MODIFIER_KEYCODE(keycode) != restore_modifiers) continue;
+
+                /* Clear ownership before action_exec() enters the nested
+                 * pre-process hook; this event is the requested restoration,
+                 * not a new physical transition that should cancel one. */
+                report_clear_restore_pending[row] &= ~mask;
+                action_exec(MAKE_KEYEVENT(row, col, true));
+#ifdef CONSOLE_ENABLE
+                if (debug_report_restore_count < UINT16_MAX) {
+                    debug_report_restore_count++;
+                }
+#endif
+            }
+        }
+    }
+}
+
+static void modifier_press_prepass(void) {
+    /* matrix_scan_kb() can run during Bootmagic, before keyboard_post_init_kb()
+     * configures the OS switch and host transport. Leave those startup scans
+     * entirely under QMK's normal initialization path. */
+    if (!modifier_prepass_ready) return;
+
+    enforce_system_modifier_policy();
+
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        matrix_row_t current_row       = matrix_get_row(row);
+        matrix_row_t new_presses       = current_row & ~modifier_prepass_previous[row];
+        modifier_prepass_previous[row] = current_row;
+
+        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+            matrix_row_t mask = MATRIX_ROW_SHIFTER << col;
+            if (!(new_presses & mask)) continue;
+
+            uint16_t keycode = basic_keycode_at_position(row, col);
+            if (!IS_MODIFIER_KEYCODE(keycode)) continue;
+
+            /* Mark only after action_exec(): the nested pre-process call must
+             * be allowed through; the later matrix_task duplicate must not. */
+            modifier_prepass_active = true;
+            action_exec(MAKE_KEYEVENT(row, col, true));
+            modifier_prepass_active = false;
+            modifier_prepass_dispatched[row] |= mask;
+#ifdef CONSOLE_ENABLE
+            if (debug_modifier_prepass_count < UINT16_MAX) {
+                debug_modifier_prepass_count++;
+            }
+#endif
+        }
+    }
+}
+
+static bool modifier_press_is_prepass_duplicate(const keyrecord_t *record) {
+    if (modifier_prepass_active || !record->event.pressed || record->event.key.row >= MATRIX_ROWS || record->event.key.col >= MATRIX_COLS) {
+        return false;
+    }
+
+    matrix_row_t mask = MATRIX_ROW_SHIFTER << record->event.key.col;
+    if (!(modifier_prepass_dispatched[record->event.key.row] & mask)) {
+        return false;
+    }
+
+    modifier_prepass_dispatched[record->event.key.row] &= ~mask;
+    return true;
 }
 
 /* Non-blocking device reset state machine.
@@ -255,6 +465,18 @@ void long_press_key(void) {
 void m_break_all_key(void) {
     uint8_t report_buf[16];
 
+    /* The report clear below does not change the debounced physical matrix.
+     * Capture held basic positions before erasing their logical state so the
+     * next scan can rebuild them. Stateful custom/layer/macro positions are
+     * deliberately excluded by report_clear_capture_basic_holds(). */
+    report_clear_capture_basic_holds();
+
+#ifdef CONSOLE_ENABLE
+    if (debug_report_clear_count < UINT16_MAX) {
+        debug_report_clear_count++;
+    }
+#endif
+
     clear_weak_mods();
     clear_mods();
     clear_keyboard();
@@ -331,7 +553,10 @@ void dial_sw_scan(void) {
     if (dial_save != dial_scan) {
         if (++dial_change_cnt < DIAL_CHANGE_CONFIRM) return;
         dial_change_cnt = 0;
-        m_break_all_key();
+        /* Recording a stable electrical change is not itself a mode change.
+         * Do not clear the HID report here: switch_dev_link() and the OS-mode
+         * branches below already release keys if the logical mode changes.
+         * This keeps dial contact noise from erasing an unrelated modifier. */
         dial_save                 = dial_scan;
         no_act_time               = 0;
         rf_linking_time           = 0;
@@ -491,7 +716,20 @@ static void macro_tap_task(void) {
  *         avoiding the 50ms Sleep_Handle poll delay.
  */
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    if (usb_wakeup_defer_record(record)) {
+    enforce_system_modifier_policy();
+
+    /* A real transition after m_break_all_key() owns this position now. This
+     * also prevents a later-in-row event from being replayed a second time on
+     * the next scan when the clear happened part-way through matrix_task(). */
+    if (record->event.key.row < MATRIX_ROWS && record->event.key.col < MATRIX_COLS) {
+        report_clear_restore_pending[record->event.key.row] &= ~(MATRIX_ROW_SHIFTER << record->event.key.col);
+    }
+
+    if (modifier_press_is_prepass_duplicate(record)) {
+        return false;
+    }
+
+    if (usb_wakeup_defer_record(keycode, record)) {
         return false;
     }
 
@@ -506,7 +744,16 @@ bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
  *        matrix_task() dispatches new changes from that scan.
  */
 void matrix_scan_kb(void) {
+    /* Drop any stale marker before USB replay can synthesize an event at the
+     * same position. matrix_task() normally consumes every marker immediately
+     * after this hook returns. */
+    memset(modifier_prepass_dispatched, 0, sizeof(modifier_prepass_dispatched));
     usb_wakeup_replay_task();
+    report_clear_restore_basic_holds();
+    modifier_press_prepass();
+#ifdef CONSOLE_ENABLE
+    matrix_scan_timing_debug_record();
+#endif
     matrix_scan_user();
 }
 
@@ -536,13 +783,15 @@ static bool handle_wireless_link(uint8_t link_target, keyrecord_t *record) {
  * @brief  qmk process record
  */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    enforce_system_modifier_policy();
+
     if (!process_record_user(keycode, record)) {
         return false;
     }
 
 #ifdef CONSOLE_ENABLE
     if (debug_config.matrix) {
-        dprintf("EV k=%04X r=%d c=%d %s layer=%d mods=%02X weak=%02X oneshot=%02X row=%08lX\n", keycode, record->event.key.row, record->event.key.col, record->event.pressed ? "down" : "up", get_highest_layer(layer_state), get_mods(), get_weak_mods(), get_oneshot_mods(), (uint32_t)matrix_get_row(record->event.key.row));
+        dprintf("EV k=%04X r=%d c=%d %s layer=%d mods=%02X weak=%02X oneshot=%02X no_gui=%d sys=%02X row=%08lX\n", keycode, record->event.key.row, record->event.key.col, record->event.pressed ? "down" : "up", get_highest_layer(layer_state), get_mods(), get_weak_mods(), get_oneshot_mods(), keymap_config.no_gui, dev_info.sys_sw_state, (uint32_t)matrix_get_row(record->event.key.row));
     }
 #endif
 
@@ -942,6 +1191,8 @@ void keyboard_post_init_kb(void) {
     dprintf("rows=%d cols=%d diode=%s default_layer=%ld layer_state=%08lX\n", MATRIX_ROWS, MATRIX_COLS, DIODE_DIRECTION_STR, (uint32_t)default_layer_state, (uint32_t)layer_state);
 #    endif
 #endif
+
+    modifier_prepass_ready = true;
 }
 
 /**
@@ -1064,6 +1315,7 @@ void housekeeping_task_kb(void) {
     user_config_flush_if_dirty();
 #ifdef CONSOLE_ENABLE
     debug_matrix_scan();
+    debug_scan_timing_report();
 #endif
 #ifdef RGB_DEBUG
     extern void rgb_debug_task(void);
@@ -1190,8 +1442,8 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                         caps_word_off();
                     break;
                 case id_win_lock:
-                    keymap_config.no_gui = value_data[0] ? 1 : 0;
-                    kbd_flags.win_lock   = keymap_config.no_gui;
+                    kbd_flags.win_lock   = value_data[0] ? 1 : 0;
+                    keymap_config.no_gui = !system_switch_is_mac() && kbd_flags.win_lock;
                     break;
                 default:
                     *command_id = id_unhandled;
@@ -1232,7 +1484,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     value_data[0] = is_caps_word_on() ? 1 : 0;
                     break;
                 case id_win_lock:
-                    value_data[0] = keymap_config.no_gui ? 1 : 0;
+                    value_data[0] = kbd_flags.win_lock ? 1 : 0;
                     break;
                 default:
                     *command_id = id_unhandled;

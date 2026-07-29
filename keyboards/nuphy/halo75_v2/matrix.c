@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "debounce.h"
 #include "quantum.h"
+#include "halo75_v2_internal.h"
 
 /* Port bit masks for row and column pins.
  * Rows: C14, C15, A0, A1, A2, A3
@@ -44,9 +45,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * how long a single matrix_scan_custom() call can block. */
 #define MATRIX_SETTLE_MAX_ITERS 1000
 
+#ifdef CONSOLE_ENABLE
+static uint16_t debug_settle_max_iters;
+static uint32_t debug_settle_cap_count;
+
+/* Snapshot and reset from the low-frequency debug reporter. Keeping all
+ * printing outside matrix_scan_custom() ensures diagnostics cannot lengthen
+ * the scan they are intended to measure. */
+void matrix_settle_debug_take(uint16_t *max_iters, uint32_t *cap_count) {
+    *max_iters = debug_settle_max_iters;
+    *cap_count = debug_settle_cap_count;
+
+    debug_settle_max_iters = 0;
+    debug_settle_cap_count = 0;
+}
+#endif
+
 /* matrix state(1:on, 0:off) */
 extern matrix_row_t raw_matrix[MATRIX_ROWS]; // raw values
 extern matrix_row_t matrix[MATRIX_ROWS];     // debounced values
+
+/* Pressed samples observed between the two RGB-driver transfers. They are
+ * consumed by the next normal scan, never dispatched from the I2C call stack. */
+static matrix_row_t interleaved_presses[MATRIX_ROWS];
 
 /* Ultra-fast column read: read both GPIO ports in two instructions,
  * then extract all 17 column bits with bit manipulation.
@@ -88,8 +109,7 @@ void matrix_init_custom(void) {
     palSetGroupMode(PAL_PORT(B0), colB_bits, 0U, (PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP | PAL_STM32_OSPEED_LOWEST));
 }
 
-/* Only need to scan the result into current_matrix, and return changed. */
-uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
+static uint8_t scan_matrix_rows(matrix_row_t current_matrix[], bool consume_interleaved) {
     bool changed = false;
 
     for (uint8_t current_row = 0; current_row < MATRIX_ROWS; current_row++) {
@@ -104,15 +124,52 @@ uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
             stable_threshold = ((((palReadPort(PAL_PORT(A0)) & colA_bits) ^ colA_bits) | ((palReadPort(PAL_PORT(B0)) & colB_bits) ^ colB_bits)) == 0) ? (stable_threshold - 1) : MATRIX_SETTLE_STABLE_READS;
         }
 
+#ifdef CONSOLE_ENABLE
+        if (settle_iters > debug_settle_max_iters) {
+            debug_settle_max_iters = settle_iters;
+        }
+        if (settle_iters > MATRIX_SETTLE_MAX_ITERS) {
+            debug_settle_cap_count++;
+        }
+#endif
+
         select_row(current_row);
         matrix_output_select_delay();
 
         matrix_row_t cols = read_cols();
         unselect_rows();
 
+        if (consume_interleaved) {
+            /* Preserve a press that began and ended during the full RGB flush.
+             * A release is intentionally not latched: the normal release
+             * debounce owns that transition after this synthetic press scan. */
+            cols |= interleaved_presses[current_row];
+            interleaved_presses[current_row] = 0;
+        }
+
         changed |= (current_matrix[current_row] != cols);
         current_matrix[current_row] = cols;
     }
 
     return changed;
+}
+
+/* Only need to scan the result into current_matrix, and return changed. */
+uint8_t matrix_scan_custom(matrix_row_t current_matrix[]) {
+    return scan_matrix_rows(current_matrix, true);
+}
+
+/* The two RGB drivers are independent synchronous I2C transfers. Sampling
+ * between them halves the longest interval in which a very short physical
+ * transition could begin and end unseen. Capture into a private array so this
+ * remains safe even when a manual LED flush occurs inside wake/reset code. */
+void halo75_v2_matrix_capture(void) {
+    matrix_row_t captured[MATRIX_ROWS] = {0};
+    scan_matrix_rows(captured, false);
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        interleaved_presses[row] |= captured[row];
+    }
+#ifdef CONSOLE_ENABLE
+    matrix_scan_timing_debug_record();
+#endif
 }
