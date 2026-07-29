@@ -83,6 +83,7 @@ Enables:
 - `debug_matrix` — raw and debounced matrix row dumps on every change
 - `debug_keyboard` — key event logs (keycode, row/col, layer, mods)
 - `debug_mouse` — mouse report logs (if `MOUSEKEY_ENABLE`)
+- `SCAN` — five-second scan-latency and custom matrix-settle summary
 
 Output is high-volume. Use `qmk console` to view:
 
@@ -94,11 +95,79 @@ Sample output:
 
 ```
 DBG NuPhy Halo75 V2 console enabled
-rows=12 cols=16 diode=COL2ROW default_layer=1 layer_state=00000002
+rows=6 cols=17 diode=COL2ROW default_layer=1 layer_state=00000002
 RAW 00000000 00000000 00000002 ...
 DBN 00000000 00000000 00000002 ...
-EV k=7004 r=0 c=1 down layer=1 mods=00 weak=00 oneshot=00 row=00000002
+EV k=7004 r=0 c=1 down layer=1 mods=00 weak=00 oneshot=00 no_gui=0 sys=A2 row=00000002
+SCAN max_gap=5 ms gaps_ge_4ms=156/5s settle_max=2 settle_caps=0 report_clears=0 clear_restores=0 gui_repairs=0 modifier_prepasses=0 wake=0 queued=0 replayed=0 restored=0 overflows=0
 ```
+
+`max_gap` is the longest interval between physical matrix acquisitions,
+including the capture inserted between the two RGB-driver transfers.
+`settle_max` is the largest number of GPIO reads needed for a column line to
+return high, and `settle_caps` counts rows that reached the 1,000-iteration
+safety limit. A large `max_gap` with `settle_max=2` points to work outside the
+matrix scanner, such as RF UART transmission or a stalled peripheral. The
+normal ~4 ms two-driver RGB flush is split by a capture scan, so it should no
+longer create a 4 ms blind interval. Any non-zero `settle_caps` implicates the
+scanner, switch matrix, or electrical settling directly. After the initial
+startup report, `report_clears` should stay at zero during ordinary typing; an
+increment means a mode, sleep, link, or reset path deliberately erased all
+pressed keys. `clear_restores` counts physically held basic HID keys rebuilt
+after such a clear. Modifiers are rebuilt before ordinary keys, and a real
+matrix edge cancels the corresponding pending restoration. This keeps a
+legitimate transport/mode report clear from leaving Cmd—or any held basic
+key—logically absent until the next physical press.
+
+The RGB bus uses STM32F0 Fast-mode Plus timing generated from the 48 MHz system
+clock (`TIMINGR=0x00500A13`). The previous nominal 1 MHz configuration selected
+the 8 MHz HSI but programmed every timing field to zero; QMK's
+`I2C1_CLOCK_SPEED` does not configure this I2Cv2 peripheral. That combination
+could not satisfy the STM32F0 1 MHz timing constraints and made LED-transfer
+latency and reliability dependent on out-of-spec bus timing.
+The Halo uses QMK's custom RGB Matrix driver seam to keep its two-driver flush
+schedule local to this keyboard. The underlying IS31FL3733 implementation
+remains the unmodified shared QMK driver.
+`RGB_MATRIX_SLEEP` is enabled and the custom light/deep-sleep power handlers
+use the same suspend state. QMK renders one off frame before LED power is
+removed, then stops producing I2C frames until wake. This prevents an idle
+keyboard from repeatedly talking to drivers that are shut down or unpowered.
+The two IS31FL3733 SDB pins are actively driven low during that transition,
+matching NuPhy's original firmware; they are no longer left as floating GPIO
+inputs whose shutdown level depends on unverified external pulls.
+Host-initiated USB resume also exits the Halo's custom light-sleep state, so
+QMK cannot restart RGB rendering while the driver power rail and SDB pins
+remain off waiting for a physical wake key. It cancels both pending sleep
+flags, preventing a sleep request scheduled immediately before resume from
+putting the active keyboard straight back to sleep.
+The first wake key requests the STM32 USB remote-wakeup pulse asynchronously.
+ChibiOS' stock helper sleeps the calling thread for the 2 ms pulse duration;
+the Halo instead uses a ChibiOS virtual timer to end the same pulse without
+blocking matrix processing. USB resume ownership stays in the wake-event
+queue, while the light/deep-sleep power helpers only restore local hardware.
+
+For the physical Mac position, `no_gui` must always remain `0` and `sys` should
+settle at `A2`. A non-zero `no_gui` would mean QMK is deliberately suppressing
+Command before HID report generation. `gui_repairs` counts times the keyboard
+found and corrected that invalid Mac-mode state before QMK handled a key.
+`modifier_prepasses` counts physical modifier presses dispatched before QMK's
+normal row-order walk. It increases for every basic modifier press. The Halo's
+letter rows precede its bottom modifier row, so this modifier-first dispatch
+prevents a same-scan Cmd+C from reaching the host as C followed by Cmd.
+
+During a USB resume, `wake` counts resume event groups and `queued`/`replayed`
+should match after the bus becomes active. `overflows` must remain zero; a
+non-zero value means more than 32 transitions arrived before USB resumed.
+`restored` counts keys that remained physically held across QMK's wake cleanup
+and therefore needed their logical action state recreated without a new edge.
+Replay waits for both the ChibiOS driver and QMK's logical USB state to become
+active/configured. The latter changes only after `suspend_wakeup_init()` has
+finished clearing stale keyboard state, preventing a late wake handler from
+erasing an already-replayed Command press. Host-initiated resumes run the same
+unchanged-hold restoration even when no key transition was queued. Restoration
+intersects the current matrix with QMK's previous matrix snapshot, so a brand
+new key in the first post-resume scan remains exclusively owned by the normal
+event path and cannot be dispatched twice.
 
 ### RGB Debug Mode
 
