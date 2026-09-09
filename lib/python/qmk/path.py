@@ -21,11 +21,9 @@ def is_keyboard(keyboard_name):
     if Path(keyboard_name).is_absolute():
         return False
 
-    keyboard_path = QMK_FIRMWARE / 'keyboards' / keyboard_name
-    keyboard_json = keyboard_path / 'keyboard.json'
-    info_json = keyboard_path / 'info.json'
+    keyboard_json = QMK_FIRMWARE / 'keyboards' / keyboard_name / 'keyboard.json'
 
-    return keyboard_json.exists() or info_json.exists()
+    return keyboard_json.exists()
 
 
 def under_qmk_firmware(path=Path(os.environ['ORIG_CWD'])):
